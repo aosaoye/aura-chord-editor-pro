@@ -19,6 +19,7 @@ import { useUser } from "@clerk/nextjs";
 
 export default function SongEditor() {
   const [song, setSong] = useState<Song | null>(null);
+  const [songPrice, setSongPrice] = useState<number>(0);
   const [isExporting, setIsExporting] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -151,6 +152,9 @@ export default function SongEditor() {
                 loadedSong.userId = found.userId;
                 loadedSong.authorName = found.user?.name;
                 setSong(loadedSong);
+                if (found.price != null) {
+                  setSongPrice(Number(found.price));
+                }
               } catch(e) { console.error("Error parsing song", e); }
             }
           } else {
@@ -544,7 +548,7 @@ export default function SongEditor() {
       const response = await fetch('/api/songs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ song })
+        body: JSON.stringify({ song, price: songPrice })
       });
       
       const data = await response.json();
@@ -575,7 +579,7 @@ export default function SongEditor() {
     } finally {
       setIsSaving(false);
     }
-  }, [song, showToast]);
+  }, [song, songPrice]);
 
   // Pantalla 1: Importador (Awwwards Style)
   if (!song) {

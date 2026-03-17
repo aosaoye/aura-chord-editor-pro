@@ -33,6 +33,9 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
             }
           }
         }
+      },
+      ratings: {
+        select: { value: true }
       }
     },
     orderBy: { updatedAt: "desc" },
@@ -107,9 +110,16 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
                        <span>•</span>
                        <span title="Obras Globales Publicadas">{song.user._count.songs} Obras</span>
                        <span>•</span>
-                       <span title="Valoraciones de la Obra (Simulado)" className="flex items-center gap-1 text-amber-500">
-                         ★ { (Math.random() * (5.0 - 4.2) + 4.2).toFixed(1) }
-                       </span>
+                       {(() => {
+                         const avgRating = song.ratings.length > 0
+                           ? (song.ratings.reduce((acc: number, r: { value: number }) => acc + r.value, 0) / song.ratings.length).toFixed(1)
+                           : "0";
+                         return (
+                           <span title="Valoración de la Obra" className={`flex items-center gap-1 ${song.ratings.length > 0 ? "text-amber-500" : "text-muted-foreground"}`}>
+                             ★ {avgRating}
+                           </span>
+                         );
+                       })()}
                      </div>
                    </div>
                  </div>
@@ -119,9 +129,22 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
                       <Clock size={12} />
                       {format(new Date(song.createdAt), "d MMM, yy", { locale: es })}
                     </div>
-                    <Link href={`/editor?id=${song.id}`} className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/70 transition-colors flex items-center gap-1">
-                      Ver Partitura →
-                    </Link>
+                    
+                    <div className="flex items-center gap-3">
+                      {song.price && song.price > 0 ? (
+                        <span className="text-xs font-black px-3 py-1 bg-amber-500/10 text-amber-500 rounded-full border border-amber-500/20">
+                          {song.price.toFixed(2)} €
+                        </span>
+                      ) : (
+                        <span className="text-xs font-black px-3 py-1 bg-primary/10 text-primary rounded-full border border-primary/20">
+                          GRATIS
+                        </span>
+                      )}
+                      
+                      <Link href={`/editor?id=${song.id}`} className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/70 transition-colors flex items-center gap-1">
+                        VER →
+                      </Link>
+                    </div>
                  </div>
 
                  {/* Visual Decorativo */}

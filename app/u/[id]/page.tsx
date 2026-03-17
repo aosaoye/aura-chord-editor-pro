@@ -54,6 +54,9 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
       userId: id,
       isPublic: true
     },
+    include: {
+      ratings: { select: { value: true } }
+    },
     orderBy: { updatedAt: "desc" },
     take: 50
   });
@@ -112,8 +115,17 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
                       <div className="bg-primary/10 text-primary p-2 rounded-lg">
                         <Music size={20} />
                       </div>
-                      <div className="text-right">
+                      <div className="flex flex-col items-end gap-2">
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{song.bpm} BPM</p>
+                        {song.price && song.price > 0 ? (
+                          <span className="text-[10px] font-black px-2 py-0.5 bg-amber-500/10 text-amber-500 rounded border border-amber-500/20 shadow-sm">
+                            {song.price.toFixed(2)} €
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-black px-2 py-0.5 bg-primary/10 text-primary rounded border border-primary/20 shadow-sm">
+                            GRATIS
+                          </span>
+                        )}
                       </div>
                    </div>
 
@@ -123,6 +135,16 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
                         <Clock size={12} />
                         Actualizado {format(new Date(song.updatedAt), "d MMM, yyyy", { locale: es })}
                      </div>
+                     {(() => {
+                        const avgRating = song.ratings.length > 0
+                          ? (song.ratings.reduce((acc: number, r: { value: number }) => acc + r.value, 0) / song.ratings.length).toFixed(1)
+                          : "0";
+                        return (
+                          <div title="Valoración de la Obra" className={`text-[10px] flex items-center gap-1 mt-2 font-bold ${song.ratings.length > 0 ? "text-amber-500" : "text-muted-foreground"}`}>
+                            ★ {avgRating}
+                          </div>
+                        );
+                     })()}
                    </div>
                    
                    {/* Decorative background visual */}

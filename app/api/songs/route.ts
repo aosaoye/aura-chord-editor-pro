@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { song } = body;
+    const { song, price } = body;
 
     if (!song || !song.title) {
       return NextResponse.json({ error: "Faltan datos de la canción" }, { status: 400 });
@@ -61,6 +61,7 @@ export async function POST(req: NextRequest) {
             title: song.title,
             bpm: song.bpm || 120,
             parsedData: JSON.stringify(song),
+            price: price != null ? Number(price) : undefined,
           }
         });
         return NextResponse.json({ success: true, savedSong }, { status: 200 });
@@ -75,6 +76,7 @@ export async function POST(req: NextRequest) {
         bpm: song.bpm || 120,
         rawLyrics: "(Letra generada)", 
         parsedData: JSON.stringify(song),
+        price: price != null ? Number(price) : 0,
       },
     });
 
@@ -120,7 +122,7 @@ export async function GET(req: NextRequest) {
     const songs = await prisma.song.findMany({
       where: { userId },
       orderBy: { updatedAt: "desc" },
-      select: { id: true, title: true, bpm: true, updatedAt: true, createdAt: true, parsedData: true, isPublic: true }
+      select: { id: true, title: true, bpm: true, updatedAt: true, createdAt: true, parsedData: true, isPublic: true, price: true }
     });
 
     return NextResponse.json({ success: true, songs }, { status: 200 });

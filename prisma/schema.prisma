@@ -9,56 +9,60 @@ datasource db {
 }
 
 model User {
-  id                     String    @id @default(uuid())
-  clerkId                String    @unique // The ID provided by Clerk Authentication
-  email                  String    @unique
-  name                   String?
-  
+  id      String  @id @default(uuid())
+  clerkId String  @unique // The ID provided by Clerk Authentication
+  email   String  @unique
+  name    String?
+
   // Suscripción Stripe
   stripeCustomerId       String?   @unique @map(name: "stripe_customer_id")
   stripeSubscriptionId   String?   @unique @map(name: "stripe_subscription_id")
   stripePriceId          String?   @map(name: "stripe_price_id")
   stripeCurrentPeriodEnd DateTime? @map(name: "stripe_current_period_end")
-  
-  songs                  Song[]
-  devotionals            Devotional[]
-  
-  // Relaciones de Comunidad y Seguidores
-  followers              Follows[] @relation("following")
-  following              Follows[] @relation("follower")
-  
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+
+  songs       Song[]
+  devotionals Devotional[]
+
+  // Relaciones de Comunidad, Seguidores y Notificaciones
+  followers     Follows[]      @relation("following")
+  following     Follows[]      @relation("follower")
+  notifications Notification[]
+  songRatings   SongRating[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Song {
-  id          String   @id @default(uuid())
-  userId      String   // Foreign key to User
-  user        User     @relation(fields: [userId], references: [clerkId], onDelete: Cascade)
-  
-  title       String
-  bpm         Int      @default(120)
-  rawLyrics   String   @db.Text
-  parsedData  String   @db.Text // Store the JSON serialized Song object from ChordPro
-  
-  isPublic    Boolean  @default(false) // Visibility toggle para la comunidad
+  id     String @id @default(uuid())
+  userId String // Foreign key to User
+  user   User   @relation(fields: [userId], references: [clerkId], onDelete: Cascade)
+
+  title      String
+  bpm        Int    @default(120)
+  rawLyrics  String @db.Text
+  parsedData String @db.Text // Store the JSON serialized Song object from ChordPro
+
+  isPublic Boolean @default(false) // Visibility toggle para la comunidad
+  price    Float?  @default(0) // Marketplace feature: 0 es Gratis, > 0 es de pago
 
   devotionals DevotionalSong[]
+  ratings     SongRating[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
 
 model Follows {
-  follower    User     @relation("follower", fields: [followerId], references: [clerkId], onDelete: Cascade)
-  followerId  String
+  follower   User   @relation("follower", fields: [followerId], references: [clerkId], onDelete: Cascade)
+  followerId String
 
-  following   User     @relation("following", fields: [followingId], references: [clerkId], onDelete: Cascade)
+  following   User   @relation("following", fields: [followingId], references: [clerkId], onDelete: Cascade)
   followingId String
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@id([followerId, followingId])
   @@index([followerId])
@@ -66,29 +70,54 @@ model Follows {
 }
 
 model Devotional {
-  id          String   @id @default(uuid())
-  userId      String   
-  user        User     @relation(fields: [userId], references: [clerkId], onDelete: Cascade)
-  
-  title       String
-  date        DateTime?
-  
-  songs       DevotionalSong[]
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [clerkId], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  title String
+  date  DateTime?
+
+  songs DevotionalSong[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
 
 model DevotionalSong {
-  id            String     @id @default(uuid())
-  devotionalId  String
-  devotional    Devotional @relation(fields: [devotionalId], references: [id], onDelete: Cascade)
-  songId        String
-  song          Song       @relation(fields: [songId], references: [id], onDelete: Cascade)
-  order         Int        @default(0)
+  id           String     @id @default(uuid())
+  devotionalId String
+  devotional   Devotional @relation(fields: [devotionalId], references: [id], onDelete: Cascade)
+  songId       String
+  song         Song       @relation(fields: [songId], references: [id], onDelete: Cascade)
+  order        Int        @default(0)
 
   @@index([devotionalId])
   @@index([songId])
+}
+
+model SongRating {
+  id        String   @id @default(uuid())
+  value     Int // Valor de estrellas (1-5)
+  userId    String
+  user      User     @relation(fields: [userId], references: [clerkId], onDelete: Cascade)
+  songId    String
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, songId]) // Un usuario solo puede puntuar una obra una vez
+  @@index([songId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [clerkId], onDelete: Cascade)
+  message   String
+  link      String? // Optional link to the new song or content
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
