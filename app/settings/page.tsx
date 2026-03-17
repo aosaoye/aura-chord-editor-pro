@@ -106,19 +106,6 @@ export default function SettingsPage() {
             </div>
 
             <div className="flex flex-col gap-3">
-               <label className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">Columnas por Página</label>
-               <select 
-                 value={settings.columns || 3} onChange={(e) => updateSettings({ columns: parseInt(e.target.value) })}
-                 className="w-full bg-background border-b-2 border-border py-3 text-sm font-medium text-foreground outline-none focus:border-primary cursor-pointer transition-colors"
-               >
-                 <option value={1}>1 Columna (Lineal clásico)</option>
-                 <option value={2}>2 Columnas</option>
-                 <option value={3}>3 Columnas (Compacto PDF)</option>
-                 <option value={4}>4 Columnas (Modo Super Denso)</option>
-               </select>
-            </div>
-
-            <div className="flex flex-col gap-3">
                <label className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">Espaciado y Alineación</label>
                <div className="grid grid-cols-2 gap-4">
                  <select 

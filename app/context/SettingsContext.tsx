@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type { NotationType } from "../helpers/chordFormatter";
 
 export interface GlobalSettings {
-  columns: number;
   fontFamily: string;
   alignment: string;
   fontSize: string;
@@ -14,7 +13,6 @@ export interface GlobalSettings {
 }
 
 const defaultSettings: GlobalSettings = {
-  columns: 1,
   fontFamily: "font-sans",
   alignment: "justify-start",
   fontSize: "text-lg",

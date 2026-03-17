@@ -29,7 +29,7 @@ export default function SongEditor() {
   
   // Consumimos Settings Globales
   const { settings } = useGlobalSettings();
-  const { fontFamily, fontSize, lineHeight, alignment, colorTheme, notation, columns } = settings;
+  const { fontFamily, fontSize, lineHeight, alignment, colorTheme, notation } = settings;
 
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
@@ -49,6 +49,7 @@ export default function SongEditor() {
   const pagesContainerRef = useRef<HTMLDivElement>(null);
 
   const [show3DPiano, setShow3DPiano] = useState(false);
+  const [editorColumns, setEditorColumns] = useState<number>(0);
   const [active3DChord, setActive3DChord] = useState<Chord | null>(null);
 
   // Hook del Teleprompter
@@ -690,7 +691,7 @@ export default function SongEditor() {
   const isReadOnly = song?.userId && user?.id ? song.userId !== user.id : false;
 
   const hasMultipleSongs = Array.isArray(song?.sections) && song.sections.filter(s => s.title && /^\d+\.\s/.test(s.title)).length > 1;
-  const computedColumns = hasMultipleSongs && (columns || 1) === 1 ? 2 : (columns || 1);
+  const activeColumns = editorColumns > 0 ? editorColumns : (hasMultipleSongs ? 2 : 1);
   const baseLinesPerColumn = fontSize.includes('2xl') ? 11 : fontSize.includes('xl') ? 14 : fontSize.includes('sm') ? 22 : 18;
 
   return (
@@ -991,6 +992,26 @@ export default function SongEditor() {
                 </button>
              </div>
 
+             <div className="flex flex-col gap-2">
+                <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Diseño de Página (Columnas)</label>
+                <div className="flex bg-gray-50 dark:bg-[#1a1a1a] rounded border border-gray-200 dark:border-gray-800 overflow-hidden">
+                  {[0, 1, 2, 3].map((colVal) => (
+                    <button 
+                      key={colVal}
+                      onClick={() => setEditorColumns(colVal)} 
+                      className={`flex-1 py-3 text-xs font-bold transition-colors border-r last:border-r-0 border-gray-200 dark:border-gray-800
+                        ${editorColumns === colVal 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800'
+                        }`}
+                    >
+                      {colVal === 0 ? 'AUTO' : colVal}
+                    </button>
+                  ))}
+                </div>
+                 <p className="text-[9px] font-light text-gray-500 mt-1">Ajuste local solo para esta sesión.</p>
+             </div>
+
              {notation === 'roman' && (
              <div className="flex flex-col gap-2">
                 <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Tono Base (Romanos)</label>
@@ -1024,7 +1045,7 @@ export default function SongEditor() {
               : "flex gap-6 lg:gap-12 overflow-x-auto snap-x lg:snap-mandatory hide-scrollbar pb-12 w-full lg:pr-[50vw]"
           }
         >
-          {song && paginateSong(song, baseLinesPerColumn, computedColumns).map((page, index) => (
+          {song && paginateSong(song, baseLinesPerColumn, activeColumns).map((page, index) => (
             <div 
               key={page.id}
               className={`a4-page bg-background text-foreground p-6 sm:p-10 lg:p-16 overflow-hidden lg:shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.15)] transition-all duration-500 relative flex flex-col justify-start w-full lg:w-[210mm] lg:min-w-[210mm] min-h-[80vh] lg:h-[297mm] ring-0 lg:ring-1 lg:ring-border origin-top rounded-xl lg:rounded-none border border-border lg:border-none
@@ -1057,7 +1078,7 @@ export default function SongEditor() {
               )}
 
               {/* CONTENIDO DE LA PÁGINA (COLUMNAS MASONRY DINÁMICAS) */}
-              <div className={`grid grid-cols-1 ${ ({1: 'md:grid-cols-1', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-4'} as Record<number, string>)[computedColumns] || 'md:grid-cols-1'} gap-8 sm:gap-12 w-full mt-2 flex-1 items-start`}>
+              <div className={`grid grid-cols-1 ${ ({1: 'md:grid-cols-1', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-4'} as Record<number, string>)[activeColumns] || 'md:grid-cols-1'} gap-8 sm:gap-12 w-full mt-2 flex-1 items-start`}>
                 {page.columns.map((col, colIdx) => (
                   <div key={`col-${page.id}-${colIdx}`} className="col-span-1 flex flex-col gap-10">
                     {col.map((section, sIdx) => (
