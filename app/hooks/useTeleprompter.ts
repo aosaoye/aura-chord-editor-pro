@@ -37,28 +37,44 @@ export function useTeleprompter(song: Song | null) {
           const lineRepeats = line.repeat || 1;
           
           for (let l = 0; l < lineRepeats; l++) {
-            // Re-calculamos matemáticamente ignorando el JSON estático
             const lineDurationSecs = line.beats * beatDurationSecs;
-            
-            // Construcción Cronológica de Acordes dentro de la línea
             const chords: ChordCue[] = [];
-            let totalSyllables = 0;
-            line.words.forEach(w => totalSyllables += w.syllables.length);
             
-            const timePerSyllable = totalSyllables > 0 ? lineDurationSecs / totalSyllables : 0;
-            let sylIndex = 0;
-            
-            line.words.forEach(w => {
-              w.syllables.forEach(syl => {
-                if (syl.chord) {
-                  chords.push({
-                    chord: syl.chord,
-                    startTime: currentTime + (sylIndex * timePerSyllable)
-                  });
+            // Recopilar todos los acordes de la línea
+            const lineChords: Chord[] = [];
+            line.words.forEach(w => w.syllables.forEach(syl => {
+              if (syl.chord) lineChords.push(syl.chord);
+            }));
+
+            // Algoritmo de Compás (Distribución Inteligente)
+            // Si hay 3 acordes en 4 tiempos -> 1 tiempo, 1 tiempo, 2 tiempos
+            if (lineChords.length > 0) {
+              const totalLineBeats = line.beats; 
+              let currentBeatOffset = 0;
+              const numChords = lineChords.length;
+
+              for (let i = 0; i < numChords; i++) {
+                let chordBeats = 1;
+                if (i === numChords - 1) {
+                   // El último acorde se lleva los tiempos restantes
+                   chordBeats = totalLineBeats - currentBeatOffset;
+                   if (chordBeats < 0) chordBeats = 1; // Fallback de seguridad
+                } else {
+                   // Todos los demás acorde se llevan la división entera
+                   // Ej. 4 tiempos / 3 acordes = 1 (floor). 
+                   chordBeats = Math.floor(totalLineBeats / numChords);
+                   if (chordBeats < 1) chordBeats = 1;
                 }
-                sylIndex++;
-              });
-            });
+
+                chords.push({
+                   chord: lineChords[i],
+                   // startTime de cada acorde es proporcional a sus beats
+                   startTime: currentTime + (currentBeatOffset * beatDurationSecs)
+                });
+                
+                currentBeatOffset += chordBeats;
+              }
+            }
 
             flatTimeline.push({
               lineId: line.id,

@@ -33,13 +33,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-foreground font-sans relative overflow-hidden transition-colors duration-500 flex flex-col pt-[72px]">
-      <Navbar variant="border" className="bg-white/80 dark:bg-zinc-950/80 border-b border-border" />
+    <div className="min-h-screen bg-background text-foreground font-sans relative overflow-hidden transition-colors duration-500 flex flex-col pt-[72px]">
+      <Navbar variant="border" className="bg-background/80 border-b border-border" />
       
       <div className="flex flex-1 w-full max-w-[1600px] mx-auto overflow-hidden">
         
         {/* Sidebar Vertical (Hidden on mobile, very similar to the reference image) */}
-        <aside className="hidden md:flex flex-col w-64 border-r border-border bg-white dark:bg-zinc-950 p-6 gap-8">
+        <aside className="hidden md:flex flex-col w-64 border-r border-border bg-background p-6 gap-8">
           <div className="flex flex-col gap-2">
              <p className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase mb-2">Mi Espacio</p>
              <Link href="/dashboard" className="flex items-center gap-3 text-sm font-semibold p-3 rounded-lg bg-primary/10 text-primary transition-colors">
@@ -89,13 +89,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
            {/* Metrics Grid */}
            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
              
-             <div className="bg-white dark:bg-zinc-900 border border-border rounded-3xl p-6 flex flex-col justify-between shadow-sm relative overflow-hidden group">
+             <div className="bg-background border border-border rounded-3xl p-6 flex flex-col justify-between shadow-sm relative overflow-hidden group">
                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all"></div>
                <p className="text-muted-foreground font-semibold text-sm flex items-center gap-2 relative z-10"><Music size={16}/> Total Obras</p>
                <h3 className="text-5xl font-bold tracking-tighter mt-4 relative z-10">{songs.length}</h3>
              </div>
 
-             <div className="bg-white dark:bg-zinc-900 border border-border rounded-3xl p-6 flex flex-col justify-between shadow-sm relative overflow-hidden group">
+             <div className="bg-background border border-border rounded-3xl p-6 flex flex-col justify-between shadow-sm relative overflow-hidden group">
                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all"></div>
                <p className="text-muted-foreground font-semibold text-sm flex items-center gap-2 relative z-10"><Clock size={16}/> Última Edictión</p>
                <h3 className="text-2xl font-bold tracking-tight mt-4 relative z-10">
@@ -103,8 +103,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
                </h3>
              </div>
 
-             <div className="bg-zinc-950 dark:bg-zinc-50 text-white dark:text-black border border-border rounded-3xl p-6 flex flex-col justify-center items-center shadow-md relative overflow-hidden text-center">
-               <p className="text-zinc-400 dark:text-zinc-500 font-semibold text-sm mb-2">Plan Actual</p>
+             <div className="bg-foreground text-background border border-border rounded-3xl p-6 flex flex-col justify-center items-center shadow-md relative overflow-hidden text-center">
+               <p className="text-background/70 font-semibold text-sm mb-2">Plan Actual</p>
                <h3 className="text-3xl font-bold tracking-tighter">
                  {dbUser?.stripeSubscriptionId ? "PRO" : "GRATIS"}
                </h3>
@@ -136,7 +136,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
                     <div key={song.id} className="relative group">
                       <PublicToggle songId={song.id} initialIsPublic={song.isPublic ?? false} />
                       <Link href={`/editor?id=${song.id}`} className="cursor-pointer">
-                        <div className="bg-white dark:bg-zinc-900 border border-border rounded-2xl p-6 h-48 flex flex-col justify-between hover:border-primary hover:shadow-lg transition-all duration-300 relative overflow-hidden">
+                        <div className="bg-background border border-border rounded-2xl p-6 h-48 flex flex-col justify-between hover:border-primary hover:shadow-lg transition-all duration-300 relative overflow-hidden">
                           
                           <div className="flex justify-between items-start z-10 w-full pr-8">
                              <div className="bg-primary/10 text-primary p-2 rounded-lg">

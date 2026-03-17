@@ -33,6 +33,7 @@ export default function SongEditor() {
 
   const [titleInput, setTitleInput] = useState("");
   const [bpmInput, setBpmInput] = useState(120);
+  const [timeSignatureInput, setTimeSignatureInput] = useState("4/4");
   const [lyricsInput, setLyricsInput] = useState("");
 
   const [toastMsg, setToastMsg] = useState("");
@@ -143,7 +144,7 @@ export default function SongEditor() {
       // Auto-procesamos la canción
       setIsAnimating(true);
       setTimeout(() => {
-        const parsedSong = parseTextToSong(draftLyrics, draftTitle, 120);
+        const parsedSong = parseTextToSong(draftLyrics, draftTitle, 120, "4/4");
         setSong(parsedSong);
         setIsAnimating(false);
       }, 500);
@@ -182,12 +183,12 @@ export default function SongEditor() {
       setIsAnimating(true);
       
       setTimeout(() => {
-        const parsedSong = parseTextToSong(lyricsInput, titleInput, bpmInput);
+        const parsedSong = parseTextToSong(lyricsInput, titleInput, bpmInput, timeSignatureInput);
         setSong(parsedSong);
         setIsAnimating(false);
       }, 500);
     },
-    [titleInput, bpmInput, lyricsInput]
+    [titleInput, bpmInput, lyricsInput, timeSignatureInput]
   );
 
   const handleChordChange = useCallback((syllableId: string, newChord: Chord | null) => {
@@ -527,6 +528,22 @@ export default function SongEditor() {
                   onChange={(e) => setBpmInput(Number(e.target.value))}
                   className="w-full border-b border-border py-3 bg-transparent text-foreground text-xl sm:text-2xl font-light focus:outline-none focus:border-primary transition-all sm:text-center placeholder:text-muted-foreground/30"
                 />
+              </div>
+
+              <div className="w-full sm:w-36 space-y-3 group">
+                <label className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase transition-colors group-focus-within:text-primary">
+                  Compás
+                </label>
+                <select 
+                  value={timeSignatureInput}
+                  onChange={(e) => setTimeSignatureInput(e.target.value)}
+                  className="w-full border-b border-border py-3 bg-transparent text-foreground text-xl sm:text-2xl font-light focus:outline-none focus:border-primary transition-all sm:text-center placeholder:text-muted-foreground/30 appearance-none"
+                >
+                  <option value="4/4">4/4 (Común)</option>
+                  <option value="3/4">3/4 (Vals)</option>
+                  <option value="2/2">2/2 (Marcha)</option>
+                  <option value="6/8">6/8 (Compuesto)</option>
+                </select>
               </div>
             </div>
 

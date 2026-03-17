@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
 :root {
   --background: #fdfdfd;
   --foreground: #111111;
@@ -75,3 +76,4 @@ body {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+@custom-variant dark (&:where(.dark, .dark *));

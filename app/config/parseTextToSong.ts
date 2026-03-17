@@ -15,7 +15,7 @@ function mockSilabear(word: string): string[] {
 const generateId = (prefix: string) => 
   `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
 
-export function parseTextToSong(rawText: string, title: string, bpm: number): Song {
+export function parseTextToSong(rawText: string, title: string, bpm: number, timeSignature: string = "4/4"): Song {
   // 1. Sanitización exhaustiva y división por bloques (Secciones)
   // Utilizamos replace para limpiar múltiples saltos de línea redundantes
   const cleanText = rawText.trim().replace(/\n{3,}/g, '\n\n');
@@ -24,8 +24,14 @@ export function parseTextToSong(rawText: string, title: string, bpm: number): So
   // --- ⏱️ MOTOR DE CÁLCULO DE TIEMPO (NUEVO) ---
   // Calculamos matemáticamente las duraciones en base a la velocidad de la canción
   const beatDurationSecs = 60 / bpm; // Ej: si bpm=120, entonces 60/120 = 0.5s por cada golpe de metrónomo (beat)
-  const defaultLineBeats = 8; // Asumimos que cada línea lírica dura 8 golpes por defecto
-  const lineDurationSecs = defaultLineBeats * beatDurationSecs; // Ej: 8 * 0.5s = 4.0 segundos por línea
+  
+  // Analizamos el compás introducido
+  const [beatsPerMeasureStr] = (timeSignature || "4/4").split('/');
+  const beatsPerMeasure = parseInt(beatsPerMeasureStr) || 4;
+  
+  // Asumimos que cada línea lírica dura normalmente 2 compases o 1 compás. Lo configuraremos dinámicamente según el compás.
+  const defaultLineBeats = beatsPerMeasure * 2; // Si 4/4, entonces 8 golpes. Si 3/4, 6 golpes.
+  const lineDurationSecs = defaultLineBeats * beatDurationSecs; 
   
   // Variable acumuladora mutada que mantendrá el estado del "reloj global" durante todo el mapeo
   let currentGlobalTime = 0; 
@@ -154,6 +160,7 @@ export function parseTextToSong(rawText: string, title: string, bpm: number): So
     id: generateId('song'),
     title,
     bpm,
+    timeSignature,
     sections: deduplicatedSections
   };
 }
