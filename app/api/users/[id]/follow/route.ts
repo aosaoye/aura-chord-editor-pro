@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { getAuth } from "@clerk/nextjs/server";
+import { getAuth, currentUser } from "@clerk/nextjs/server";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -16,6 +16,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     if (followerId === followingId) {
       return NextResponse.json({ error: "No puedes seguirte a ti mismo" }, { status: 400 });
+    }
+
+    // Asegurar que el usuario follower existe en la base de datos (Sincronización lazy)
+    let dbUser = await prisma.user.findUnique({
+      where: { clerkId: followerId },
+    });
+
+    if (!dbUser) {
+      const clerkUser = await currentUser();
+      dbUser = await prisma.user.create({
+        data: {
+          clerkId: followerId,
+          email: clerkUser?.emailAddresses[0]?.emailAddress ?? "",
+          name: clerkUser?.firstName ?? "Usuario",
+        },
+      });
     }
 
     // Comprobar si ya le sigue
