@@ -122,13 +122,22 @@ export default function SongEditor() {
       fetch(`/api/songs?id=${songId}`)
         .then(res => res.json())
         .then(data => {
-          if (data.songs) {
-            const found = data.songs.find((s: any) => s.id === songId);
+          if (data.songs && data.songs.length > 0) {
+            const found = data.songs.find((s: any) => s.id === songId) || data.songs[0];
             if (found && found.parsedData) {
-              setSong(JSON.parse(found.parsedData));
+              try {
+                const loadedSong = JSON.parse(found.parsedData);
+                // Asegurarnos de que el ID del objeto en memoria sea SIEMPRE el UUID de la base de datos
+                // Así cuando el usuario pulse 'Guardar', hará un PATCH/UPDATE en vez de crear uno nuevo.
+                loadedSong.id = found.id;
+                setSong(loadedSong);
+              } catch(e) { console.error("Error parsing song", e); }
             }
+          } else {
+            showToast("⚠️ " + (data.error || "No se pudo cargar la obra."));
           }
         })
+        .catch(() => showToast("❌ Error de red al cargar la obra."))
         .finally(() => setIsAnimating(false));
       return;
     }
@@ -472,6 +481,16 @@ export default function SongEditor() {
       }
       
       showToast("✅ ¡Obra guardada exitosamente!");
+      
+      // AL GUARDAR (Sobretodo si es la 1ª vez), la BD le ha asignado un UUID real (data.savedSong.id)
+      // Actualizamos el objeto local SI el ID ha cambiado para que las próximas veces se actualice
+      if (data.savedSong && data.savedSong.id && data.savedSong.id !== song.id) {
+         setSong(prev => prev ? { ...prev, id: data.savedSong.id } : prev);
+         
+         // Opcional: Modificar la URL sin recargar para que si refresca siga estando en su UUID
+         window.history.replaceState(null, '', `/editor?id=${data.savedSong.id}`);
+      }
+      
     } catch (err) {
       console.error(err);
       showToast("❌ Hubo un error al guardar o comunicarse con el servidor.");

@@ -4,7 +4,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = getAuth(req);
     const userId = session?.userId;
@@ -13,7 +13,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const { isPublic } = body;
 

@@ -4,11 +4,11 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = getAuth(req);
     const followerId = session?.userId;
-    const followingId = params.id;
+    const { id: followingId } = await params;
     
     if (!followerId) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
