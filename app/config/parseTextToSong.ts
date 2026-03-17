@@ -101,20 +101,24 @@ export function parseTextToSong(rawText: string, title: string, bpm: number): So
     });
 
     // --- COMPRESIÓN DE LÍNEAS REPETIDAS ---
-    const getLineFootprint = (line: Line) => line.words.map(w => w.syllables.map(s => s.text).join('')).join(' ').toLowerCase();
+    const getLineFootprint = (l: Line) => 
+      l.words.map(w => w.syllables.map(s => s.text).join('')).join(' ').toLowerCase();
     
     const deduplicatedLines: Line[] = [];
-    for (const currentLine of lines) {
-      if (deduplicatedLines.length > 0) {
-        const lastLine = deduplicatedLines[deduplicatedLines.length - 1];
-        if (getLineFootprint(currentLine) === getLineFootprint(lastLine)) {
-          lastLine.repeat = (lastLine.repeat || 1) + 1;
-          lastLine.endTime = currentLine.endTime; // Extendemos el tiempo global
-          continue;
-        }
+    lines.forEach((currentLine) => {
+      if (deduplicatedLines.length === 0) {
+        deduplicatedLines.push(currentLine);
+        return;
       }
-      deduplicatedLines.push(currentLine);
-    }
+      const lastLine = deduplicatedLines[deduplicatedLines.length - 1];
+      if (getLineFootprint(currentLine) === getLineFootprint(lastLine)) {
+        // Encontramos repetición consecutiva de la MISMA línea
+        lastLine.repeat = (lastLine.repeat || 1) + 1;
+        lastLine.endTime = currentLine.endTime; // Alargamos el tiempo
+      } else {
+        deduplicatedLines.push(currentLine);
+      }
+    });
 
     return {
       id: generateId('sec'),
@@ -126,19 +130,25 @@ export function parseTextToSong(rawText: string, title: string, bpm: number): So
   });
 
   // --- COMPRESIÓN DE SECCIONES REPETIDAS ---
-  const getSectionFootprint = (section: Section) => section.lines.map(l => `${l.words.map(w => w.syllables.map(s => s.text).join('')).join(' ').toLowerCase()}|x${l.repeat || 1}`).join('\n');
+  // Si un bloque entero es idéntico al bloque anterior, aumentamos su contador
+  const getSectionFootprint = (section: Section) => 
+    section.lines.map(l => `${l.words.map(w => w.syllables.map(s => s.text).join('')).join(' ').toLowerCase()}|x${l.repeat || 1}`).join('\n');
   
   const deduplicatedSections: Section[] = [];
-  for (const currentSection of sections) {
-    if (deduplicatedSections.length > 0) {
-      const lastSection = deduplicatedSections[deduplicatedSections.length - 1];
-      if (currentSection.type === lastSection.type && getSectionFootprint(currentSection) === getSectionFootprint(lastSection)) {
-        lastSection.repeat = (lastSection.repeat || 1) + 1;
-        continue;
-      }
+  sections.forEach((currentSection) => {
+    if (deduplicatedSections.length === 0) {
+      deduplicatedSections.push(currentSection);
+      return;
     }
-    deduplicatedSections.push(currentSection);
-  }
+    const lastSection = deduplicatedSections[deduplicatedSections.length - 1];
+    
+    // Simplificamos la condición a sólo footprint idéntico
+    if (getSectionFootprint(currentSection) === getSectionFootprint(lastSection)) {
+      lastSection.repeat = (lastSection.repeat || 1) + 1;
+    } else {
+      deduplicatedSections.push(currentSection);
+    }
+  });
 
   return {
     id: generateId('song'),
