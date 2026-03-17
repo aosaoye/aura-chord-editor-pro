@@ -384,10 +384,25 @@ export default function SongEditor() {
       if (pageNodes.length === 1) {
         const firstPage = pageNodes[0];
         const bgColor = window.getComputedStyle(firstPage).backgroundColor;
+        const a4WidthPx = 794;
+        const a4HeightPx = 1123;
+        
         const dataUrl = await toPng(firstPage, { 
           quality: 1.0, 
           pixelRatio: 2, 
-          backgroundColor: bgColor
+          backgroundColor: bgColor,
+          width: a4WidthPx,
+          height: a4HeightPx,
+          style: {
+            width: `${a4WidthPx}px`,
+            height: `${a4HeightPx}px`,
+            minWidth: `${a4WidthPx}px`,
+            minHeight: `${a4HeightPx}px`,
+            maxWidth: `${a4WidthPx}px`,
+            maxHeight: `${a4HeightPx}px`,
+            transform: 'none',
+            margin: '0'
+          }
         });
         const link = document.createElement("a");
         link.download = `${song.title.toLowerCase().replace(/\s+/g, '-')}-score.png`;
@@ -401,10 +416,25 @@ export default function SongEditor() {
         for (let i = 0; i < pageNodes.length; i++) {
           const pageNode = pageNodes[i];
           const bgColor = window.getComputedStyle(pageNode).backgroundColor;
+          const a4WidthPx = 794;
+          const a4HeightPx = 1123;
+          
           const dataUrl = await toPng(pageNode, { 
             quality: 1.0, 
             pixelRatio: 2, 
-            backgroundColor: bgColor
+            backgroundColor: bgColor,
+            width: a4WidthPx,
+            height: a4HeightPx,
+            style: {
+              width: `${a4WidthPx}px`,
+              height: `${a4HeightPx}px`,
+              minWidth: `${a4WidthPx}px`,
+              minHeight: `${a4HeightPx}px`,
+              maxWidth: `${a4WidthPx}px`,
+              maxHeight: `${a4HeightPx}px`,
+              transform: 'none',
+              margin: '0'
+            }
           });
           
           const base64Data = dataUrl.replace(/^data:image\/(png|jpg);base64,/, "");
@@ -447,10 +477,25 @@ export default function SongEditor() {
         const pageNode = pageNodes[i];
         const bgColor = window.getComputedStyle(pageNode).backgroundColor;
 
+        const a4WidthPx = 794;
+        const a4HeightPx = 1123;
+        
         const dataUrl = await toPng(pageNode, { 
           quality: 1.0, 
           pixelRatio: 2, 
-          backgroundColor: bgColor
+          backgroundColor: bgColor,
+          width: a4WidthPx,
+          height: a4HeightPx,
+          style: {
+            width: `${a4WidthPx}px`,
+            height: `${a4HeightPx}px`,
+            minWidth: `${a4WidthPx}px`,
+            minHeight: `${a4HeightPx}px`,
+            maxWidth: `${a4WidthPx}px`,
+            maxHeight: `${a4HeightPx}px`,
+            transform: 'none',
+            margin: '0'
+          }
         });
 
         if (i > 0) pdf.addPage();
