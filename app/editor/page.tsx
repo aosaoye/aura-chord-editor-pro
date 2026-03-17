@@ -123,6 +123,10 @@ export default function SongEditor() {
       localStorage.removeItem("chordpro-draft-lyrics");
       localStorage.removeItem("chordpro-draft-title");
       setIsAnimating(false);
+      setSong(null);
+      setTitleInput("");
+      setLyricsInput("");
+      setBpmInput(120);
       
       // Limpiar URL para que no siga diciendo new=true al guardar
       window.history.replaceState(null, '', '/editor');
@@ -685,6 +689,10 @@ export default function SongEditor() {
   // Pantalla 2: El Editor "Canvas"
   const isReadOnly = song?.userId && user?.id ? song.userId !== user.id : false;
 
+  const hasMultipleSongs = Array.isArray(song?.sections) && song.sections.filter(s => s.title && /^\d+\.\s/.test(s.title)).length > 1;
+  const computedColumns = hasMultipleSongs && (columns || 1) === 1 ? 2 : (columns || 1);
+  const baseLinesPerColumn = fontSize.includes('2xl') ? 11 : fontSize.includes('xl') ? 14 : fontSize.includes('sm') ? 22 : 18;
+
   return (
     <div className={`min-h-screen bg-background text-foreground transition-colors duration-500 overflow-hidden font-sans selection:bg-primary selection:text-white ${colorTheme} ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
       
@@ -1016,7 +1024,7 @@ export default function SongEditor() {
               : "flex gap-6 lg:gap-12 overflow-x-auto snap-x lg:snap-mandatory hide-scrollbar pb-12 w-full lg:pr-[50vw]"
           }
         >
-          {paginateSong(song, (fontSize.includes('2xl') ? 11 : fontSize.includes('xl') ? 14 : fontSize.includes('sm') ? 22 : 18), columns || 3).map((page, index) => (
+          {song && paginateSong(song, baseLinesPerColumn, computedColumns).map((page, index) => (
             <div 
               key={page.id}
               className={`a4-page bg-background text-foreground p-6 sm:p-10 lg:p-16 overflow-hidden lg:shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.15)] transition-all duration-500 relative flex flex-col justify-start w-full lg:w-[210mm] lg:min-w-[210mm] min-h-[80vh] lg:h-[297mm] ring-0 lg:ring-1 lg:ring-border origin-top rounded-xl lg:rounded-none border border-border lg:border-none
@@ -1049,7 +1057,7 @@ export default function SongEditor() {
               )}
 
               {/* CONTENIDO DE LA PÁGINA (COLUMNAS MASONRY DINÁMICAS) */}
-              <div className={`grid grid-cols-1 ${ ({1: 'md:grid-cols-1', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-4'} as Record<number, string>)[columns || 3] || 'md:grid-cols-3'} gap-8 sm:gap-12 w-full mt-2 flex-1 items-start`}>
+              <div className={`grid grid-cols-1 ${ ({1: 'md:grid-cols-1', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-4'} as Record<number, string>)[computedColumns] || 'md:grid-cols-1'} gap-8 sm:gap-12 w-full mt-2 flex-1 items-start`}>
                 {page.columns.map((col, colIdx) => (
                   <div key={`col-${page.id}-${colIdx}`} className="col-span-1 flex flex-col gap-10">
                     {col.map((section, sIdx) => (
