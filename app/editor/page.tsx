@@ -50,6 +50,7 @@ export default function SongEditor() {
 
   const [show3DPiano, setShow3DPiano] = useState(false);
   const [editorColumns, setEditorColumns] = useState<number>(0);
+  const [editorMargin, setEditorMargin] = useState<'estrecho' | 'normal' | 'amplio'>('normal');
   const [active3DChord, setActive3DChord] = useState<Chord | null>(null);
 
   // Hook del Teleprompter
@@ -694,6 +695,13 @@ export default function SongEditor() {
   const activeColumns = editorColumns > 0 ? editorColumns : (hasMultipleSongs ? 2 : 1);
   const baseLinesPerColumn = fontSize.includes('2xl') ? 11 : fontSize.includes('xl') ? 14 : fontSize.includes('sm') ? 22 : 18;
 
+  const marginMap = {
+    'estrecho': 'p-4 sm:p-6 lg:p-8',
+    'normal': 'p-6 sm:p-10 lg:p-16',
+    'amplio': 'p-10 sm:p-14 lg:p-24'
+  };
+  const activeMarginClass = marginMap[editorMargin];
+
   return (
     <div className={`min-h-screen bg-background text-foreground transition-colors duration-500 overflow-hidden font-sans selection:bg-primary selection:text-white ${colorTheme} ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
       
@@ -1012,6 +1020,30 @@ export default function SongEditor() {
                  <p className="text-[9px] font-light text-gray-500 mt-1">Ajuste local solo para esta sesión.</p>
              </div>
 
+             <div className="flex flex-col gap-2">
+                <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Márgenes de Hoja</label>
+                <div className="flex bg-gray-50 dark:bg-[#1a1a1a] rounded border border-gray-200 dark:border-gray-800 overflow-hidden">
+                  {[
+                    { id: 'estrecho', label: 'Estrecho' },
+                    { id: 'normal', label: 'Normal' },
+                    { id: 'amplio', label: 'Amplio' }
+                  ].map((marg) => (
+                    <button 
+                      key={marg.id}
+                      onClick={() => setEditorMargin(marg.id as any)} 
+                      className={`flex-1 py-3 text-xs font-bold transition-colors border-r last:border-r-0 border-gray-200 dark:border-gray-800
+                        ${editorMargin === marg.id 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800'
+                        }`}
+                    >
+                      {marg.label}
+                    </button>
+                  ))}
+                </div>
+                 <p className="text-[9px] font-light text-gray-500 mt-1">Control de respiración del papel impreso/PDF.</p>
+             </div>
+
              {notation === 'roman' && (
              <div className="flex flex-col gap-2">
                 <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Tono Base (Romanos)</label>
@@ -1048,7 +1080,7 @@ export default function SongEditor() {
           {song && paginateSong(song, baseLinesPerColumn, activeColumns).map((page, index) => (
             <div 
               key={page.id}
-              className={`a4-page bg-background text-foreground p-6 sm:p-10 lg:p-16 overflow-hidden lg:shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.15)] transition-all duration-500 relative flex flex-col justify-start w-full lg:w-[210mm] lg:min-w-[210mm] min-h-[80vh] lg:h-[297mm] ring-0 lg:ring-1 lg:ring-border origin-top rounded-xl lg:rounded-none border border-border lg:border-none
+              className={`a4-page bg-background text-foreground ${activeMarginClass} overflow-hidden lg:shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.15)] transition-all duration-500 relative flex flex-col justify-start w-full lg:w-[210mm] lg:min-w-[210mm] min-h-[80vh] lg:h-[297mm] ring-0 lg:ring-1 lg:ring-border origin-top rounded-xl lg:rounded-none border border-border lg:border-none
                 ${isPreviewMode ? 'transform shrink-0 scale-[0.6] sm:scale-75 lg:scale-[0.85] -mt-[40mm] sm:-mt-[20mm] lg:-mt-[10mm]' : 'shrink-0 lg:snap-center'}
               `}
             >
