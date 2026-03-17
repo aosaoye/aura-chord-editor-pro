@@ -17,7 +17,7 @@ export default function LandingPage() {
       <main className="pb-20 px-8 sm:px-16 max-w-[1800px] mx-auto flex flex-col justify-center relative">
         
          {/* Huge curved visual container at the bottom */}
-        <div className="w-full mt-24 lg:mt-32 min-h-[400px] lg:aspect-[25/9] bg-zinc-950 rounded-2xl sm:rounded-3xl relative group shadow-lg overflow-hidden flex flex-col justify-end p-8 sm:p-14 lg:p-24 border border-border/50 bg-[url('/images/hero-bg.png')] bg-cover bg-center">
+        <div className="w-full mt-24 lg:mt-32 min-h-[400px] lg:aspect-[25/9] bg-zinc-950 rounded-2xl sm:rounded-3xl relative group shadow-lg overflow-hidden flex flex-col justify-end p-8 sm:p-14 lg:p-24 border border-border/50 bg-[url('https://images.pexels.com/photos/7521300/pexels-photo-7521300.jpeg')] bg-cover bg-center">
           
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/40 via-zinc-950/80 to-zinc-950/90 opacity-90 group-hover:scale-105 group-hover:opacity-100 transition-all duration-1000 ease-in-out"></div>
           

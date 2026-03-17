@@ -10,8 +10,8 @@ import FollowButton from "./FollowButton";
 
 const prisma = new PrismaClient();
 
-export default async function UserProfilePage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default async function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
 
   const { currentUser } = await import('@clerk/nextjs/server');
   const user = await currentUser();
