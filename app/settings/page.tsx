@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Navbar from "../components/Navbar";
-import { useGlobalSettings } from "../context/SettingsContext";
+import { useGlobalSettings, themeClasses } from "../context/SettingsContext";
 import { useTheme } from "next-themes";
 import type { NotationType } from "../helpers/chordFormatter";
 import { useState, useEffect } from "react";
@@ -56,11 +56,7 @@ export default function SettingsPage() {
             <div className="flex flex-col gap-3">
               <label className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">Paleta de Color (Acentos)</label>
               <div className="grid grid-cols-3 gap-4">
-                {[
-                  { id: "theme-violet", label: "Violeta", bg: "bg-indigo-600" },
-                  { id: "theme-amber", label: "ÁMBAR", bg: "bg-amber-600" },
-                  { id: "theme-forest", label: "BOSQUE", bg: "bg-emerald-700" }
-                ].map((palette) => (
+                {themeClasses.map((palette) => (
                   <div 
                     key={palette.id}
                     onClick={() => updateSettings({ colorTheme: palette.id })}

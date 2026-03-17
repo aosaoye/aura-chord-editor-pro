@@ -668,7 +668,7 @@ export default function SongEditor() {
         }
       />
 
-      <div className={isPreviewMode ? "flex h-screen w-full bg-muted" : "pt-36 pb-32 px-10 flex flex-col lg:flex-row gap-10 items-start justify-center animate-in fade-in zoom-in-95 duration-1000 ease-out fill-mode-both"}>
+      <div className={isPreviewMode ? "flex h-screen w-full bg-muted" : "pt-24 sm:pt-36 pb-32 px-4 sm:px-10 flex flex-col lg:flex-row gap-6 lg:gap-10 items-start justify-center animate-in fade-in zoom-in-95 duration-1000 ease-out fill-mode-both"}>
         
         {/* PANTALLA COMPLETA PRESENTACIÓN (TELEPROMPTER PROFESIONAL) */}
         {isPlaying && (
@@ -846,7 +846,7 @@ export default function SongEditor() {
 
         {/* CONTROLES DE SESIÓN LOCAL (Solo Transpositor y Tono) */}
         {!isPreviewMode && (
-        <aside className="w-full lg:w-64 bg-background rounded-xl shadow-lg border border-border p-6 flex flex-col gap-8 sticky top-36 z-30 shrink-0">
+        <aside className="w-full lg:w-64 bg-background rounded-xl shadow-lg lg:shadow-xl border border-border p-5 sm:p-6 flex flex-col gap-6 lg:gap-8 static lg:sticky top-36 z-30 shrink-0">
            <div className="pb-4 border-b border-border">
              <h3 className="text-xs font-bold tracking-[0.2em] uppercase text-foreground">Sesión Activa</h3>
              <p className="text-[10px] text-muted-foreground mt-1">Herramientas globales de partitura.</p>
@@ -902,15 +902,15 @@ export default function SongEditor() {
           ref={pagesContainerRef}
           className={
             isPreviewMode 
-              ? "flex-1 w-full flex flex-col items-center overflow-y-auto py-12 px-4 shadow-inner hide-scrollbar bg-muted gap-8" 
-              : "flex gap-12 overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-12 w-full pr-[50vw]"
+              ? "flex-1 w-full flex flex-col items-center overflow-y-auto py-12 px-2 sm:px-4 shadow-inner hide-scrollbar bg-muted gap-8" 
+              : "flex gap-6 lg:gap-12 overflow-x-auto snap-x lg:snap-mandatory hide-scrollbar pb-12 w-full lg:pr-[50vw]"
           }
         >
           {paginateSong(song, (fontSize.includes('2xl') ? 11 : fontSize.includes('xl') ? 14 : fontSize.includes('sm') ? 22 : 18), columns || 3).map((page, index) => (
             <div 
               key={page.id}
-              className={`a4-page bg-background text-foreground p-10 sm:p-16 overflow-hidden shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.15)] transition-all duration-500 relative flex flex-col justify-start w-[210mm] min-w-[210mm] h-[297mm] ring-1 ring-border origin-top
-                ${isPreviewMode ? 'transform shrink-0 scale-[0.6] sm:scale-75 lg:scale-[0.85] -mt-[40mm] sm:-mt-[20mm] lg:-mt-[10mm]' : 'shrink-0 snap-center'}
+              className={`a4-page bg-background text-foreground p-6 sm:p-10 lg:p-16 overflow-hidden lg:shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.15)] transition-all duration-500 relative flex flex-col justify-start w-full lg:w-[210mm] lg:min-w-[210mm] min-h-[80vh] lg:h-[297mm] ring-0 lg:ring-1 lg:ring-border origin-top rounded-xl lg:rounded-none border border-border lg:border-none
+                ${isPreviewMode ? 'transform shrink-0 scale-[0.6] sm:scale-75 lg:scale-[0.85] -mt-[40mm] sm:-mt-[20mm] lg:-mt-[10mm]' : 'shrink-0 lg:snap-center'}
               `}
             >
               {/* Controles de Número de Página */}
@@ -947,9 +947,20 @@ export default function SongEditor() {
                         
                         {/* Título de la sección si existe y NO es continuación */}
                         {section.title && !section.isContinuation && (
-                          <h2 className={`text-2xl sm:text-3xl font-serif font-bold italic mb-2 opacity-90 ${alignment === 'justify-center' ? 'text-center' : alignment === 'justify-end' ? 'text-right' : 'text-left'}`}>
-                            {section.title}
-                          </h2>
+                           /^\d+\.\s/.test(section.title) ? (
+                             // DEVOTIONAL SONG HEADER (e.g. "1. Te Adoramos")
+                             <div className="w-full mt-4 mb-2">
+                               <div className="w-12 h-1 bg-primary mb-4 rounded-full"></div>
+                               <h2 className={`text-3xl sm:text-5xl font-black tracking-tight ${alignment === 'justify-center' ? 'text-center' : alignment === 'justify-end' ? 'text-right' : 'text-left'}`}>
+                                 {section.title}
+                               </h2>
+                             </div>
+                           ) : (
+                             // NORMAL SECTION TITLE
+                             <h2 className={`text-xl sm:text-2xl font-serif font-bold italic mb-0 opacity-90 ${alignment === 'justify-center' ? 'text-center' : alignment === 'justify-end' ? 'text-right' : 'text-left'}`}>
+                               {section.title}
+                             </h2>
+                           )
                         )}
 
                         {/* Minimalist Section Label con Repetidor Numérico - Sólo si empieza aquí */}
@@ -991,7 +1002,7 @@ export default function SongEditor() {
                           </div>
                         )}
 
-                        <div className="flex flex-col gap-8">
+                        <div className="flex flex-col gap-3 sm:gap-4 mt-1">
                           {section.lines.map((line) => {
                             const playingStyle = activeLineId === line.id 
                               ? 'opacity-100 scale-[1.02] transform origin-left ml-4 text-primary' 
@@ -1003,11 +1014,11 @@ export default function SongEditor() {
                               <div 
                                 key={line.id} 
                                 id={line.id} 
-                                className={`flex flex-wrap items-end ${alignment} transition-all duration-700 ease-in-out relative group/line ${playingStyle} ${fontFamily} ${fontSize} ${lineHeight}`}
+                                className={`flex flex-wrap items-end ${alignment} transition-all duration-700 ease-in-out relative group/line ${playingStyle} ${fontFamily} ${fontSize} ${lineHeight} shrink-0`}
                               >
                                 
                                 {line.words.map((word, wIdx) => (
-                                  <div key={word.id} className="flex flex-wrap mr-5 group/word">
+                                  <div key={word.id} className="flex flex-wrap mr-3 sm:mr-4 group/word">
                                     {word.syllables.map((syl, i) => (
                                       <SyllableComponent
                                         key={syl.id}
@@ -1025,7 +1036,7 @@ export default function SongEditor() {
                                   </div>
                                 ))}
 
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-3 translate-x-4 opacity-0 group-hover/line:opacity-100 group-hover/line:translate-x-full transition-all duration-300">
+                                <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-3 translate-x-4 opacity-0 group-hover/line:opacity-100 group-hover/line:translate-x-full transition-all duration-300 z-10">
                                    <button 
                                      onClick={() => handleAddTrailingChord(section.id, line.id)}
                                      className="text-[9px] font-bold text-primary-foreground bg-primary border border-transparent rounded px-3 py-1.5 tracking-widest hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all shadow-md uppercase whitespace-nowrap"

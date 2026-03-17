@@ -21,6 +21,7 @@ model User {
   stripeCurrentPeriodEnd DateTime? @map(name: "stripe_current_period_end")
   
   songs                  Song[]
+  devotionals            Devotional[]
   
   // Relaciones de Comunidad y Seguidores
   followers              Follows[] @relation("following")
@@ -42,6 +43,8 @@ model Song {
   
   isPublic    Boolean  @default(false) // Visibility toggle para la comunidad
 
+  devotionals DevotionalSong[]
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -60,4 +63,32 @@ model Follows {
   @@id([followerId, followingId])
   @@index([followerId])
   @@index([followingId])
+}
+
+model Devotional {
+  id          String   @id @default(uuid())
+  userId      String   
+  user        User     @relation(fields: [userId], references: [clerkId], onDelete: Cascade)
+  
+  title       String
+  date        DateTime?
+  
+  songs       DevotionalSong[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model DevotionalSong {
+  id            String     @id @default(uuid())
+  devotionalId  String
+  devotional    Devotional @relation(fields: [devotionalId], references: [id], onDelete: Cascade)
+  songId        String
+  song          Song       @relation(fields: [songId], references: [id], onDelete: Cascade)
+  order         Int        @default(0)
+
+  @@index([devotionalId])
+  @@index([songId])
 }

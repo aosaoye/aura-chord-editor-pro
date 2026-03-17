@@ -17,24 +17,24 @@ export default function LandingPage() {
       <main className="pb-20 px-8 sm:px-16 max-w-[1800px] mx-auto flex flex-col justify-center relative">
         
          {/* Huge curved visual container at the bottom */}
-        <div className="w-full mt-32 lg:mt-40 aspect-square sm:aspect-video lg:aspect-[25/9] bg-zinc-950 rounded-lg sm:rounded-lg lg:rounded-lg relative group shadow-lg overflow-hidden flex flex-col justify-end p-10 sm:p-20 lg:p-28 border border-border/50">
+        <div className="w-full mt-24 lg:mt-32 min-h-[400px] lg:aspect-[25/9] bg-zinc-950 rounded-2xl sm:rounded-3xl relative group shadow-lg overflow-hidden flex flex-col justify-end p-8 sm:p-14 lg:p-24 border border-border/50">
           
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/40 via-zinc-950 to-zinc-950 opacity-80 group-hover:scale-105 group-hover:opacity-100 transition-all duration-1000 ease-in-out"></div>
           
           {/* Subtle primary light glow */}
-          <div className="absolute bottom-0 right-0 w-2/3 h-2/3 bg-primary/20 blur-[120px] mix-blend-screen pointer-events-none"></div>
+          <div className="absolute bottom-0 right-0 w-full lg:w-2/3 h-full lg:h-2/3 bg-primary/20 blur-[100px] mix-blend-screen pointer-events-none"></div>
 
-          <div className="relative z-10 w-full flex flex-col lg:flex-row justify-between items-start lg:items-end gap-12">
+          <div className="relative z-10 w-full flex flex-col lg:flex-row justify-between items-start lg:items-end gap-10">
             <div>
-              <h2 className="text-3xl sm:text-7xl md:text-5xl lg:text-6xl font-light text-white tracking-tight mb-6 leading-[1.05]">
-                Música que <br className="hidden sm:block"/><span className="font-bold italic">cuenta tu historia.</span>
+              <h2 className="text-4xl sm:text-6xl md:text-5xl lg:text-6xl font-light text-white tracking-tight mb-4 leading-[1.1]">
+                Música que <br className="hidden lg:block"/><span className="font-bold italic">cuenta tu historia.</span>
               </h2>
-              <p className="text-[10px] sm:text-xs font-bold tracking-[0.4em] uppercase text-zinc-400">
+              <p className="text-[9px] sm:text-[10px] font-bold tracking-[0.3em] sm:tracking-[0.4em] uppercase text-zinc-400">
                 ARQUITECTURA • ARMONÍA • REFINAMIENTO
               </p>
             </div>
 
-            <Link href="/editor" className="bg-primary text-primary-foreground px-10 sm:px-14 py-5 sm:py-6 rounded-full text-[10px] sm:text-xs font-bold tracking-[0.2em] uppercase hover:bg-primary/80 hover:scale-105 transition-all shadow-[0_20px_40px_rgba(var(--primary-raw),0.3)] active:scale-95 whitespace-nowrap">
+            <Link href="/editor" className="bg-primary text-primary-foreground px-8 sm:px-12 py-4 sm:py-5 rounded-full text-[10px] sm:text-xs font-bold tracking-[0.2em] uppercase hover:bg-primary/80 hover:scale-105 transition-all shadow-[0_20px_40px_rgba(var(--primary-raw),0.3)] active:scale-95 whitespace-nowrap text-center w-full lg:w-auto mt-4 lg:mt-0">
               Entrar al Editor
             </Link>
           </div>
