@@ -103,13 +103,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
                </h3>
              </div>
 
-             <div className="bg-foreground text-background border border-border rounded-3xl p-6 flex flex-col justify-center items-center shadow-md relative overflow-hidden text-center">
-               <p className="text-background/70 font-semibold text-sm mb-2">Plan Actual</p>
+             <div className="bg-primary text-primary-foreground border border-primary/20 rounded-3xl p-6 flex flex-col justify-center items-center shadow-md relative overflow-hidden text-center">
+               <p className="text-primary-foreground/70 font-semibold text-sm mb-2">Plan Actual</p>
                <h3 className="text-3xl font-bold tracking-tighter">
                  {dbUser?.stripeSubscriptionId ? "PRO" : "GRATIS"}
                </h3>
                {!dbUser?.stripeSubscriptionId && (
-                 <Link href="/pricing" className="mt-4 text-[10px] font-bold tracking-[0.2em] uppercase text-primary hover:underline">
+                 <Link href="/pricing" className="mt-4 text-[10px] font-bold tracking-[0.2em] uppercase text-primary-foreground underline hover:text-white transition-colors">
                    Mejorar a Pro →
                  </Link>
                )}

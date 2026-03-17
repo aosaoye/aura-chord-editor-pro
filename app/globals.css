@@ -24,31 +24,68 @@
 }
 
 /* Theme: Purple Premium */
-.theme-violet {
-  --primary: #8b5cf6;
-  --primary-raw: 139 92 246;
-}
-.theme-violet.dark {
-  --primary: #a78bfa;
-}
+.theme-violet { --primary: #8b5cf6; --primary-raw: 139 92 246; }
+.theme-violet.dark { --primary: #a78bfa; }
 
 /* Theme: Amber Warm */
-.theme-amber {
-  --primary: #f59e0b;
-  --primary-raw: 245 158 11;
-}
-.theme-amber.dark {
-  --primary: #fbbf24;
-}
+.theme-amber { --primary: #f59e0b; --primary-raw: 245 158 11; }
+.theme-amber.dark { --primary: #fbbf24; }
 
 /* Theme: Forest */
-.theme-forest {
-  --primary: #10b981;
-  --primary-raw: 16 185 129;
-}
-.theme-forest.dark {
-  --primary: #34d399;
-}
+.theme-forest { --primary: #10b981; --primary-raw: 16 185 129; }
+.theme-forest.dark { --primary: #34d399; }
+
+/* Theme: Blue */
+.theme-blue { --primary: #2563eb; --primary-raw: 37 99 235; }
+.theme-blue.dark { --primary: #60a5fa; }
+
+/* Theme: Red */
+.theme-red { --primary: #dc2626; --primary-raw: 220 38 38; }
+.theme-red.dark { --primary: #f87171; }
+
+/* Theme: Orange */
+.theme-orange { --primary: #ea580c; --primary-raw: 234 88 12; }
+.theme-orange.dark { --primary: #fb923c; }
+
+/* Theme: Cyan */
+.theme-cyan { --primary: #0891b2; --primary-raw: 8 145 178; }
+.theme-cyan.dark { --primary: #22d3ee; }
+
+/* Theme: Morado (Purple) */
+.theme-purple { --primary: #9333ea; --primary-raw: 147 51 234; }
+.theme-purple.dark { --primary: #c084fc; }
+
+/* Theme: Lime */
+.theme-lime { --primary: #65a30d; --primary-raw: 101 163 13; }
+.theme-lime.dark { --primary: #a3e635; }
+
+/* Theme: Teal */
+.theme-teal { --primary: #0d9488; --primary-raw: 13 148 136; }
+.theme-teal.dark { --primary: #2dd4bf; }
+
+/* Theme: Indigo */
+.theme-indigo { --primary: #4f46e5; --primary-raw: 79 70 229; }
+.theme-indigo.dark { --primary: #818cf8; }
+
+/* Theme: Fuchsia */
+.theme-fuchsia { --primary: #c026d3; --primary-raw: 192 38 211; }
+.theme-fuchsia.dark { --primary: #e879f9; }
+
+/* Theme: Rose */
+.theme-rose { --primary: #e11d48; --primary-raw: 225 29 72; }
+.theme-rose.dark { --primary: #fb7185; }
+
+/* Theme: Slate */
+.theme-slate { --primary: #475569; --primary-raw: 71 85 105; }
+.theme-slate.dark { --primary: #94a3b8; }
+
+/* Theme: Gray */
+.theme-gray { --primary: #4b5563; --primary-raw: 75 85 99; }
+.theme-gray.dark { --primary: #9ca3af; }
+
+/* Theme: Zinc */
+.theme-zinc { --primary: #52525b; --primary-raw: 82 82 91; }
+.theme-zinc.dark { --primary: #a1a1aa; }
 
 @theme inline {
   --color-background: var(--background);

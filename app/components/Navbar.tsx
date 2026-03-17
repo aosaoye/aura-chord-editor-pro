@@ -78,7 +78,7 @@ export default function Navbar({ variant = "default", className = "", centerCont
               </SignInButton>
             </SignedOut>
             <SignedIn>
-              <Link href="/dashboard" className="px-6 py-3 bg-foreground text-background text-[10px] font-bold tracking-[0.2em] uppercase rounded-full hover:bg-primary transition-all text-center whitespace-nowrap">
+              <Link href="/dashboard" className="px-6 py-3 bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase rounded-full hover:bg-primary/80 transition-all text-center whitespace-nowrap">
                  Mi Estudio
               </Link>
               <div className="flex items-center scale-110 ml-2">
@@ -126,7 +126,7 @@ export default function Navbar({ variant = "default", className = "", centerCont
                 </SignInButton>
               </SignedOut>
               <SignedIn>
-                <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="w-full block py-4 bg-foreground text-background text-xs font-bold tracking-[0.2em] uppercase rounded-full transition-all text-center hover:bg-primary">
+                <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="w-full block py-4 bg-primary text-primary-foreground text-xs font-bold tracking-[0.2em] uppercase rounded-full transition-all text-center hover:bg-primary/80">
                   Mi Estudio
                 </Link>
               </SignedIn>
