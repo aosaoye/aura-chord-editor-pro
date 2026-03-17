@@ -6,6 +6,7 @@ import { PrismaClient } from "@prisma/client";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import PublicToggle from "./PublicToggle";
+import DeleteSongButton from "./DeleteSongButton";
 
 const prisma = new PrismaClient();
 
@@ -46,7 +47,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
                <LayoutDashboard size={18} />
                Visión General
              </Link>
-             <Link href="/editor" className="flex items-center gap-3 text-sm font-medium p-3 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 text-muted-foreground hover:text-foreground transition-colors">
+             <Link href="/editor?new=true" className="flex items-center gap-3 text-sm font-medium p-3 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 text-muted-foreground hover:text-foreground transition-colors">
                <Plus size={18} />
                Nueva Obra
              </Link>
@@ -126,7 +127,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
                   <Folder size={48} className="mb-4 opacity-50" />
                   <p className="font-semibold text-lg">Aún no tienes obras guardadas</p>
                   <p className="text-sm mt-1">Crea tu primera obra de arte musical en el estudio.</p>
-                  <Link href="/editor" className="mt-6 font-bold text-primary text-sm hover:underline">
+                  <Link href="/editor?new=true" className="mt-6 font-bold text-primary text-sm hover:underline">
                     Ir al Estudio →
                   </Link>
                 </div>
@@ -135,10 +136,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
                   {songs.map((song) => (
                     <div key={song.id} className="relative group">
                       <PublicToggle songId={song.id} initialIsPublic={song.isPublic ?? false} />
+                      <DeleteSongButton songId={song.id} />
                       <Link href={`/editor?id=${song.id}`} className="cursor-pointer">
                         <div className="bg-background border border-border rounded-2xl p-6 h-48 flex flex-col justify-between hover:border-primary hover:shadow-lg transition-all duration-300 relative overflow-hidden">
                           
-                          <div className="flex justify-between items-start z-10 w-full pr-8">
+                          <div className="flex justify-between items-start z-10 w-full pr-16">
                              <div className="bg-primary/10 text-primary p-2 rounded-lg">
                                <Music size={20} />
                              </div>

@@ -113,9 +113,19 @@ export default function SongEditor() {
     const draftLyrics = localStorage.getItem("chordpro-draft-lyrics");
     const draftTitle = localStorage.getItem("chordpro-draft-title");
     
-    // Si viene de URL searchParams, lo simularemos cogiendo del backend (Simplificado)
     const urlParams = new URLSearchParams(window.location.search);
     const songId = urlParams.get('id');
+    const isNew = urlParams.get('new');
+
+    if (isNew === 'true') {
+      localStorage.removeItem("chordpro-draft-lyrics");
+      localStorage.removeItem("chordpro-draft-title");
+      setIsAnimating(false);
+      
+      // Limpiar URL para que no siga diciendo new=true al guardar
+      window.history.replaceState(null, '', '/editor');
+      return;
+    }
 
     if (songId) {
       setIsAnimating(true);

@@ -129,3 +129,44 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const session = getAuth(req);
+    const userId = session?.userId;
+    
+    if (!userId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const urlParams = new URL(req.url);
+    const id = urlParams.searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "ID de obra requerido" }, { status: 400 });
+    }
+
+    // Verificar propiedad
+    const song = await prisma.song.findUnique({
+      where: { id },
+      select: { userId: true }
+    });
+
+    if (!song) {
+      return NextResponse.json({ error: "Obra no encontrada" }, { status: 404 });
+    }
+
+    if (song.userId !== userId) {
+      return NextResponse.json({ error: "No tienes permiso para eliminar esta obra" }, { status: 403 });
+    }
+
+    await prisma.song.delete({
+      where: { id }
+    });
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error) {
+    console.error("Error al eliminar la obra:", error);
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+  }
+}
