@@ -1091,17 +1091,25 @@ export default function SongEditor() {
 
               {/* HEADER DE PAGINA CONDICIONAL */}
               {index === 0 ? (
-                <div className="mb-12 shrink-0">
-                  <h1 className="text-4xl sm:text-5xl lg:text-7xl font-light tracking-tight break-words leading-[1.1] mb-8">
-                    {song.title}
-                  </h1>
-                  <div className="flex items-center gap-6">
-                    <span className="text-[10px] font-bold tracking-[0.4em] text-gray-400 uppercase">
-                      TEMPO — <span className="text-black dark:text-white">{song.bpm} BPM</span>
-                    </span>
-                    <div className="h-px bg-gray-200 dark:bg-gray-800 flex-1 max-w-[200px]"></div>
+                hasMultipleSongs ? (
+                  <div className="mb-6 shrink-0 border-b border-gray-200 dark:border-gray-800 pb-4">
+                     <h1 className={`text-2xl sm:text-3xl font-serif font-black italic tracking-tight ${alignment === 'justify-center' ? 'text-center' : alignment === 'justify-end' ? 'text-right' : 'text-left'}`}>
+                       {song.title}
+                     </h1>
                   </div>
-                </div>
+                ) : (
+                  <div className="mb-12 shrink-0">
+                    <h1 className="text-4xl sm:text-5xl lg:text-7xl font-light tracking-tight break-words leading-[1.1] mb-8">
+                      {song.title}
+                    </h1>
+                    <div className="flex items-center gap-6">
+                      <span className="text-[10px] font-bold tracking-[0.4em] text-gray-400 uppercase">
+                        TEMPO — <span className="text-black dark:text-white">{song.bpm} BPM</span>
+                      </span>
+                      <div className="h-px bg-gray-200 dark:bg-gray-800 flex-1 max-w-[200px]"></div>
+                    </div>
+                  </div>
+                )
               ) : (
                 <div className="mb-10 flex justify-between items-center opacity-40 border-b border-gray-200 dark:border-gray-800 pb-2 shrink-0">
                    <span className="text-[10px] uppercase font-bold tracking-widest">{song.title}</span>
@@ -1118,11 +1126,10 @@ export default function SongEditor() {
                         
                         {/* Título de la sección si existe y NO es continuación */}
                         {section.title && !section.isContinuation && (
-                           /^\d+\.\s/.test(section.title) ? (
-                             // DEVOTIONAL SONG HEADER (e.g. "1. Te Adoramos")
-                             <div className="w-full mt-4 mb-2">
-                               <div className="w-12 h-1 bg-primary mb-4 rounded-full"></div>
-                               <h2 className={`text-3xl sm:text-5xl font-black tracking-tight ${alignment === 'justify-center' ? 'text-center' : alignment === 'justify-end' ? 'text-right' : 'text-left'}`}>
+                           /^(?:[IVX]+\.|\d+\.)/i.test(section.title) ? (
+                             // DEVOTIONAL SONG HEADER (e.g. "I.", "1. Te Adoramos")
+                             <div className="w-full mt-2 mb-2">
+                               <h2 className={`text-lg sm:text-xl font-serif font-black italic tracking-wide opacity-90 ${alignment === 'justify-center' ? 'text-center' : alignment === 'justify-end' ? 'text-right' : 'text-left'}`}>
                                  {section.title}
                                </h2>
                              </div>

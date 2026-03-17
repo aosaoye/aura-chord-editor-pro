@@ -47,8 +47,8 @@ export function parseTextToSong(rawText: string, title: string, bpm: number, tim
     const firstLine = linesText[0];
     const isTagLine = firstLine.startsWith('[') && firstLine.endsWith(']');
     
-    // Check if the line is just a numbered title, e.g., "1." or "1. Tu fidelidad"
-    const isNumberedTitle = /^\d+\./.test(firstLine);
+    // Check if the line is just a numbered title, e.g., "1.", "1. Tu fidelidad", or "I.", "II."
+    const isNumberedTitle = /^(?:[IVX]+\.|\d+\.)/i.test(firstLine);
     
     if (isTagLine) {
       const tag = firstLine.toLowerCase();
