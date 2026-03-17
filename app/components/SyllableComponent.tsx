@@ -5,23 +5,25 @@ import type { Syllable, Chord } from "../config/config";
 import ChordEditorMenu from "./ChordEditorMenu";
 import { formatChordText, NotationType } from "../helpers/chordFormatter";
 
-interface SyllableProps {
+export interface SyllableProps {
   syllable: Syllable;
   onChordChange: (syllableId: string, newChord: Chord | null) => void;
   nextHasChord?: boolean;
   notation?: NotationType;
   songKey?: string;
+  readOnly?: boolean;
 }
 
-export default function SyllableComponent({ syllable, onChordChange, nextHasChord = true, notation = 'english', songKey = 'C' }: SyllableProps) {
+export default function SyllableComponent({ syllable, onChordChange, nextHasChord = true, notation = 'english', songKey = 'C', readOnly = false }: SyllableProps) {
   const { id, text, chord } = syllable;
   
   const [isEditing, setIsEditing] = useState(false);
 
   const handleClick = useCallback(() => {
+     if (readOnly) return;
      window.dispatchEvent(new CustomEvent('chord-picker-opened', { detail: id }));
      setIsEditing(true);
-  }, [id]);
+  }, [id, readOnly]);
 
   useEffect(() => {
     const handlePickerOpened = (e: CustomEvent) => {
@@ -35,13 +37,14 @@ export default function SyllableComponent({ syllable, onChordChange, nextHasChor
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLSpanElement>) => {
+      if (readOnly) return;
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         window.dispatchEvent(new CustomEvent('chord-picker-opened', { detail: id }));
         setIsEditing(true);
       }
     },
-    [id]
+    [id, readOnly]
   );
 
   const handleSave = useCallback((newChord: Chord | null) => {
@@ -63,10 +66,10 @@ export default function SyllableComponent({ syllable, onChordChange, nextHasChor
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         className={
-          // 1. Alineación 'items-start' en lugar de center. Esto alinea la palabra y el acorde a la izquierda.
-          // 2. Se ha removido el padding fijo 'px-[2px]' que causaba que las sílabas luciesen separadas antinaturalmente
-          "inline-flex flex-col items-start cursor-pointer transition-all duration-300 outline-none " +
-          "hover:bg-black/[0.04] focus-visible:bg-black/5 focus-visible:ring-1 focus-visible:ring-black group rounded-sm"
+          "inline-flex flex-col items-start transition-all duration-300 outline-none " +
+          (readOnly 
+            ? "cursor-default group rounded-sm" 
+            : "cursor-pointer hover:bg-black/[0.04] focus-visible:bg-black/5 focus-visible:ring-1 focus-visible:ring-black group rounded-sm")
         }
         aria-label={`Sílaba: ${text}, Acorde: ${
           chord ? chord.rootNote + chord.variation : "ninguno"
@@ -95,7 +98,7 @@ export default function SyllableComponent({ syllable, onChordChange, nextHasChor
             );
           })() : (
             // El icono '+' ahora es absoluto para NO alterar el ancho real de la caja flex de la sílaba
-             <span className="opacity-0 group-hover:opacity-100 flex items-end justify-center pb-0.5 text-[10px] font-light text-gray-400 transition-opacity absolute left-1/2 -translate-x-1/2 w-full pointer-events-none">
+             <span className={`opacity-0 ${!readOnly ? 'group-hover:opacity-100' : ''} flex items-end justify-center pb-0.5 text-[10px] font-light text-gray-400 transition-opacity absolute left-1/2 -translate-x-1/2 w-full pointer-events-none`}>
                +
              </span>
           )}

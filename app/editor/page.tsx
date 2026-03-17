@@ -15,12 +15,14 @@ import { useGlobalSettings } from "../context/SettingsContext";
 import { useTeleprompter } from "../hooks/useTeleprompter";
 import Piano3D from "../components/Piano3D";
 import { getChordKeys } from "../helpers/chordToPianoKeys";
+import { useUser } from "@clerk/nextjs";
 
 export default function SongEditor() {
   const [song, setSong] = useState<Song | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const { user } = useUser();
 
   // --- Opciones Musicales de Sesión ---
   const [songKey, setSongKey] = useState('C');
@@ -140,6 +142,8 @@ export default function SongEditor() {
                 // Asegurarnos de que el ID del objeto en memoria sea SIEMPRE el UUID de la base de datos
                 // Así cuando el usuario pulse 'Guardar', hará un PATCH/UPDATE en vez de crear uno nuevo.
                 loadedSong.id = found.id;
+                loadedSong.userId = found.userId;
+                loadedSong.authorName = found.user?.name;
                 setSong(loadedSong);
               } catch(e) { console.error("Error parsing song", e); }
             }
@@ -679,6 +683,8 @@ export default function SongEditor() {
   }
 
   // Pantalla 2: El Editor "Canvas"
+  const isReadOnly = song?.userId && user?.id ? song.userId !== user.id : false;
+
   return (
     <div className={`min-h-screen bg-background text-foreground transition-colors duration-500 overflow-hidden font-sans selection:bg-primary selection:text-white ${colorTheme} ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
       
@@ -1101,10 +1107,9 @@ export default function SongEditor() {
                             {/* Auto-rellenar acordes lógico */}
                             {(() => {
                                const hasChords = section.lines.some(l => l.words.some(w => w.syllables.some(s => s.chord !== null)));
-                               const isFirstSection = colIdx === 0 && sIdx === 0 && (!page.columns[0][0] || page.columns[0][0].id === section.id) && index === 0;
                                const globalSecIdx = song.sections.findIndex(s => s.id === section.id);
                                // Only show if this section has NO chords, and is NOT the first section ever
-                               if (!hasChords && globalSecIdx > 0) {
+                               if (!hasChords && globalSecIdx > 0 && !isReadOnly) {
                                  return (
                                    <button 
                                      onClick={() => handleAutoFillChords(section.id)}
@@ -1149,26 +1154,29 @@ export default function SongEditor() {
                                           (!word.syllables[i+1] && line.words[wIdx+1]?.syllables[0]?.chord)
                                         )}
                                         onChordChange={handleChordChange}
+                                        readOnly={isReadOnly}
                                       />
                                     ))}
                                   </div>
                                 ))}
 
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-3 translate-x-4 opacity-0 group-hover/line:opacity-100 group-hover/line:translate-x-full transition-all duration-300 z-10">
-                                   <button 
-                                     onClick={() => handleAddTrailingChord(section.id, line.id)}
-                                     className="text-[9px] font-bold text-primary-foreground bg-primary border border-transparent rounded px-3 py-1.5 tracking-widest hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all shadow-md uppercase whitespace-nowrap"
-                                   >
-                                     + Acorde
-                                   </button>
-                                   <span 
-                                    onClick={() => handleLineRepeatChange(section.id, line.id)}
-                                    className="text-[10px] font-bold tracking-wider text-gray-200 dark:text-gray-700 cursor-pointer hover:text-primary transition-colors border border-transparent hover:border-primary rounded px-2"
-                                    title="Repeticiones de la línea"
-                                   >
-                                     x{line.repeat || 1}
-                                   </span>
-                                </div>
+                                {!isReadOnly && (
+                                  <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-3 translate-x-4 opacity-0 group-hover/line:opacity-100 group-hover/line:translate-x-full transition-all duration-300 z-10">
+                                     <button 
+                                       onClick={() => handleAddTrailingChord(section.id, line.id)}
+                                       className="text-[9px] font-bold text-primary-foreground bg-primary border border-transparent rounded px-3 py-1.5 tracking-widest hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all shadow-md uppercase whitespace-nowrap"
+                                     >
+                                       + Acorde
+                                     </button>
+                                     <span 
+                                      onClick={() => handleLineRepeatChange(section.id, line.id)}
+                                      className="text-[10px] font-bold tracking-wider text-gray-200 dark:text-gray-700 cursor-pointer hover:text-primary transition-colors border border-transparent hover:border-primary rounded px-2"
+                                      title="Repeticiones de la línea"
+                                     >
+                                       x{line.repeat || 1}
+                                     </span>
+                                  </div>
+                                )}
 
                               </div>
                             );

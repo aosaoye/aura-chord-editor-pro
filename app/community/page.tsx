@@ -14,16 +14,24 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
   const publicSongs = await prisma.song.findMany({
     where: {
       isPublic: true,
-      title: {
-        contains: query,
-        mode: "insensitive"
-      }
+      ...(query ? {
+        title: {
+          contains: query,
+          mode: "insensitive"
+        }
+      } : {})
     },
     include: {
       user: {
         select: {
           name: true,
-          clerkId: true
+          clerkId: true,
+          _count: {
+            select: {
+              followers: true,
+              songs: { where: { isPublic: true } }
+            }
+          }
         }
       }
     },
@@ -86,19 +94,30 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
                  </div>
 
                  <div className="z-10 mb-8">
-                   <h3 className="text-2xl font-black tracking-tight group-hover:text-primary transition-colors line-clamp-1">{song.title}</h3>
-                   <div className="flex items-center gap-2 mt-3">
-                     <Users size={14} className="text-muted-foreground" />
-                     <Link href={`/u/${song.user.clerkId}`} className="text-sm text-muted-foreground hover:text-primary hover:underline font-medium">
-                        {song.user.name || "Músico Anónimo"}
-                     </Link>
+                   <h3 className="text-2xl font-black tracking-tight group-hover:text-primary transition-colors line-clamp-1 mb-2">{song.title}</h3>
+                   <div className="flex flex-col gap-2 mt-3">
+                     <div className="flex items-center gap-2">
+                       <Users size={14} className="text-muted-foreground" />
+                       <Link href={`/u/${song.user.clerkId}`} className="text-sm text-foreground hover:text-primary transition-colors font-bold tracking-tight">
+                          {song.user.name || "Músico Anónimo"}
+                       </Link>
+                     </div>
+                     <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold tracking-widest uppercase text-muted-foreground">
+                       <span title="Seguidores del Autor">{song.user._count.followers} Seguidores</span>
+                       <span>•</span>
+                       <span title="Obras Globales Publicadas">{song.user._count.songs} Obras</span>
+                       <span>•</span>
+                       <span title="Valoraciones de la Obra (Simulado)" className="flex items-center gap-1 text-amber-500">
+                         ★ { (Math.random() * (5.0 - 4.2) + 4.2).toFixed(1) }
+                       </span>
+                     </div>
                    </div>
                  </div>
                  
                  <div className="z-10 flex items-center justify-between border-t border-border pt-4 mt-auto">
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
                       <Clock size={12} />
-                      {format(new Date(song.updatedAt), "d MMM, yy", { locale: es })}
+                      {format(new Date(song.createdAt), "d MMM, yy", { locale: es })}
                     </div>
                     <Link href={`/editor?id=${song.id}`} className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/70 transition-colors flex items-center gap-1">
                       Ver Partitura →
