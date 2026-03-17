@@ -22,6 +22,10 @@ model User {
   
   songs                  Song[]
   
+  // Relaciones de Comunidad y Seguidores
+  followers              Follows[] @relation("following")
+  following              Follows[] @relation("follower")
+  
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 }
@@ -35,9 +39,25 @@ model Song {
   bpm         Int      @default(120)
   rawLyrics   String   @db.Text
   parsedData  String   @db.Text // Store the JSON serialized Song object from ChordPro
+  
+  isPublic    Boolean  @default(false) // Visibility toggle para la comunidad
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([userId])
+}
+
+model Follows {
+  follower    User     @relation("follower", fields: [followerId], references: [clerkId], onDelete: Cascade)
+  followerId  String
+
+  following   User     @relation("following", fields: [followingId], references: [clerkId], onDelete: Cascade)
+  followingId String
+
+  createdAt   DateTime @default(now())
+
+  @@id([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
 }

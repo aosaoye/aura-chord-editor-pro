@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Plus, Folder, Clock, Music, Settings, LayoutDashboard } from "lucide-react";
+import { Plus, Folder, Clock, Music, Settings, LayoutDashboard, Globe } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { getAuth } from "@clerk/nextjs/server";
 import { PrismaClient } from "@prisma/client";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import PublicToggle from "./PublicToggle";
 
 const prisma = new PrismaClient();
 
@@ -52,6 +53,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
              <Link href="/dashboard" className="flex items-center gap-3 text-sm font-medium p-3 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 text-muted-foreground hover:text-foreground transition-colors">
                <Folder size={18} />
                Todas mis obras
+             </Link>
+             <Link href="/community" className="flex items-center gap-3 text-sm font-medium p-3 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 text-muted-foreground hover:text-foreground transition-colors">
+               <Globe size={18} />
+               Comunidad
              </Link>
           </div>
 
@@ -128,17 +133,19 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {songs.map((song) => (
-                    <Link href={`/editor?id=${song.id}`} key={song.id} className="group cursor-pointer">
-                      <div className="bg-white dark:bg-zinc-900 border border-border rounded-2xl p-6 h-48 flex flex-col justify-between hover:border-primary hover:shadow-lg transition-all duration-300 relative overflow-hidden">
-                        
-                        <div className="flex justify-between items-start z-10">
-                           <div className="bg-primary/10 text-primary p-2 rounded-lg">
-                             <Music size={20} />
-                           </div>
-                           <div className="text-right">
-                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{song.bpm} BPM</p>
-                           </div>
-                        </div>
+                    <div key={song.id} className="relative group">
+                      <PublicToggle songId={song.id} initialIsPublic={song.isPublic ?? false} />
+                      <Link href={`/editor?id=${song.id}`} className="cursor-pointer">
+                        <div className="bg-white dark:bg-zinc-900 border border-border rounded-2xl p-6 h-48 flex flex-col justify-between hover:border-primary hover:shadow-lg transition-all duration-300 relative overflow-hidden">
+                          
+                          <div className="flex justify-between items-start z-10 w-full pr-8">
+                             <div className="bg-primary/10 text-primary p-2 rounded-lg">
+                               <Music size={20} />
+                             </div>
+                             <div className="text-right">
+                               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{song.bpm} BPM</p>
+                             </div>
+                          </div>
 
                         <div className="z-10 mt-auto">
                           <h3 className="text-lg font-bold tracking-tight group-hover:text-primary transition-colors line-clamp-1">{song.title}</h3>
@@ -148,7 +155,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
                         {/* Decorative background visual */}
                         <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors"></div>
                       </div>
-                    </Link>
+                      </Link>
+                    </div>
                   ))}
                 </div>
               )}

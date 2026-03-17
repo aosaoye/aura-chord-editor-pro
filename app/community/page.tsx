@@ -1,0 +1,118 @@
+import Link from "next/link";
+import { Search, Music, Users, Clock, Globe } from "lucide-react";
+import Navbar from "../components/Navbar";
+import { PrismaClient } from "@prisma/client";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+
+const prisma = new PrismaClient();
+
+export default async function CommunityPage({ searchParams }: { searchParams: { q?: string } }) {
+  const query = searchParams.q || "";
+
+  // Buscamos canciones públicas recientes
+  const publicSongs = await prisma.song.findMany({
+    where: {
+      isPublic: true,
+      title: {
+        contains: query,
+        mode: "insensitive"
+      }
+    },
+    include: {
+      user: {
+        select: {
+          name: true,
+          clerkId: true
+        }
+      }
+    },
+    orderBy: { updatedAt: "desc" },
+    take: 40
+  });
+
+  return (
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-foreground font-sans relative overflow-hidden transition-colors duration-500 flex flex-col pt-[72px]">
+      <Navbar variant="border" className="bg-white/80 dark:bg-zinc-950/80 border-b border-border" />
+      
+      <main className="flex-1 w-full max-w-[1200px] mx-auto p-6 md:p-10 lg:p-12">
+        
+        <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-5 duration-700">
+           <div className="inline-flex items-center justify-center p-3 bg-primary/10 text-primary rounded-full mb-6">
+              <Globe size={32} />
+           </div>
+           <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4">Comunidad Global</h1>
+           <p className="text-muted-foreground text-lg max-w-xl mx-auto font-light mb-10">
+             Descubre la música de otros creadores, encuentra inspiración y sigue a tus compositores favoritos.
+           </p>
+
+           <form className="max-w-2xl mx-auto relative group flex items-center shadow-lg rounded-full overflow-hidden border border-border bg-white dark:bg-zinc-900 focus-within:border-primary transition-colors">
+              <Search className="absolute left-6 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
+              <input 
+                 type="text" 
+                 name="q"
+                 defaultValue={query}
+                 placeholder="Busca partituras o autores..."
+                 className="w-full bg-transparent py-5 pl-16 pr-6 focus:outline-none text-lg font-light placeholder-muted-foreground"
+              />
+              <button type="submit" className="absolute right-2 px-6 py-3 bg-primary text-primary-foreground font-bold text-xs uppercase tracking-widest rounded-full hover:bg-primary/90 transition-colors">
+                Buscar
+              </button>
+           </form>
+        </div>
+
+        {query && (
+          <p className="mb-6 text-muted-foreground">Resultados para: <span className="text-foreground font-bold">"{query}"</span></p>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-150">
+          {publicSongs.length === 0 ? (
+            <div className="col-span-full py-20 text-center flex flex-col items-center">
+               <Music size={48} className="text-muted-foreground/30 mb-4" />
+               <p className="text-xl font-bold">No se encontraron obras públicas.</p>
+               <p className="text-muted-foreground mt-2">Prueba a buscar otro nombre o sé el primero en publicar una obra magistral.</p>
+            </div>
+          ) : (
+            publicSongs.map((song) => (
+               <div key={song.id} className="group bg-white dark:bg-zinc-900 border border-border rounded-3xl p-6 flex flex-col justify-between hover:border-primary hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                 
+                 <div className="flex justify-between items-start z-10 mb-6">
+                    <div className="bg-primary/10 text-primary p-3 rounded-2xl">
+                      <Music size={24} />
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-2 py-1 bg-muted rounded-full">{song.bpm} BPM</p>
+                    </div>
+                 </div>
+
+                 <div className="z-10 mb-8">
+                   <h3 className="text-2xl font-black tracking-tight group-hover:text-primary transition-colors line-clamp-1">{song.title}</h3>
+                   <div className="flex items-center gap-2 mt-3">
+                     <Users size={14} className="text-muted-foreground" />
+                     <Link href={`/u/${song.user.clerkId}`} className="text-sm text-muted-foreground hover:text-primary hover:underline font-medium">
+                        {song.user.name || "Músico Anónimo"}
+                     </Link>
+                   </div>
+                 </div>
+                 
+                 <div className="z-10 flex items-center justify-between border-t border-border pt-4 mt-auto">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                      <Clock size={12} />
+                      {format(new Date(song.updatedAt), "d MMM, yy", { locale: es })}
+                    </div>
+                    <Link href={`/editor?id=${song.id}`} className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/70 transition-colors flex items-center gap-1">
+                      Ver Partitura →
+                    </Link>
+                 </div>
+
+                 {/* Visual Decorativo */}
+                 <div className="absolute -bottom-16 -right-16 w-40 h-40 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all opacity-50 group-hover:opacity-100 pointer-events-none"></div>
+               </div>
+            ))
+          )}
+        </div>
+
+      </main>
+    </div>
+  );
+}
