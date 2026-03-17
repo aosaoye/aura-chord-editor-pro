@@ -9,6 +9,7 @@ export default function PublicToggle({ songId, initialIsPublic }: { songId: stri
 
   const toggleVisibility = async (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigating if this is inside a Link wrapper
+    e.stopPropagation();
     
     setLoading(true);
     try {

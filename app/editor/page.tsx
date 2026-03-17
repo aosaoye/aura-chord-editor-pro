@@ -770,15 +770,15 @@ export default function SongEditor() {
                            `}
                          >
                            {/* Texto de la Línea Gigante con Acordes Perfectamente Alineados */}
-                           <div className={`text-white font-black tracking-tight leading-[1.1] transition-all duration-500 flex flex-wrap justify-center items-end ${isActive ? 'text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem]' : 'text-3xl sm:text-4xl md:text-5xl lg:text-6xl'}`}>
+                           <div className={`text-white font-black tracking-tight leading-tight transition-all duration-500 flex flex-wrap justify-center items-end ${isActive ? 'text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem]' : 'text-3xl sm:text-4xl md:text-5xl lg:text-6xl'}`}>
                              {line.words.map((word, wIdx) => (
                                <div key={word.id} className="flex mr-5 md:mr-8 last:mr-0">
                                  {word.syllables.map((syl, i) => (
-                                   <div key={syl.id} className="flex flex-col items-start relative">
+                                   <div key={syl.id} className="flex flex-col items-start relative pt-2">
                                      
                                      {/* Slot del Acorde (Reserva de altura incluso vacío si la línea lo requiere) */}
                                      {hasChords && (
-                                       <div className={`w-full min-h-[1.5em] mb-1 md:mb-2 font-serif text-primary tracking-widest flex items-end relative ${isActive ? 'text-2xl sm:text-4xl' : 'text-xl sm:text-2xl'}`}>
+                                       <div className={`w-full min-h-[1.8em] mb-1 md:mb-2 font-sans font-bold text-primary tracking-widest flex items-end relative leading-normal ${isActive ? 'text-2xl sm:text-4xl' : 'text-xl sm:text-2xl'}`}>
                                          {syl.chord ? (() => {
                                             const formatted = formatChordText(syl.chord, notation, songKey);
                                             const nextHasChord = Boolean(
@@ -786,7 +786,7 @@ export default function SongEditor() {
                                               (!word.syllables[i+1] && line.words[wIdx+1]?.syllables[0]?.chord)
                                             );
                                             return (
-                                              <span className={`flex items-start z-10 ${nextHasChord ? 'pr-5' : 'absolute left-0 bottom-0 whitespace-nowrap'}`}>
+                                              <span className={`flex items-start z-10 pt-1 ${nextHasChord ? 'pr-5' : 'absolute left-0 bottom-0 whitespace-nowrap'}`}>
                                                 <span>{formatted.root}</span>
                                                 {formatted.variation && (
                                                   <span className="text-[0.6em] relative top-0 ml-[1px] font-sans font-bold">{formatted.variation}</span>
@@ -1003,7 +1003,7 @@ export default function SongEditor() {
                              </div>
                            ) : (
                              // NORMAL SECTION TITLE
-                             <h2 className={`text-xl sm:text-2xl font-serif font-bold italic mb-0 opacity-90 ${alignment === 'justify-center' ? 'text-center' : alignment === 'justify-end' ? 'text-right' : 'text-left'}`}>
+                             <h2 className={`text-xl sm:text-2xl font-sans font-black italic tracking-tight mb-0 opacity-90 ${alignment === 'justify-center' ? 'text-center' : alignment === 'justify-end' ? 'text-right' : 'text-left'}`}>
                                {section.title}
                              </h2>
                            )
@@ -1126,7 +1126,7 @@ export default function SongEditor() {
         <div className="fixed bottom-0 left-0 lg:bottom-6 lg:left-auto lg:right-6 lg:-translate-x-0 w-full lg:w-[500px] h-[30vh] lg:h-[30vh] bg-[#050505]/90 backdrop-blur-2xl border border-[#ffffff20] rounded-t-3xl lg:rounded-3xl shadow-[0_-20px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_20px_50px_rgba(0,0,0,0.8)] z-[110] overflow-hidden flex flex-col group animate-in slide-in-from-bottom-12 duration-500 ease-out">
            <div className="absolute top-4 right-4 z-20 flex items-center gap-4">
                {active3DChord ? (
-                 <span className="text-xl font-bold tracking-widest font-serif text-primary drop-shadow">
+                 <span className="text-xl font-black tracking-tighter text-primary drop-shadow">
                     {formatChordText(active3DChord, notation, songKey).root}
                     <span className="text-sm font-sans">{formatChordText(active3DChord, notation, songKey).variation}</span>
                  </span>
