@@ -58,18 +58,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
                <LayoutDashboard size={18} />
                Visión General
              </Link>
-             <Link href="/editor?new=true" className="flex items-center gap-3 text-sm font-medium p-3 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 text-muted-foreground hover:text-foreground transition-colors">
-               <Plus size={18} />
-               Nueva Obra
-             </Link>
-             <Link href="/dashboard" className="flex items-center gap-3 text-sm font-medium p-3 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 text-muted-foreground hover:text-foreground transition-colors">
-               <Folder size={18} />
-               Todas mis obras
-             </Link>
-             <Link href="/community" className="flex items-center gap-3 text-sm font-medium p-3 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 text-muted-foreground hover:text-foreground transition-colors">
-               <Globe size={18} />
-               Comunidad
-             </Link>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -92,7 +80,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
                 <p className="text-muted-foreground mt-2 font-medium">Aquí está un resumen de tu espacio creativo.</p>
               </div>
 
-              <Link href="/editor" className="bg-primary text-primary-foreground px-6 py-3 rounded-full text-xs font-bold tracking-[0.1em] uppercase hover:scale-105 active:scale-95 transition-all shadow-[0_10px_20px_rgba(var(--primary-raw),0.2)] flex items-center gap-2 whitespace-nowrap">
+              <Link href="/editor?new=true" className="bg-primary text-primary-foreground px-6 py-3 rounded-full text-xs font-bold tracking-[0.1em] uppercase hover:scale-105 active:scale-95 transition-all shadow-[0_10px_20px_rgba(var(--primary-raw),0.2)] flex items-center gap-2 whitespace-nowrap">
                 <Plus size={16} />
                 Añadir nueva obra
               </Link>

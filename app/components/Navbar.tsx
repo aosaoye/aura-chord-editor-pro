@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { usePathname } from "next/navigation";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { Menu, X } from "lucide-react";
+import Image from "next/image";
 
 interface NavbarProps {
   variant?: "default" | "transparent" | "editor" | "border";
@@ -51,8 +52,13 @@ export default function Navbar({ variant = "default", className = "", centerCont
   return (
     <nav className={navClasses}>
       <div className="flex-shrink-0 flex items-center">
-        <Link href="/" className="font-black text-2xl tracking-tighter italic whitespace-nowrap">
-          CHORD<span className="font-light">PRO</span>
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-lg border border-border group-hover:scale-105 transition-transform duration-300">
+             <Image src="/images/logo.png" alt="AuraChords Logo" fill className="object-cover" />
+          </div>
+          <span className="font-black text-2xl tracking-tighter italic whitespace-nowrap group-hover:text-primary transition-colors duration-300">
+            AURA<span className="font-light">CHORDS</span>
+          </span>
         </Link>
       </div>
       
@@ -61,6 +67,7 @@ export default function Navbar({ variant = "default", className = "", centerCont
         <div className="hidden lg:flex items-center gap-12 text-[10px] font-bold tracking-[0.2em] uppercase">
           <Link href="/" className={linkClass("/")}>Inicio</Link>
           <Link href="/dashboard" className={linkClass("/dashboard")}>Mis Obras</Link>
+          <Link href="/community" className={linkClass("/community")}>Comunidad</Link>
           <Link href="/editor" className={linkClass("/editor")}>Estudio</Link>
           <Link href="/pricing" className={linkClass("/pricing")}>Planes (Pro)</Link>
         </div>
@@ -109,6 +116,7 @@ export default function Navbar({ variant = "default", className = "", centerCont
             <div className="flex flex-col gap-6 text-sm font-bold tracking-[0.2em] uppercase">
               <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/")}>Inicio</Link>
               <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/dashboard")}>Mis Obras</Link>
+              <Link href="/community" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/community")}>Comunidad</Link>
               <Link href="/editor" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/editor")}>Estudio</Link>
               <Link href="/pricing" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/pricing")}>Planes (Pro)</Link>
             </div>
