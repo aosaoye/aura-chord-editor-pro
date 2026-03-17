@@ -17,6 +17,17 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
   const user = await currentUser();
   const userId = user?.id; // Clerk user id
 
+  const handleGreetings = (): string => {
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      return "Buenos días";
+    } else if (hour < 18) {
+      return "Buenas tardes";
+    } else {
+      return "Buenas noches";
+    }
+  }
+
   let dbUser = null;
   let songs: any[] = [];
 
@@ -76,12 +87,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-6">
               <div>
                 <h1 className="text-3xl sm:text-4xl font-light tracking-tight text-foreground">
-                  Buenos días, <span className="font-bold">{user?.firstName || "Compositor"}</span>
+                  {handleGreetings()}, <span className="font-bold">{user?.firstName || "Compositor"}</span>
                 </h1>
                 <p className="text-muted-foreground mt-2 font-medium">Aquí está un resumen de tu espacio creativo.</p>
               </div>
 
-              <Link href="/editor" className="bg-primary text-primary-foreground px-6 py-3 rounded-xl text-xs font-bold tracking-[0.1em] uppercase hover:scale-105 active:scale-95 transition-all shadow-[0_10px_20px_rgba(var(--primary-raw),0.2)] flex items-center gap-2 whitespace-nowrap">
+              <Link href="/editor" className="bg-primary text-primary-foreground px-6 py-3 rounded-full text-xs font-bold tracking-[0.1em] uppercase hover:scale-105 active:scale-95 transition-all shadow-[0_10px_20px_rgba(var(--primary-raw),0.2)] flex items-center gap-2 whitespace-nowrap">
                 <Plus size={16} />
                 Añadir nueva obra
               </Link>
