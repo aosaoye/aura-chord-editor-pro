@@ -28,12 +28,8 @@ export function paginateSong(song: Song, linesPerColumn: number = 17, columnsPer
     // A section header usually takes up space equivalent to ~2 lines
     const titleSpace = section.title ? 2 : 1; 
 
-    // If starting a new section, and it doesn't fit, push current column and reset
-    if (currentLinesCount + titleSpace + 2 > linesPerColumn && currentLinesCount > 0) {
-      allColumns.push(currentColumnSections);
-      currentColumnSections = [];
-      currentLinesCount = 0;
-    }
+    // Eliminado: Salto de columna prematuro.
+    // Ahora el algoritmo prioriza llenar la columna hasta el borde antes de saltar.
 
     while (unpaginatedLines.length > 0) {
       // Current available space on the column, floored to avoid fractional slices infinite loops
