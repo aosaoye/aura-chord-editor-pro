@@ -107,11 +107,31 @@ export default function SongEditor() {
     }
   }, [isPlaying, activeLineId]);
 
-  // Hook Importación del Buscador (LocalStorage) + AutoRecover
+  // Hook Importación del Buscador (LocalStorage) + AutoRecover + Load from DB
   useEffect(() => {
     const draftLyrics = localStorage.getItem("chordpro-draft-lyrics");
     const draftTitle = localStorage.getItem("chordpro-draft-title");
     
+    // Si viene de URL searchParams, lo simularemos cogiendo del backend (Simplificado)
+    const urlParams = new URLSearchParams(window.location.search);
+    const songId = urlParams.get('id');
+
+    if (songId) {
+      setIsAnimating(true);
+      fetch(`/api/songs?id=${songId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.songs) {
+            const found = data.songs.find((s: any) => s.id === songId);
+            if (found && found.parsedData) {
+              setSong(JSON.parse(found.parsedData));
+            }
+          }
+        })
+        .finally(() => setIsAnimating(false));
+      return;
+    }
+
     if (draftLyrics && draftTitle) {
       setTitleInput(draftTitle);
       setLyricsInput(draftLyrics);

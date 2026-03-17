@@ -65,3 +65,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
+
+export async function GET(req: NextRequest) {
+  try {
+    const session = getAuth(req);
+    const userId = session?.userId;
+    
+    if (!userId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const songs = await prisma.song.findMany({
+      where: { userId },
+      orderBy: { updatedAt: "desc" },
+      select: { id: true, title: true, bpm: true, updatedAt: true, createdAt: true }
+    });
+
+    return NextResponse.json({ success: true, songs }, { status: 200 });
+  } catch (error) {
+    console.error("Error al obtener las obras:", error);
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+  }
+}
