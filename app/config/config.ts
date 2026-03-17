@@ -28,7 +28,7 @@ export interface Line {
 export interface Section {
     id: string,
     title?: string,      // Título opcional, e.g. "1." o "2. Tu fidelidad"
-    type: 'verse' | 'chorus' | 'bridge' | 'pre-chorus',
+    type: string | 'Estrofa' | 'Coro' | 'Puente' | 'Pre-Coro' | 'Intro' | 'Final' | 'Instrumental',
     lines: Line[],
     repeat?: number      // Numero de repeticiones (ej. x2, x4)
 }

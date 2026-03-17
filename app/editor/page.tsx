@@ -243,6 +243,19 @@ export default function SongEditor() {
     });
   }, []);
 
+  const handleSectionTypeChange = useCallback((sectionId: string, newType: string) => {
+    setSong((currentSong) => {
+      if (!currentSong) return currentSong;
+      const updatedSections = currentSong.sections.map((section) => {
+        if (section.id === sectionId) {
+          return { ...section, type: newType };
+        }
+        return section;
+      });
+      return { ...currentSong, sections: updatedSections };
+    });
+  }, []);
+
   const handleLineRepeatChange = useCallback((sectionId: string, lineId: string) => {
     setSong((currentSong) => {
       if (!currentSong) return currentSong;
@@ -1058,7 +1071,21 @@ export default function SongEditor() {
                         {!section.isContinuation && (
                           <div className="flex items-center gap-6 group/secHeader w-full">
                             <span className="text-[10px] font-bold tracking-[0.4em] text-gray-400 uppercase flex items-center gap-3 shrink-0">
-                              {section.type}
+                              <select
+                                value={section.type}
+                                onChange={(e) => handleSectionTypeChange(section.id, e.target.value)}
+                                className="bg-transparent border-none appearance-none outline-none font-bold tracking-[0.4em] uppercase text-gray-400 cursor-pointer hover:text-primary transition-colors focus:outline-none focus:ring-0 max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap"
+                                title="Cambiar tipo de sección"
+                              >
+                                {![
+                                  'Estrofa', 'Coro', 'Pre-Coro', 'Puente', 'Intro', 'Final', 'Instrumental', 'Interludio'
+                                ].includes(section.type) && (
+                                  <option value={section.type} className="text-foreground bg-background">{section.type}</option>
+                                )}
+                                {['Estrofa', 'Coro', 'Pre-Coro', 'Puente', 'Intro', 'Final', 'Instrumental', 'Interludio'].map(type => (
+                                  <option key={type} value={type} className="text-foreground bg-background">{type}</option>
+                                ))}
+                              </select>
                               
                               <span 
                                 onClick={() => handleSectionRepeatChange(section.id)}

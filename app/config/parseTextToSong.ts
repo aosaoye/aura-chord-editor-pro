@@ -42,7 +42,7 @@ export function parseTextToSong(rawText: string, title: string, bpm: number, tim
     const linesText = block.trim().split('\n').map(l => l.trim()).filter(Boolean);
     
     // 3. Inferencia de tipo de Sección
-    let sectionType: Section['type'] = 'verse'; // Default fallback
+    let sectionType: string = 'Estrofa'; // Default fallback
     let sectionTitle: string | undefined;
     const firstLine = linesText[0];
     const isTagLine = firstLine.startsWith('[') && firstLine.endsWith(']');
@@ -52,9 +52,13 @@ export function parseTextToSong(rawText: string, title: string, bpm: number, tim
     
     if (isTagLine) {
       const tag = firstLine.toLowerCase();
-      if (tag.includes('coro') || tag.includes('chorus')) sectionType = 'chorus';
-      else if (tag.includes('puente') || tag.includes('bridge')) sectionType = 'bridge';
-      else if (tag.includes('pre')) sectionType = 'pre-chorus';
+      if (tag.includes('coro') || tag.includes('chorus')) sectionType = 'Coro';
+      else if (tag.includes('puente') || tag.includes('bridge')) sectionType = 'Puente';
+      else if (tag.includes('pre') || tag.includes('pre-coro') || tag.includes('pre-chorus')) sectionType = 'Pre-Coro';
+      else if (tag.includes('intro') || tag.includes('preludio') || tag.includes('prelude')) sectionType = 'Intro';
+      else if (tag.includes('outro') || tag.includes('final') || tag.includes('coda')) sectionType = 'Final';
+      else if (tag.includes('instrumental') || tag.includes('solo')) sectionType = 'Instrumental';
+      else sectionType = firstLine.replace('[', '').replace(']', '').trim();
       
       // Mutamos el array extrayendo la primera línea para que no conste como letra cantada
       linesText.shift();
