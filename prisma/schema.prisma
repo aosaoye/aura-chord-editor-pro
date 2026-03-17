@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                     String    @id @default(uuid())
+  clerkId                String    @unique // The ID provided by Clerk Authentication
+  email                  String    @unique
+  name                   String?
+  
+  // Suscripción Stripe
+  stripeCustomerId       String?   @unique @map(name: "stripe_customer_id")
+  stripeSubscriptionId   String?   @unique @map(name: "stripe_subscription_id")
+  stripePriceId          String?   @map(name: "stripe_price_id")
+  stripeCurrentPeriodEnd DateTime? @map(name: "stripe_current_period_end")
+  
+  songs                  Song[]
+  
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+}
+
+model Song {
+  id          String   @id @default(uuid())
+  userId      String   // Foreign key to User
+  user        User     @relation(fields: [userId], references: [clerkId], onDelete: Cascade)
+  
+  title       String
+  bpm         Int      @default(120)
+  rawLyrics   String   @db.Text
+  parsedData  String   @db.Text // Store the JSON serialized Song object from ChordPro
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
