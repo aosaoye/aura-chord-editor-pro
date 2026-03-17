@@ -110,25 +110,10 @@ export function parseTextToSong(rawText: string, title: string, bpm: number, tim
       };
     });
 
-    // --- COMPRESIÓN DE LÍNEAS REPETIDAS ---
-    const getLineFootprint = (l: Line) => 
-      l.words.map(w => w.syllables.map(s => s.text).join('')).join(' ').toLowerCase();
-    
-    const deduplicatedLines: Line[] = [];
-    lines.forEach((currentLine) => {
-      if (deduplicatedLines.length === 0) {
-        deduplicatedLines.push(currentLine);
-        return;
-      }
-      const lastLine = deduplicatedLines[deduplicatedLines.length - 1];
-      if (getLineFootprint(currentLine) === getLineFootprint(lastLine)) {
-        // Encontramos repetición consecutiva de la MISMA línea
-        lastLine.repeat = (lastLine.repeat || 1) + 1;
-        lastLine.endTime = currentLine.endTime; // Alargamos el tiempo
-      } else {
-        deduplicatedLines.push(currentLine);
-      }
-    });
+    // --- BYPASS DE COMPRESIÓN DE LÍNEAS REPETIDAS ---
+    // A petición del usuario: "si en una estrofa o coro se repite una linea que no lo resuma".
+    // Las líneas repetidas ahora se mantendrán intactas en el lienzo.
+    const deduplicatedLines: Line[] = lines;
 
     return {
       id: generateId('sec'),
