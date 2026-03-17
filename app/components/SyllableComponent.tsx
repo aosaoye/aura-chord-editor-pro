@@ -112,14 +112,18 @@ export default function SyllableComponent({ syllable, onChordChange, nextHasChor
       </span>
 
       {isEditing && (
-        // top-full originado desde la izquierda 'left-0' luce mucho mejor en el diseño de Awwwards
-        <div className="absolute top-full left-0 z-[150] mt-2 shadow-2xl shadow-black/20 text-black">
-          <ChordEditorMenu
-            initialChord={chord}
-            onSave={handleSave}
-            onCancel={handleCancel}
-          />
-        </div>
+        <>
+          {/* Fondo para cerrar en móvil */}
+          <div className="fixed inset-0 z-[190] sm:hidden bg-black/20 backdrop-blur-sm animate-in fade-in" onClick={handleCancel} />
+          
+          <div className="fixed bottom-0 left-0 w-full sm:absolute sm:top-full sm:left-0 sm:w-auto sm:bottom-auto z-[200] sm:mt-2 text-black">
+            <ChordEditorMenu
+              initialChord={chord}
+              onSave={handleSave}
+              onCancel={handleCancel}
+            />
+          </div>
+        </>
       )}
     </span>
   );

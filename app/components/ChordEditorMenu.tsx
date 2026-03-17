@@ -59,9 +59,9 @@ export default function ChordEditorMenu({
       role="dialog"
       aria-modal="true"
       aria-label="Editor de acorde"
-      className="flex flex-col gap-6 p-6 bg-white shadow-2xl shadow-black/10 outline-none w-max animate-in fade-in zoom-in-95 duration-300 border border-gray-100"
+      className="flex flex-col gap-4 sm:gap-6 p-5 sm:p-6 pb-12 sm:pb-6 bg-white shadow-[0_-20px_50px_rgba(0,0,0,0.15)] sm:shadow-2xl sm:shadow-black/10 outline-none w-full sm:w-max animate-in slide-in-from-bottom-5 sm:zoom-in-95 duration-300 border-t sm:border border-gray-100 rounded-t-3xl sm:rounded-xl"
     >
-      <div className="flex gap-6">
+      <div className="grid grid-cols-3 gap-2 sm:flex sm:gap-6">
         {/* Select de la Nota Raíz */}
         <div className="flex flex-col gap-2">
           <label
@@ -134,7 +134,7 @@ export default function ChordEditorMenu({
       </div>
 
       {/* Controles y Botones */}
-      <div className="flex justify-between items-center mt-2 pt-5 border-t border-gray-100">
+      <div className="flex justify-between items-center mt-2 sm:mt-0 pt-4 sm:pt-5 border-t border-gray-100">
         <button
           onClick={handleRemove}
           className="text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase hover:text-red-500 transition-colors focus:outline-none"
@@ -143,17 +143,17 @@ export default function ChordEditorMenu({
           Quitar
         </button>
 
-        <div className="flex gap-5 items-center">
+        <div className="flex gap-3 sm:gap-5 items-center">
           <button
             onClick={onCancel}
-            className="text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase hover:text-black transition-colors focus:outline-none"
+            className="text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase hover:text-black transition-colors focus:outline-none hidden sm:block"
             aria-label="Cancelar edición"
           >
             Cancelar
           </button>
           <button
             onClick={handleApply}
-            className="text-[10px] font-bold tracking-[0.15em] bg-black text-white hover:bg-gray-800 uppercase px-6 py-2.5 transition-all active:scale-95 focus:outline-none"
+            className="text-[10px] font-bold tracking-[0.15em] bg-black text-white hover:bg-gray-800 uppercase px-6 py-3 sm:py-2.5 rounded-full sm:rounded-none transition-all active:scale-95 focus:outline-none w-full sm:w-auto text-center"
             aria-label="Aplicar cambios"
           >
             Aplicar
