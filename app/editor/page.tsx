@@ -1110,8 +1110,8 @@ export default function SongEditor() {
                   </h1>
                 </div>
               ) : (
-                <div className="mb-12 shrink-0">
-                  <h1 className="text-4xl sm:text-5xl lg:text-7xl font-light tracking-tight break-words leading-[1.1] mb-8">
+                <div className="mb-6 shrink-0">
+                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-light tracking-tight break-words leading-[1.1] mb-4">
                     {song.title}
                   </h1>
                   <div className="flex items-center gap-6 md:gap-8 flex-wrap">

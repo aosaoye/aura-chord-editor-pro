@@ -14,6 +14,10 @@ export default function NotificationBell() {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
     fetchNotifications();
     // Poll every 30 seconds
     const interval = setInterval(fetchNotifications, 30000);
@@ -30,12 +34,30 @@ export default function NotificationBell() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Reference to track the latest unread ID to avoid spamming the same notification
+  const lastNotifiedIdRef = useRef<string | null>(null);
+
   const fetchNotifications = async () => {
     try {
       const res = await fetch("/api/notifications");
       if (res.ok) {
         const data = await res.json();
-        setNotifications(data.notifications || []);
+        const newNotifs = data.notifications || [];
+        
+        // Trigger native push notification if there is a NEW unread notification
+        const latestUnread = newNotifs.find((n: any) => !n.read);
+        if (latestUnread && latestUnread.id !== lastNotifiedIdRef.current) {
+           lastNotifiedIdRef.current = latestUnread.id;
+           
+           if (typeof window !== 'undefined' && "Notification" in window && Notification.permission === "granted") {
+              new window.Notification("Nueva Partitura - Studio", {
+                 body: latestUnread.message,
+                 icon: "/images/logo.png"
+              });
+           }
+        }
+        
+        setNotifications(newNotifs);
       }
     } catch (e) {
       console.error(e);
