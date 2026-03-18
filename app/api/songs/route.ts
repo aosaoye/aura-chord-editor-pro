@@ -138,8 +138,11 @@ export async function GET(req: NextRequest) {
                 parsed.sections = parsed.sections.slice(0, 2);
                 parsed.isPreviewRestriction = true; // Avisamos al editor
                 song.parsedData = JSON.stringify(parsed);
+                song.rawLyrics = "[CONTENIDO PROTEGIDO]\n\nEsta obra es premium y está protegida por derechos de su compositor. Adquiere el acceso permanente para visualizar, editar y exportar la partitura y acordes completos.";
                 isPreviewRestriction = true;
-             } catch(e) {}
+             } catch(e) {
+                song.rawLyrics = "[CONTENIDO PROTEGIDO]";
+             }
           }
        }
 

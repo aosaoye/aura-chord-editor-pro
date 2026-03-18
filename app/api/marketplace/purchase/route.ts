@@ -45,18 +45,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Ya posees esta obra" }, { status: 400 });
     }
 
-    // SIMULACIÓN de pago correcto vía Stripe Checkout
-    // Aquí en Producción crearías la sesión de checkout y retornarías la URL de pago de Stripe.
-    
-    await (prisma as any).purchase.create({
-      data: {
-        userId,
-        songId,
-        amount: song.price
-      }
-    });
+    // BLOQUEO DE PAGOS FALSOS: Evitar que los usuarios se aprueben la obra sin pagar
+    // TODO: Eliminar esto cuando Stripe Checkout se integre en la fase final.
+    return NextResponse.json({ error: "Checkout y pasarela de pago en mantenimiento. Las compras premium están temporalmente pausadas." }, { status: 400 });
 
-    return NextResponse.json({ success: true, message: "¡Compra exitosa! Ya tienes acceso total." }, { status: 200 });
   } catch (error) {
     console.error("Error al procesar la compra:", error);
     return NextResponse.json({ error: "Error interno procesando el pago" }, { status: 500 });

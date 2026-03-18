@@ -425,6 +425,11 @@ export default function SongEditor() {
   const handleExportToImage = useCallback(async () => {
     if (!song || !pagesContainerRef.current) return;
 
+    if ((song as any).isPreviewRestriction) {
+      showToast("🔒 Debes adquirir esta obra Premium para habilitar la descarga en imagen.");
+      return;
+    }
+
     try {
       setIsExporting(true);
 
@@ -508,6 +513,11 @@ export default function SongEditor() {
 
   const handleExportToPDF = useCallback(async () => {
     if (!song || !pagesContainerRef.current) return;
+
+    if ((song as any).isPreviewRestriction) {
+      showToast("🔒 Debes adquirir esta obra Premium para habilitar la descarga en PDF.");
+      return;
+    }
 
     try {
       setIsExporting(true);
@@ -734,7 +744,8 @@ export default function SongEditor() {
   }
 
   // Pantalla 2: El Editor "Canvas"
-  const isReadOnly = song?.userId && user?.id ? song.userId !== user.id : false;
+  // Si la canción está en BDD (tiene userId), y mi ID no coincide (o no estoy logueado), es solo de Lectura!
+  const isReadOnly = song?.userId ? song.userId !== user?.id : false;
 
   const hasMultipleSongs = Array.isArray(song?.sections) && song.sections.filter(s => s.title && /^\d+\.\s/.test(s.title)).length > 1;
   const activeColumns = editorColumns > 0 ? editorColumns : (hasMultipleSongs ? 2 : 1);
@@ -749,8 +760,8 @@ export default function SongEditor() {
 
   return (
     <>
-      {mobileBlocker}
-      <div className={`hidden lg:flex min-h-screen flex-col bg-background text-foreground transition-colors duration-500 overflow-hidden font-sans selection:bg-primary selection:text-white ${colorTheme} ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
+      {!isReadOnly && mobileBlocker}
+      <div className={`${!isReadOnly ? 'hidden lg:flex' : 'flex'} w-full min-h-screen flex-col bg-background text-foreground transition-colors duration-500 overflow-hidden font-sans selection:bg-primary selection:text-white ${colorTheme} ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
 
         {/* Top Fixed Navbar */}
         <Navbar
