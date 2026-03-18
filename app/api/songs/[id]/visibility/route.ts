@@ -18,13 +18,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { isPublic } = body;
 
     // Verify ownership
-    const song = await prisma.song.findUnique({ where: { id } });
+    const song = await (prisma as any).song.findUnique({ where: { id } });
     
     if (!song || song.userId !== userId) {
       return NextResponse.json({ error: "Obra no encontrada o no tienes permiso" }, { status: 404 });
     }
 
-    const updatedSong = await prisma.song.update({
+    const updatedSong = await (prisma as any).song.update({
       where: { id },
       data: { isPublic },
       include: {
@@ -41,8 +41,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (isPublic && !song.isPublic) {
         const followers = updatedSong.user?.followers || [];
         if (followers.length > 0) {
-           await prisma.notification.createMany({
-             data: followers.map(f => ({
+           await (prisma as any).notification.createMany({
+             data: followers.map((f: any) => ({
                userId: f.followerId,
                message: `${updatedSong.user?.name || 'Un músico'} ha publicado una nueva partitura: "${updatedSong.title}"`,
                link: `/editor?id=${updatedSong.id}`

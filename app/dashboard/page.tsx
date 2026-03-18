@@ -63,6 +63,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
 
           <div className="flex flex-col gap-2">
              <p className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase mb-2">Ajustes</p>
+             <Link href="/dashboard/marketplace" className="flex items-center gap-3 text-sm font-medium p-3 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 text-muted-foreground hover:text-foreground transition-colors group">
+               <span className="group-hover:text-primary transition-colors">💳</span>
+               Marketplace (Ventas)
+             </Link>
              <Link href="/settings" className="flex items-center gap-3 text-sm font-medium p-3 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 text-muted-foreground hover:text-foreground transition-colors">
                <Settings size={18} />
                Configuración

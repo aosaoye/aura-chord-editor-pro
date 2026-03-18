@@ -4,7 +4,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -17,7 +17,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: "Invalid rating value" }, { status: 400 });
     }
 
-    const songId = params.id;
+    const { id: songId } = await params;
 
     // Check if song exists
     const song = await prisma.song.findUnique({
@@ -29,7 +29,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 
     // Upsert rating (Create if not exists, update if exists)
-    const newRating = await prisma.songRating.upsert({
+    const newRating = await (prisma as any).songRating.upsert({
       where: {
          userId_songId: {
             userId: userId,

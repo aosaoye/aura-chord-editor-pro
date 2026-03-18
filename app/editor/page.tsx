@@ -16,6 +16,7 @@ import { useTeleprompter } from "../hooks/useTeleprompter";
 import Piano3D from "../components/Piano3D";
 import { getChordKeys } from "../helpers/chordToPianoKeys";
 import { useUser } from "@clerk/nextjs";
+import PurchaseButton from "../components/PurchaseButton";
 
 export default function SongEditor() {
   const [song, setSong] = useState<Song | null>(null);
@@ -985,6 +986,22 @@ export default function SongEditor() {
            
            <div className="flex flex-col gap-6">
              <div className="flex flex-col gap-2">
+                <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Precio en Marketplace</label>
+                <div className="flex items-center gap-3">
+                  <span className="text-lg font-bold">€</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={songPrice || 0}
+                    onChange={(e) => setSongPrice(Number(e.target.value))}
+                    className="flex-1 bg-transparent border-b border-gray-200 dark:border-gray-800 py-2 text-sm font-medium outline-none focus:border-primary text-foreground transition-colors"
+                  />
+                </div>
+                 <p className="text-[9px] font-light text-gray-500 mt-1">Deja 0 para compartir libremente en la comunidad.</p>
+             </div>
+
+             <div className="flex flex-col gap-2">
                 <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Transpositor Inteligente</label>
                 <div className="flex bg-gray-50 dark:bg-[#1a1a1a] rounded border border-gray-200 dark:border-gray-800 overflow-hidden">
                   <button onClick={() => handleTranspose(-1)} className="flex-1 py-3 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 border-r border-gray-200 dark:border-gray-800 transition-colors">-1</button>
@@ -1077,10 +1094,21 @@ export default function SongEditor() {
           ref={pagesContainerRef}
           className={
             isPreviewMode 
-              ? "flex-1 w-full flex flex-col items-center overflow-y-auto py-12 px-2 sm:px-4 shadow-inner hide-scrollbar bg-muted gap-8" 
-              : "flex gap-6 lg:gap-12 overflow-x-auto snap-x lg:snap-mandatory hide-scrollbar pb-12 w-full lg:pr-[50vw]"
+              ? "flex-1 w-full flex flex-col items-center overflow-y-auto py-12 px-2 sm:px-4 shadow-inner hide-scrollbar bg-muted gap-8 relative" 
+              : "flex gap-6 lg:gap-12 overflow-x-auto snap-x lg:snap-mandatory hide-scrollbar pb-12 w-full lg:pr-[50vw] relative"
           }
         >
+          {/* BANNER DE PREVIEW DE PAGO */}
+          {(song as any).isPreviewRestriction && (
+             <div className="sticky left-1/2 -ml-[1px] md:absolute md:bottom-24 md:left-1/2 md:-translate-x-1/2 z-50 bg-background/95 backdrop-blur-xl p-8 sm:p-12 rounded-3xl border border-primary/20 shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.4)] text-center max-w-lg w-[90%] mt-8 mb-24 md:mt-0 md:mb-0 flex flex-col items-center animate-in slide-in-from-bottom-12 duration-1000 shrink-0 self-center">
+                <span className="text-4xl mb-4 opacity-80">🔒</span>
+                <h3 className="text-2xl font-black tracking-tight mb-2">Obra Premium</h3>
+                <p className="text-muted-foreground text-sm mb-8 leading-relaxed">El creador ha protegido esta pieza. Adquiere los derechos de transcripción para ver todos los acordes, imprimir PDF y habilitar el Teleprompter.</p>
+                
+                <PurchaseButton songId={song.id} price={(song as any).price || 1.00} />
+             </div>
+          )}
+
           {song && paginateSong(song, baseLinesPerColumn, activeColumns).map((page, index) => (
             <div 
               key={page.id}

@@ -5,8 +5,8 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { PresentationControls, Environment, ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
 
-// Pattern of one octave (12 notes).
-// isBlack: true/false. whiteOffset: incremental x-position of white keys.
+// Patron de un octava (12 notas).
+// Si es negra es true, si es blanca es false.
 const OCTAVE_PATTERN = [
   { isBlack: false, whiteOffset: 0 },   // C
   { isBlack: true, whiteOffset: 0.5 },  // C#
@@ -22,7 +22,7 @@ const OCTAVE_PATTERN = [
   { isBlack: false, whiteOffset: 6 },   // B
 ];
 
-// Generates data for `numOctaves` octaves starting from index 0.
+// Genera los datos para `numOctaves` octavas comenzando desde el índice 0.
 function generatePianoKeys(numOctaves: number = 3) {
   const keys = [];
   for (let oct = 0; oct < numOctaves; oct++) {
@@ -31,7 +31,7 @@ function generatePianoKeys(numOctaves: number = 3) {
         keys.push({
           index: oct * 12 + i,
           isBlack: pattern.isBlack,
-          // 7 white keys per octave, so we shift by 7 units per octave
+          // 7 blancas por octava, entonces desplazamos por 7 unidades por octava
           xPos: pattern.whiteOffset + (oct * 7)
         });
     }
@@ -39,7 +39,7 @@ function generatePianoKeys(numOctaves: number = 3) {
   return keys;
 }
 
-// Single Key Component with spring physics
+// Componente de tecla individual con física de resorte
 function PianoKey({ 
     data, 
     isActive, 

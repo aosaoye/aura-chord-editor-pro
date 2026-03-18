@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
+import NotificationBell from "./NotificationBell";
 
 interface NavbarProps {
   variant?: "default" | "transparent" | "editor" | "border";
@@ -88,8 +89,9 @@ export default function Navbar({ variant = "default", className = "", centerCont
               <Link href="/dashboard" className="px-6 py-3 bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase rounded-full hover:bg-primary/80 transition-all text-center whitespace-nowrap">
                  Mi Estudio
               </Link>
-              <div className="flex items-center scale-110 ml-2">
-                 <UserButton />
+              <div className="flex items-center gap-4 ml-2">
+                 <NotificationBell />
+                 <div className="scale-110"><UserButton /></div>
               </div>
             </SignedIn>
           </>
@@ -99,6 +101,7 @@ export default function Navbar({ variant = "default", className = "", centerCont
       {/* Mobile Hamburger */}
       <div className="lg:hidden flex items-center gap-4">
         <SignedIn>
+           <NotificationBell />
            <UserButton />
         </SignedIn>
         <button 

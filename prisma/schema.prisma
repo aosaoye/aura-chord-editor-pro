@@ -20,6 +20,9 @@ model User {
   stripePriceId          String?   @map(name: "stripe_price_id")
   stripeCurrentPeriodEnd DateTime? @map(name: "stripe_current_period_end")
 
+  // Marketplace Stripe Connect
+  stripeConnectAccountId String? @unique @map(name: "stripe_connect_account_id")
+
   songs       Song[]
   devotionals Devotional[]
 
@@ -28,6 +31,7 @@ model User {
   following     Follows[]      @relation("follower")
   notifications Notification[]
   songRatings   SongRating[]
+  purchases     Purchase[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -48,6 +52,7 @@ model Song {
 
   devotionals DevotionalSong[]
   ratings     SongRating[]
+  purchases   Purchase[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -120,4 +125,18 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+model Purchase {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [clerkId], onDelete: Cascade)
+  songId    String
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  amount    Float
+  createdAt DateTime @default(now())
+
+  @@unique([userId, songId])
+  @@index([userId])
+  @@index([songId])
 }
