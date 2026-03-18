@@ -259,8 +259,8 @@ export default function LyricsSearchPage() {
       const stanzas = lyrics.split(/\n\s*\n/);
       const cols = 3; 
       
-      const linesPerColumnCover = 28; // Cabecera ocupa espacio
-      const linesPerColumnNormal = 38; 
+      const linesPerColumnCover = 32; // Cabecera ocupa espacio
+      const linesPerColumnNormal = 42; 
       
       let pagesHtml: string[] = [];
       let currentPageHtml = "";
@@ -277,25 +277,22 @@ export default function LyricsSearchPage() {
       };
 
       const startColumn = () => {
-         return `<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 24px;">`;
+         return `<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px;">`;
       };
       
       const getHeader = () => `
-         <div style="margin-bottom: 32px; text-align: center; display: flex; flex-direction: column; align-items: center; border-bottom: 1px solid #333; padding-bottom: 24px;">
-            <h2 style="color: white; font-size: 48px; font-weight: 300; font-family: ui-sans-serif, system-ui, sans-serif; margin: 0 0 8px 0; letter-spacing: -2px;">${song.toUpperCase()}</h2>
-            <h3 style="color: ${pColorHex}; font-size: 12px; font-weight: bold; font-family: ui-sans-serif, system-ui, sans-serif; margin: 0; letter-spacing: 0.4em; text-transform: uppercase;">${artist.toUpperCase()}</h3>
+         <div style="margin-bottom: 30px;">
+            <h1 style="color: white; font-size: 40px; font-weight: bold; font-family: sans-serif; margin: 0; letter-spacing: 1px;">${song.toUpperCase()}</h1>
+            <p style="color: ${pColorHex}; font-size: 14px; font-weight: bold; font-family: sans-serif; margin-top: 8px; letter-spacing: 2px;">${artist.toUpperCase()}</p>
+            <div style="border-bottom: 2px solid #282828; margin-top: 20px; width: 100%;"></div>
          </div>
-         <div style="display: flex; flex-direction: row; gap: 32px; flex: 1; align-items: flex-start;">
+         <div style="display: flex; flex-direction: row; gap: 40px; flex: 1; align-items: flex-start;">
       `;
       const getFooter = (pageNum: number) => `
          </div>
-         <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; opacity: 0.6;">
-            <p style="font-size: 8px; font-weight: bold; letter-spacing: 0.3em; text-transform: uppercase; color: white; margin: 0; line-height: 1.6; font-family: ui-sans-serif, system-ui, sans-serif;">
-               POWERED BY LYRICS.OVH<br/>
-               LETRA OBTENIDA A TRAVÉS DE CHORDPRO<br/>
-               <span style="opacity: 0.5; letter-spacing: 0.1em;">PÁGINA ${pageNum + 1}</span>
-            </p>
-            <span style="font-size: 24px; font-weight: 900; letter-spacing: -1px; color: white; font-family: ui-sans-serif, system-ui, sans-serif; margin: 0;">C</span>
+         <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid #282828; display: flex; justify-content: space-between; align-items: flex-end; color: #666; font-family: sans-serif; font-size: 10px; font-weight: bold;">
+            <span style="letter-spacing: 2px;">POWERED BY LETRA.GLOBAL</span>
+            <span style="font-size: 14px;">PAG ${pageNum + 1}</span>
          </div>
       `;
 
@@ -303,7 +300,7 @@ export default function LyricsSearchPage() {
       currentPageHtml += startColumn();
 
       stanzas.forEach(stanza => {
-         const sLines = stanza.split('\n');
+         const sLines = stanza.split('\\n');
          const blocksNeeded = sLines.length + 1; // +1 espacio visual extra
          const maxL = cPage === 0 ? linesPerColumnCover : linesPerColumnNormal;
 
@@ -327,7 +324,7 @@ export default function LyricsSearchPage() {
          }
 
          const stanzaHtml = `
-            <div style="color: #d1d1d1; font-size: 16px; line-height: 1.7; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; font-weight: 400; white-space: pre-wrap;">${stanza}</div>
+            <div style="color: ${textColor}; font-size: 14.5px; line-height: 1.6; font-family: sans-serif; font-weight: 500; white-space: pre-wrap;">${stanza}</div>
          `;
          currentPageHtml += stanzaHtml;
          currentLinesInsideColumn += blocksNeeded;
@@ -342,7 +339,7 @@ export default function LyricsSearchPage() {
          const pageDiv = document.createElement("div");
          pageDiv.style.width = `${a4Width}px`;
          pageDiv.style.height = `${a4Height}px`;
-         pageDiv.style.background = `radial-gradient(circle at top right, ${pColorHex}25 0%, #0a0a0a 600px), #0a0a0a`;
+         pageDiv.style.backgroundColor = bgColor;
          pageDiv.style.padding = `${margin}px`;
          pageDiv.style.boxSizing = "border-box";
          pageDiv.style.display = "flex";
@@ -361,7 +358,7 @@ export default function LyricsSearchPage() {
             const pageDiv = document.createElement("div");
             pageDiv.style.width = `${a4Width}px`;
             pageDiv.style.height = `${a4Height}px`;
-            pageDiv.style.background = `radial-gradient(circle at top right, ${pColorHex}25 0%, #0a0a0a 600px), #0a0a0a`;
+            pageDiv.style.backgroundColor = bgColor;
             pageDiv.style.padding = `${margin}px`;
             pageDiv.style.boxSizing = "border-box";
             pageDiv.style.display = "flex";
@@ -537,7 +534,16 @@ export default function LyricsSearchPage() {
 
   return (
     <div className={`min-h-screen bg-background text-foreground transition-colors duration-500 font-sans selection:bg-primary selection:text-white ${settings.colorTheme}`}>
-      <Navbar />
+      <Navbar 
+        centerContent={
+          <div className="hidden lg:flex items-center gap-12 text-[10px] font-bold tracking-[0.2em] text-gray-400 uppercase">
+            <Link href="/" className="cursor-pointer hover:text-black dark:hover:text-white transition-colors">Inicio</Link>
+            <span className="cursor-pointer text-black dark:text-white border-b-2 border-black dark:border-white pb-1">Buscador</span>
+            <Link href="/settings" className="cursor-pointer hover:text-black dark:hover:text-white transition-colors">Configuración</Link>
+            <Link href="/editor" className="cursor-pointer hover:text-black dark:hover:text-white transition-colors">Estudio</Link>
+          </div>
+        }
+      />
       
       <div className="pt-36 pb-32 px-6 sm:px-10 max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-both">
         
