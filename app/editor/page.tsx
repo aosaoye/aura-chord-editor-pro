@@ -19,6 +19,7 @@ import PurchaseButton from "../components/PurchaseButton";
 import StarRatingInteractive from "../components/StarRatingInteractive";
 import GsapWrapper from "../components/GsapWrapper";
 import Piano3D from "../components/Piano3D";
+import ExportModal from "../components/ExportModal";
 
 export default function SongEditor() {
   const [song, setSong] = useState<Song | null>(null);
@@ -26,6 +27,7 @@ export default function SongEditor() {
   const [isExporting, setIsExporting] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const { user } = useUser();
 
   const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
@@ -826,19 +828,10 @@ export default function SongEditor() {
             {/* Grupo de Exportación */}
             <div className="flex items-center bg-foreground rounded-full overflow-hidden shadow-xl transition-transform active:scale-95 shrink-0">
               <button
-                onClick={handleExportToPDF}
-                disabled={isExporting}
+                onClick={() => setIsExportModalOpen(true)}
                 className="px-6 py-3 bg-foreground text-background text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-50 border-r border-background/20 flex items-center gap-2"
               >
-                {isExporting ? "Generando..." : "PDF"}
-              </button>
-
-              <button
-                onClick={handleExportToImage}
-                disabled={isExporting || isSaving}
-                className="px-6 py-3 bg-foreground text-background text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-50 border-r border-background/20 flex items-center gap-2"
-              >
-                PNG
+                📥 Exportar Pro
               </button>
 
               <button
@@ -920,12 +913,9 @@ export default function SongEditor() {
                                     <div className={`w-full min-h-[1.8em] mb-1 md:mb-2 font-sans font-bold text-primary tracking-widest flex items-end relative leading-normal ${isActive ? 'text-2xl sm:text-4xl' : 'text-xl sm:text-2xl'}`}>
                                       {syl.chord ? (() => {
                                         const formatted = formatChordText(syl.chord, notation, songKey);
-                                        const nextHasChord = Boolean(
-                                          word.syllables[i + 1]?.chord ||
-                                          (!word.syllables[i + 1] && line.words[wIdx + 1]?.syllables[0]?.chord)
-                                        );
+                                        // Aseguramos margen derecho dinámico para evitar solapamientos masivos
                                         return (
-                                          <span className={`flex items-start z-10 pt-1 ${nextHasChord ? 'pr-5' : 'absolute left-0 bottom-0 whitespace-nowrap'}`}>
+                                          <span className="flex items-start z-10 pt-1 pr-3 lg:pr-5 whitespace-nowrap">
                                             <span>{formatted.root}</span>
                                             {formatted.variation && (
                                               <span className="text-[0.6em] relative top-0 ml-[1px] font-sans font-bold">{formatted.variation}</span>
@@ -1439,6 +1429,17 @@ export default function SongEditor() {
       </div>
     )}
     </div>
+    
+    {isExportModalOpen && (
+      <ExportModal
+        song={song}
+        colorTheme={colorTheme}
+        onClose={() => setIsExportModalOpen(false)}
+        onExportPDF={handleExportToPDF}
+        onExportPNG={handleExportToImage}
+      />
+    )}
+
   </>
   );
 }
