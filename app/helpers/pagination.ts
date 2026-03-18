@@ -68,16 +68,22 @@ export function paginateSong(song: Song, linesPerColumn: number = 17, columnsPer
   }
 
   // Ahora empaquetamos las columnas dinámicamente según 'columnsPerPage' en Páginas A4
+  // Regla del usuario: Maximo 2 columnas. Si cabe en 1, solo devuelve 1 (ocupará el display 100%).
+  // Si no cabe, usa 2. Si las 2 se llenan, salta a otra página.
   const pages: Page[] = [];
-  for (let i = 0; i < allColumns.length; i += columnsPerPage) {
+  const maxCols = columnsPerPage > 0 ? columnsPerPage : 2; 
+
+  for (let i = 0; i < allColumns.length; i += maxCols) {
     const pageColumns: PageSection[][] = [];
-    for (let c = 0; c < columnsPerPage; c++) {
-      pageColumns.push(allColumns[i + c] || []);
+    for (let c = 0; c < maxCols; c++) {
+      if (allColumns[i + c]) {
+         pageColumns.push(allColumns[i + c]);
+      }
     }
     
     pages.push({
-      id: `page-${i / columnsPerPage}`,
-      index: i / columnsPerPage,
+      id: `page-${i / maxCols}`,
+      index: i / maxCols,
       columns: pageColumns
     });
   }

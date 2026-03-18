@@ -700,7 +700,7 @@ export default function SongEditor() {
   const isReadOnly = song?.userId && user?.id ? song.userId !== user.id : false;
 
   const hasMultipleSongs = Array.isArray(song?.sections) && song.sections.filter(s => s.title && /^\d+\.\s/.test(s.title)).length > 1;
-  const activeColumns = editorColumns > 0 ? editorColumns : (hasMultipleSongs ? 2 : 1);
+  const activeColumns = editorColumns > 0 ? editorColumns : 2;
   const baseLinesPerColumn = fontSize.includes('2xl') ? 11 : fontSize.includes('xl') ? 14 : fontSize.includes('sm') ? 22 : 18;
 
   const marginMap = {
@@ -910,76 +910,35 @@ export default function SongEditor() {
           </div>
         )}
 
-      {/* VISTA PREVIA: SIDEBAR IMPRESIÓN (WORD-LIKE) */}
-      {isPreviewMode && (
-        <aside className="w-full sm:w-[350px] bg-background shadow-2xl border-r border-border flex flex-col z-20 shrink-0 animate-in slide-in-from-left-8 duration-500 h-screen">
-          <div className="p-8 border-b border-border flex items-center gap-4">
-            <button
-              onClick={() => setIsPreviewMode(false)}
-              className="w-10 h-10 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors shadow-inner shrink-0"
-            >
-              <svg className="w-5 h-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-              </svg>
-            </button>
-            <h2 className="text-2xl font-light tracking-tight text-foreground">Imprimir</h2>
-          </div>
-
-          <div className="p-8 flex flex-col gap-8 flex-1 overflow-y-auto hide-scrollbar">
-            <div className="flex items-center gap-6">
-              <button
-                onClick={handleExportToPDF}
-                disabled={isExporting}
-                className="w-24 h-28 rounded-xl border-2 border-gray-200 dark:border-gray-800 flex flex-col items-center justify-center gap-3 hover:bg-primary/5 hover:border-primary transition-all disabled:opacity-50 text-foreground shadow-sm bg-gray-50 dark:bg-[#1a1a1a]"
-              >
-                <svg className="w-8 h-8 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0v3.396c0 .605.485 1.096 1.05 1.096h8.4c.565 0 1.05-.491 1.05-1.096V9.456z" />
-                </svg>
-                <span className="text-[10px] font-bold tracking-widest uppercase">{isExporting ? "Creando" : "Imprimir"}</span>
-              </button>
-              <div className="flex flex-col gap-2">
-                <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Copias</label>
-                <input type="number" defaultValue={1} min={1} className="w-20 border px-3 py-2 rounded text-sm bg-transparent border-gray-200 dark:border-gray-800 focus:outline-none focus:border-primary transition-colors text-foreground" />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2 border-t border-gray-100 dark:border-gray-800 pt-6">
-              <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Exportar como Imagen</label>
-              <button
-                onClick={handleExportToImage}
-                disabled={isExporting}
-                className="py-3 px-4 border border-gray-200 dark:border-gray-800 rounded flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-colors text-xs font-bold uppercase tracking-widest disabled:opacity-50 text-foreground"
-              >
-                Descargar PNG
-                <span className="opacity-50 text-lg">⬇</span>
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-3 border-t border-gray-100 dark:border-gray-800 pt-6">
-              <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Configuración de Impresión</label>
-              <div className="p-4 border border-gray-200 dark:border-gray-800 rounded bg-gray-50 dark:bg-[#1a1a1a] flex items-center justify-between cursor-not-allowed opacity-70">
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Todo el documento</span>
-                </div>
-                <span className="text-[10px] bg-gray-200 dark:bg-[#333] px-2 py-0.5 rounded text-gray-500 font-bold">PDF</span>
-              </div>
-              <div className="p-4 border border-gray-200 dark:border-gray-800 rounded bg-gray-50 dark:bg-[#1a1a1a] flex items-center justify-between cursor-not-allowed opacity-70">
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200">A una cara</span>
-                </div>
-              </div>
-              <div className="p-4 border border-gray-200 dark:border-gray-800 rounded bg-gray-50 dark:bg-[#1a1a1a] flex items-center justify-between cursor-not-allowed opacity-70 mt-2">
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200">A4 Vertical</span>
-                  <span className="text-[10px] text-gray-500 mt-0.5 tracking-widest">210 x 297 mm</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </aside>
+      {/* VISTA PREVIA: HUD FLOTANTE (REEMPLAZA SIDEBAR IMPRESIÓN) */}
+      {isPreviewMode && !isPlaying && (
+        <div className="fixed bottom-6 lg:bottom-10 right-6 lg:right-10 z-[60] flex items-center gap-3 bg-background/95 backdrop-blur-xl p-2.5 rounded-full border border-border/50 shadow-2xl animate-in slide-in-from-bottom-8 duration-500">
+          <button
+            onClick={() => setIsPreviewMode(false)}
+            className="w-10 h-10 rounded-full flex items-center justify-center bg-muted/80 text-foreground hover:bg-accent hover:text-foreground transition-all"
+            title="Cerrar Vista Previa"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+          
+          <div className="w-px h-6 bg-border mx-1 opacity-50"></div>
+          
+          <button
+            onClick={handleExportToPDF} 
+            disabled={isExporting}
+            className="px-6 py-3 bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase rounded-full hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+          >
+            Exportar PDF
+          </button>
+          <button
+            onClick={handleExportToImage} 
+            disabled={isExporting}
+            className="px-6 py-3 bg-foreground text-background text-[10px] font-bold tracking-[0.2em] uppercase rounded-full hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+          >
+            Exportar PNG
+          </button>
+        </div>
       )}
-
-      {/* CONTROLES DE SESIÓN LOCAL (Solo Transpositor y Tono) */}
       {!isPreviewMode && (
         <aside className="w-full lg:w-64 bg-background rounded-xl shadow-lg lg:shadow-xl border border-border p-5 sm:p-6 flex flex-col gap-6 lg:gap-8 static lg:sticky top-36 z-30 shrink-0">
           <div className="pb-4 border-b border-border">
@@ -1185,7 +1144,7 @@ export default function SongEditor() {
             )}
 
             {/* CONTENIDO DE LA PÁGINA (COLUMNAS MASONRY DINÁMICAS) */}
-            <div className={`grid grid-cols-1 ${({ 1: 'md:grid-cols-1', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-4' } as Record<number, string>)[activeColumns] || 'md:grid-cols-1'} gap-8 sm:gap-12 w-full mt-2 flex-1 items-start`}>
+            <div className={`grid grid-cols-1 ${({ 1: 'md:grid-cols-1', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-4' } as Record<number, string>)[page.columns.length] || 'md:grid-cols-1'} gap-8 sm:gap-12 w-full mt-2 flex-1 items-start`}>
               {page.columns.map((col, colIdx) => (
                 <div key={`col-${page.id}-${colIdx}`} className="col-span-1 flex flex-col gap-10">
                   {col.map((section, sIdx) => (
