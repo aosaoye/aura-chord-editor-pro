@@ -37,21 +37,21 @@ export function useTeleprompter(song: Song | null) {
           const lineRepeats = line.repeat || 1;
           
           for (let l = 0; l < lineRepeats; l++) {
-            const lineDurationSecs = line.beats * beatDurationSecs;
-            const chords: ChordCue[] = [];
-            
             // Recopilar todos los acordes de la línea
             const lineChords: Chord[] = [];
             line.words.forEach(w => w.syllables.forEach(syl => {
               if (syl.chord) lineChords.push(syl.chord);
             }));
 
+            const numChords = lineChords.length;
+            // Si la línea no tiene "beats" configurado, le damos 4 tiempos a CADA acorde que tenga, o 8 tiempos por defecto.
+            const totalLineBeats = (line.beats && line.beats > 0) ? line.beats : (numChords > 0 ? numChords * 4 : 8);
+            const lineDurationSecs = totalLineBeats * beatDurationSecs;
+            const chords: ChordCue[] = [];
+
             // Algoritmo de Compás (Distribución Inteligente)
-            // Si hay 3 acordes en 4 tiempos -> 1 tiempo, 1 tiempo, 2 tiempos
-            if (lineChords.length > 0) {
-              const totalLineBeats = line.beats; 
+            if (numChords > 0) {
               let currentBeatOffset = 0;
-              const numChords = lineChords.length;
 
               for (let i = 0; i < numChords; i++) {
                 let chordBeats = 1;
@@ -61,7 +61,6 @@ export function useTeleprompter(song: Song | null) {
                    if (chordBeats < 0) chordBeats = 1; // Fallback de seguridad
                 } else {
                    // Todos los demás acorde se llevan la división entera
-                   // Ej. 4 tiempos / 3 acordes = 1 (floor). 
                    chordBeats = Math.floor(totalLineBeats / numChords);
                    if (chordBeats < 1) chordBeats = 1;
                 }

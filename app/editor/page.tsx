@@ -1115,8 +1115,21 @@ export default function SongEditor() {
                     {song.title}
                   </h1>
                   <div className="flex items-center gap-6 md:gap-8 flex-wrap">
-                    <span className="text-[10px] font-bold tracking-[0.4em] text-gray-400 uppercase">
-                      TEMPO — <span className="text-black dark:text-white">{song.bpm} BPM</span>
+                    <span className="text-[10px] font-bold tracking-[0.4em] text-gray-400 uppercase flex items-center gap-2">
+                      TEMPO — 
+                      {isReadOnly ? (
+                        <span className="text-black dark:text-white">{song.bpm} BPM</span>
+                      ) : (
+                        <div className="flex items-center gap-1 group relative">
+                           <input 
+                             type="number" 
+                             value={song.bpm || 120}
+                             onChange={(e) => setSong({ ...(song as any), bpm: parseInt(e.target.value) || 0 })}
+                             className="bg-transparent text-black dark:text-white font-bold outline-none w-10 text-center border-b border-transparent hover:border-gray-300 focus:border-primary transition-colors cursor-text"
+                           />
+                           <span className="text-black dark:text-white">BPM</span>
+                        </div>
+                      )}
                     </span>
                     <div className="h-px bg-gray-200 dark:bg-gray-800 flex-1 min-w-[50px] max-w-[200px]"></div>
 
