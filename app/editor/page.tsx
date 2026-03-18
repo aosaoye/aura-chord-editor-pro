@@ -128,6 +128,7 @@ export default function SongEditor() {
     if (isNew === 'true') {
       localStorage.removeItem("chordpro-draft-lyrics");
       localStorage.removeItem("chordpro-draft-title");
+      localStorage.removeItem("chordpro-draft-song");
       setIsAnimating(false);
       setSong(null);
       setTitleInput("");

@@ -41,7 +41,7 @@ export default function LandingPage() {
                 creamos escenarios profesionales para tu inspiración.
               </p>
               <div className="mt-8 sm:mt-12 flex items-center gap-6 text-[10px] sm:text-[10px] font-bold tracking-[0.3em] uppercase text-foreground">
-                 <Link href="/editor" className="bg-primary text-primary-foreground px-8 sm:px-10 py-4 rounded-full text-[10px] sm:text-xs hover:bg-primary/80 transition-all hover:scale-105 active:scale-95 shadow-[0_15px_30px_rgba(var(--primary-raw),0.2)] flex items-center gap-3">
+                 <Link href="/editor?new=true" className="bg-primary text-primary-foreground px-8 sm:px-10 py-4 rounded-full text-[10px] sm:text-xs hover:bg-primary/80 transition-all hover:scale-105 active:scale-95 shadow-[0_15px_30px_rgba(var(--primary-raw),0.2)] flex items-center gap-3">
                    Crear Ahora <ArrowRight size={16} />
                  </Link>
               </div>
