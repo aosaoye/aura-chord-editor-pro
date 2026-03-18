@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { Search, Music, Users, Clock, Globe } from "lucide-react";
+import { Search, Music, Users, Clock, Globe, Star } from "lucide-react";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 import { PrismaClient } from "@prisma/client";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { auth } from "@clerk/nextjs/server";
 import GsapWrapper from "../components/GsapWrapper";
-import StarRatingInteractive from "../components/StarRatingInteractive";
+
 
 const prisma = new PrismaClient();
 
@@ -127,13 +128,9 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
                          const isOwner = userId === song.user.clerkId;
 
                          return (
-                           <div className="flex items-center gap-2 ml-auto" title={isOwner ? "No puedes votar tu propia obra" : "Valora esta obra"}>
-                             <StarRatingInteractive 
-                               songId={song.id} 
-                               myInitialRating={myRating} 
-                               readOnly={!userId || isOwner} 
-                             />
-                             <span className="text-[10px] font-bold text-muted-foreground">({avgRating})</span>
+                           <div className="flex items-center gap-1 ml-auto text-yellow-500" title={isOwner ? "No puedes votar tu propia obra" : "Valora esta obra"}>
+                             <Star size={12} fill="currentColor" />
+                             <span className="text-[10px] font-bold text-muted-foreground ml-1">({avgRating})</span>
                            </div>
                          );
                        })()}
@@ -172,6 +169,7 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
         </GsapWrapper>
 
       </main>
+      <Footer />
     </div>
   );
 }

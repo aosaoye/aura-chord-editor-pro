@@ -1,79 +1,150 @@
 import Link from 'next/link';
 import Navbar from './components/Navbar';
 import GsapWrapper from './components/GsapWrapper';
+import Footer from './components/Footer';
+import { Music, Smartphone, Zap, DollarSign, Crown, Lock, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden selection:bg-primary selection:text-white font-sans relative transition-colors duration-500">
       
-      {/* Decorative huge background letters a la Ebenzer */}
+      {/* Decorative huge background letters */}
       <GsapWrapper animationType="fade-in" duration={2} delay={0.5} className="absolute top-32 left-0 w-full h-[60vh] overflow-hidden pointer-events-none flex items-center justify-center -z-10 select-none">
-         <span className="text-[35vw] font-black tracking-tighter text-black opacity-[0.02] whitespace-nowrap">AURA</span>
+         <span className="text-[35vw] font-black tracking-tighter text-black dark:text-white opacity-[0.02] whitespace-nowrap">AURA</span>
       </GsapWrapper>
 
       {/* Navbar Premium */}
-      <Navbar variant="default" />
+      <Navbar variant="transparent" className="mix-blend-normal backdrop-blur-md" />
 
       {/* Hero Section */}
-      <main className="pb-20 px-8 sm:px-16 max-w-[1800px] mx-auto flex flex-col justify-center relative">
+      <main className="pb-20 px-6 sm:px-12 lg:px-16 max-w-[1800px] mx-auto flex flex-col justify-center relative pt-24">
         
-         {/* Huge curved visual container at the bottom */}
-        <GsapWrapper animationType="scale-up" duration={1.2} delay={0.3} className="w-full mt-24 lg:mt-32 min-h-[400px] lg:aspect-[25/9] bg-zinc-950 rounded-2xl sm:rounded-3xl relative group shadow-lg overflow-hidden flex flex-col justify-end p-8 sm:p-14 lg:p-24 border border-border/50 bg-[url('https://images.pexels.com/photos/7521300/pexels-photo-7521300.jpeg')] bg-cover bg-center">
-          
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/40 via-zinc-950/80 to-zinc-950/90 opacity-90 group-hover:scale-105 group-hover:opacity-100 transition-all duration-1000 ease-in-out"></div>
-          
-          {/* Subtle primary light glow */}
-          <div className="absolute bottom-0 right-0 w-full lg:w-2/3 h-full lg:h-2/3 bg-primary/20 blur-[100px] mix-blend-screen pointer-events-none"></div>
-
-          <div className="relative z-10 w-full flex flex-col lg:flex-row justify-between items-start lg:items-end gap-10">
-            <div>
-              <h2 className="text-4xl sm:text-6xl md:text-5xl lg:text-6xl font-light text-white tracking-tight mb-4 leading-[1.1]">
-                Música que <br className="hidden lg:block"/><span className="font-bold italic">cuenta tu historia.</span>
-              </h2>
-              <p className="text-[9px] sm:text-[10px] font-bold tracking-[0.3em] sm:tracking-[0.4em] uppercase text-zinc-400">
-                ARQUITECTURA • ARMONÍA • REFINAMIENTO
-              </p>
-            </div>
-
-            <Link href="/editor" className="bg-primary text-primary-foreground px-8 sm:px-12 py-4 sm:py-5 rounded-full text-[10px] sm:text-xs font-bold tracking-[0.2em] uppercase hover:bg-primary/80 hover:scale-105 transition-all shadow-[0_20px_40px_rgba(var(--primary-raw),0.3)] active:scale-95 whitespace-nowrap text-center w-full lg:w-auto mt-4 lg:mt-0">
-              Entrar al Editor
-            </Link>
-          </div>
-        </GsapWrapper>
-
         <GsapWrapper animationType="fade-up" duration={1} delay={0.1}>
           <div className="my-10">
-            <p className="text-[10px] font-bold tracking-[0.4em] text-foreground uppercase">
-              LEGACY OF EXCELLENCE
+            <p className="text-[10px] font-bold tracking-[0.4em] text-primary uppercase">
+              La Nueva Era de la Transcripción
             </p>
           </div>
 
           <div className="relative z-10 w-full">
-            <h1 className="text-[15vw] lg:text-[11vw] font-black tracking-tighter leading-[0.8] text-foreground">
+            <h1 className="text-[13vw] lg:text-[10vw] font-black tracking-tighter leading-[0.8] text-foreground">
               Acordes que<br/>
-              <span className="font-light italic text-muted-foreground">transcienden.</span>
+              <span className="font-light italic text-muted-foreground">trascienden.</span>
             </h1>
           </div>
 
-          <div className="flex justify-start lg:justify-end mt-20 relative z-10 lg:-mt-24 pr-4 lg:pr-32">
-            <div className="max-w-md lg:max-w-lg border-t border-border pt-10">
-              <p className="text-muted-foreground font-light text-2xl leading-relaxed">
+          <div className="flex justify-start lg:justify-end mt-16 relative z-10 lg:-mt-20 pr-4 lg:pr-32">
+            <div className="max-w-md lg:max-w-xl border-t border-border pt-10">
+              <p className="text-muted-foreground font-light text-xl sm:text-2xl leading-relaxed">
                 Cada proyecto de <span className="font-bold text-foreground">AuraChords</span> es una pieza única 
                 de arquitectura musical. No anotamos simples acordes, 
-                creamos escenarios para tu inspiración más auténtica.
+                creamos escenarios profesionales para tu inspiración.
               </p>
               <div className="mt-12 flex items-center gap-6 text-[10px] font-bold tracking-[0.3em] uppercase text-foreground">
-                 <div className="w-16 h-[1px] bg-foreground"></div>
-                 EST. 2026
+                 <Link href="/editor" className="bg-primary text-primary-foreground px-10 py-4 rounded-full text-xs hover:bg-primary/80 transition-all hover:scale-105 active:scale-95 shadow-[0_15px_30px_rgba(var(--primary-raw),0.2)] flex items-center gap-3">
+                   Crear Ahora <ArrowRight size={16} />
+                 </Link>
               </div>
             </div>
           </div>
         </GsapWrapper>
 
-       
+        {/* Visual Showcase (Hero Banner) */}
+        <GsapWrapper animationType="scale-up" duration={1.2} delay={0.3} className="w-full mt-24 lg:mt-32 aspect-[21/9] bg-zinc-950 rounded-[40px] relative group shadow-2xl border border-white/5 overflow-hidden flex flex-col justify-end p-8 sm:p-14 lg:p-24 bg-[url('https://images.pexels.com/photos/7521300/pexels-photo-7521300.jpeg')] bg-cover bg-center">
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90 group-hover:scale-105 group-hover:opacity-100 transition-all duration-1000 ease-in-out"></div>
+          <div className="absolute top-0 right-0 w-full lg:w-2/3 h-full lg:h-2/3 bg-primary/20 blur-[120px] mix-blend-screen pointer-events-none"></div>
+
+          <div className="relative z-10 w-full flex flex-col lg:flex-row justify-between items-start lg:items-end gap-10">
+            <div>
+               <h2 className="text-3xl sm:text-5xl lg:text-5xl font-light text-white tracking-tight mb-4 leading-[1.1]">
+                 Música que <br className="hidden lg:block"/><span className="font-bold italic">cuenta tu historia.</span>
+               </h2>
+            </div>
+            <Link href="/community" className="backdrop-blur-xl bg-white/10 border border-white/20 text-white px-8 sm:px-12 py-4 rounded-full text-xs font-bold tracking-[0.2em] uppercase hover:bg-white/20 hover:scale-105 transition-all text-center">
+              Explorar la Comunidad
+            </Link>
+          </div>
+        </GsapWrapper>
+
+        {/* Section: Ventajas & Características */}
+        <div className="mt-40 mb-20 relative">
+          <GsapWrapper animationType="fade-up">
+            <div className="text-center max-w-3xl mx-auto mb-20">
+              <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-6">El Estándar Profesional</h2>
+              <p className="text-muted-foreground text-lg leading-relaxed">Diseñado por músicos para músicos. AuraChords combina la potencia de un editor en tiempo real con la elegancia de una presentación fluida.</p>
+            </div>
+          </GsapWrapper>
+
+          <GsapWrapper animationType="stagger-children" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              { icon: <Music size={24}/>, title: 'Transpositor Inteligente', desc: 'Sube o baja medio tono todos tus acordes con un clic, sin arruinar tu formato.' },
+              { icon: <Smartphone size={24}/>, title: 'Teleprompter 3D', desc: 'Modo presentación inmersivo a pantalla completa optimizado para iPad y móviles en vivo.' },
+              { icon: <Zap size={24}/>, title: 'Renderizado en Tiempo Real', desc: 'Escribe letras, usa tags como [Verso] y experimenta la magía del Canvas auto-generado.' }
+            ].map((feature, i) => (
+              <div key={i} className="bg-muted/30 border border-border rounded-3xl p-10 hover:border-primary/50 transition-colors group">
+                <div className="w-16 h-16 bg-background rounded-2xl flex items-center justify-center text-primary mb-8 shadow-sm group-hover:scale-110 transition-transform">{feature.icon}</div>
+                <h3 className="text-2xl font-bold mb-4">{feature.title}</h3>
+                <p className="text-muted-foreground leading-relaxed">{feature.desc}</p>
+              </div>
+            ))}
+          </GsapWrapper>
+        </div>
+
+        {/* Section: Premium / Marketplace */}
+        <div className="my-40 lg:my-56 bg-zinc-950 text-white rounded-[40px] p-8 sm:p-16 lg:p-24 relative overflow-hidden flex flex-col lg:flex-row items-center gap-16 shadow-2xl">
+           <div className="absolute top-0 right-0 w-1/2 h-full bg-primary/10 blur-[150px] pointer-events-none"></div>
+           
+           <GsapWrapper animationType="fade-in" className="flex-1 relative z-10 w-full">
+              <span className="text-primary font-bold tracking-[0.3em] uppercase text-xs flex items-center gap-2 mb-6"><Crown size={16}/> Nivel Creador Pro</span>
+              <h2 className="text-4xl sm:text-6xl font-black tracking-tighter mb-8 leading-[1.1]">No solo compongas.<br /><span className="text-muted-foreground font-light">Monetiza tu arte.</span></h2>
+              <p className="text-zinc-400 text-lg leading-relaxed mb-10 max-w-xl">
+                 AuraChords no es solo un editor, es un Marketplace de élite. Crea transcripciones premium, fija un precio, y vende tus obras directamente a miles de músicos en la plataforma.
+              </p>
+              
+              <ul className="flex flex-col gap-6 mb-12">
+                 <li className="flex items-center gap-4 text-sm font-medium"><ShieldCheck className="text-primary"/> Pasarela segura con Stripe Connect</li>
+                 <li className="flex items-center gap-4 text-sm font-medium"><Lock className="text-primary"/> Protección Anti-Robo de Acordes (Vista Previa Inteligente)</li>
+                 <li className="flex items-center gap-4 text-sm font-medium"><DollarSign className="text-primary"/> Desembolsos directos a tu cuenta bancaria</li>
+              </ul>
+
+              <Link href="/pricing" className="bg-primary text-primary-foreground px-10 py-5 rounded-full font-bold tracking-[0.1em] uppercase hover:scale-105 transition-all shadow-[0_10px_30px_rgba(var(--primary-raw),0.4)] inline-block text-sm text-center">
+                 Ver Planes para Creadores
+              </Link>
+           </GsapWrapper>
+
+           <GsapWrapper animationType="scale-up" delay={0.2} className="flex-1 w-full lg:w-auto relative z-10">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 relative overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-all duration-500">
+                 <div className="flex justify-between items-center border-b border-zinc-800 pb-6 mb-6">
+                    <div className="flex items-center gap-4">
+                       <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center text-primary"><Music/></div>
+                       <div>
+                         <h4 className="font-bold text-lg">Quiero Llenar Tu Trono</h4>
+                         <p className="text-xs text-zinc-500 uppercase tracking-widest font-bold">120 BPM • 10 MAR, 26</p>
+                       </div>
+                    </div>
+                    <div className="bg-amber-500/10 border border-amber-500/20 text-amber-500 px-4 py-2 rounded-lg font-black text-sm">
+                       € 2.50
+                    </div>
+                 </div>
+                 <div className="space-y-4 pt-2">
+                    <div className="h-4 bg-zinc-800 rounded-full w-3/4 opacity-50"></div>
+                    <div className="h-4 bg-zinc-800 rounded-full w-1/2 opacity-50"></div>
+                    <div className="h-4 bg-zinc-800 rounded-full w-5/6 opacity-50"></div>
+                 </div>
+                 
+                 <div className="mt-10 bg-black/50 backdrop-blur-md rounded-2xl p-6 border border-zinc-800 absolute bottom-4 left-4 right-4 text-center">
+                    <span className="text-3xl mb-2 block">🔒</span>
+                    <h5 className="font-bold mb-2">Obra Premium</h5>
+                    <button className="bg-primary text-primary-foreground w-full py-3 rounded-full text-xs font-bold uppercase tracking-widest mt-2">Adquirir Permanente</button>
+                 </div>
+              </div>
+           </GsapWrapper>
+        </div>
 
       </main>
+
+      {/* FOOTER */}
+      <Footer />
     </div>
   );
 }
- 

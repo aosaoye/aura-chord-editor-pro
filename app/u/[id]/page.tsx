@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { PrismaClient } from "@prisma/client";
 import Navbar from "../../components/Navbar";
-import { Users, Music, Clock } from "lucide-react";
+import Footer from "../../components/Footer";
+import { Users, Music, Clock, Star } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -148,11 +149,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
 
                         return (
                           <div className="flex items-center gap-1 mt-3" title={isOwner ? "No puedes votar tu propia obra" : "Valora esta obra"}>
-                            <StarRatingInteractive 
-                              songId={song.id} 
-                              myInitialRating={myRating} 
-                              readOnly={!currentUserId || isOwner} 
-                            />
+                            <Star size={12} fill="currentColor" />
                             <span className="text-[9px] font-bold text-muted-foreground ml-1">({avgRating})</span>
                           </div>
                         );
@@ -167,6 +164,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
           )}
         </GsapWrapper>
       </main>
+      <Footer />
     </div>
   );
 }

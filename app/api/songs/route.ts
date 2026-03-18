@@ -101,9 +101,12 @@ export async function GET(req: NextRequest) {
 
     if (id) {
        // Buscar canción específica (puede ser pública o del usuario)
-       const song = await prisma.song.findUnique({
+       const song = await (prisma as any).song.findUnique({
           where: { id },
-          include: { user: { select: { name: true, clerkId: true } } }
+          include: { 
+            user: { select: { name: true, clerkId: true } },
+            ratings: { select: { value: true, userId: true } }
+          }
        });
        
        if (!song) {

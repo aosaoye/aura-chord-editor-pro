@@ -114,8 +114,8 @@ export default function Piano3D({ activeKeys, themeColor = "#f59e0b" }: { active
           <p className="text-[9px] font-bold tracking-[0.2em] text-gray-500 uppercase">Motor de Acordes 3D</p>
       </div>
 
-      <Canvas camera={{ position: [0, 10, 22], fov: 55 }} shadows>
-        <ambientLight intensity={0.4} />
+      <Canvas camera={{ position: [0, 10, 22], fov: 35 }} shadows>
+        <ambientLight intensity={0.7} />
         <spotLight position={[0, 20, 12]} intensity={1.5} castShadow penumbra={1} angle={0.6} />
         
         {/* Interactive Camera Controls (Orbital VR Feel) */}
