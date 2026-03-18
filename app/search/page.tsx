@@ -230,22 +230,161 @@ export default function LyricsSearchPage() {
   }, [lyrics, song, artist, router]);
 
   const handleExportPNG = useCallback(async () => {
-    if (!canvasRef.current || !lyrics) return;
+    if (!lyrics) return;
     try {
-      // Capturamos con un color de fondo gris súper oscuro fijo para exportación
-      const exportBgColor = "#0a0a0a";
-      const dataUrl = await toPng(canvasRef.current, {
-        quality: 1.0, pixelRatio: 2, backgroundColor: exportBgColor
+      showToast("Generando imágenes en formato A4...");
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+
+      // Dimensiones A4 perfectas (96 DPI)
+      const a4Width = 794;
+      const a4Height = 1123;
+      const margin = 60;
+      
+      const themeColors: Record<string, string> = {
+        "theme-amber": "#F59E0B", "theme-violet": "#8B5CF6", "theme-emerald": "#10B981", 
+        "theme-rose": "#F43F5E", "theme-sky": "#0EA5E9"
+      };
+      const pColorHex = themeColors[settings.colorTheme] || "#F59E0B";
+      const bgColor = "#0f0f0f";
+      const textColor = "#dcdcdc";
+
+      // Contenedor temporal (fuera de la vista)
+      const hiddenContainer = document.createElement("div");
+      hiddenContainer.style.position = "absolute";
+      hiddenContainer.style.left = "-9999px";
+      hiddenContainer.style.top = "0";
+      document.body.appendChild(hiddenContainer);
+
+      const stanzas = lyrics.split(/\n\s*\n/);
+      const cols = 3; 
+      
+      const linesPerColumnCover = 32; // Cabecera ocupa espacio
+      const linesPerColumnNormal = 42; 
+      
+      let pagesHtml: string[] = [];
+      let currentPageHtml = "";
+      let currentLinesInsideColumn = 0;
+      let currentColumn = 0;
+      let cPage = 0;
+
+      const finishPage = () => {
+         pagesHtml.push(currentPageHtml);
+         currentPageHtml = "";
+         currentColumn = 0;
+         currentLinesInsideColumn = 0;
+         cPage++;
+      };
+
+      const startColumn = () => {
+         return `<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px;">`;
+      };
+      
+      const getHeader = () => `
+         <div style="margin-bottom: 30px;">
+            <h1 style="color: white; font-size: 40px; font-weight: bold; font-family: sans-serif; margin: 0; letter-spacing: 1px;">${song.toUpperCase()}</h1>
+            <p style="color: ${pColorHex}; font-size: 14px; font-weight: bold; font-family: sans-serif; margin-top: 8px; letter-spacing: 2px;">${artist.toUpperCase()}</p>
+            <div style="border-bottom: 2px solid #282828; margin-top: 20px; width: 100%;"></div>
+         </div>
+         <div style="display: flex; flex-direction: row; gap: 40px; flex: 1; align-items: flex-start;">
+      `;
+      const getFooter = (pageNum: number) => `
+         </div>
+         <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid #282828; display: flex; justify-content: space-between; align-items: flex-end; color: #666; font-family: sans-serif; font-size: 10px; font-weight: bold;">
+            <span style="letter-spacing: 2px;">POWERED BY LETRA.GLOBAL</span>
+            <span style="font-size: 14px;">PAG ${pageNum + 1}</span>
+         </div>
+      `;
+
+      currentPageHtml += getHeader();
+      currentPageHtml += startColumn();
+
+      stanzas.forEach(stanza => {
+         const sLines = stanza.split('\\n');
+         const blocksNeeded = sLines.length + 1; // +1 espacio visual extra
+         const maxL = cPage === 0 ? linesPerColumnCover : linesPerColumnNormal;
+
+         if (currentLinesInsideColumn + blocksNeeded > maxL && currentLinesInsideColumn > 0) {
+            currentPageHtml += `</div>`; // Cerrar columna
+            currentColumn++;
+            currentLinesInsideColumn = 0;
+            
+            if (currentColumn >= cols) {
+               currentPageHtml += getFooter(cPage);
+               finishPage();
+               
+               // Nueva página, no lleva cabecera completa 
+               currentPageHtml += `
+                 <div style="display: flex; flex-direction: row; gap: 40px; flex: 1; align-items: flex-start;">
+               `;
+               currentPageHtml += startColumn();
+            } else {
+               currentPageHtml += startColumn(); // Nueva columna en la misma página
+            }
+         }
+
+         const stanzaHtml = `
+            <div style="color: ${textColor}; font-size: 14.5px; line-height: 1.6; font-family: sans-serif; font-weight: 500; white-space: pre-wrap;">${stanza}</div>
+         `;
+         currentPageHtml += stanzaHtml;
+         currentLinesInsideColumn += blocksNeeded;
       });
-      const link = document.createElement("a");
-      link.download = `${song.toLowerCase().replace(/\s+/g, '-')}-letra.png`;
-      link.href = dataUrl;
-      link.click();
+      
+      currentPageHtml += `</div>`; // Cerrar última columna
+      currentPageHtml += getFooter(cPage); 
+      pagesHtml.push(currentPageHtml);
+
+      if (pagesHtml.length === 1) {
+         // Exportar una sola imagen
+         const pageDiv = document.createElement("div");
+         pageDiv.style.width = `${a4Width}px`;
+         pageDiv.style.height = `${a4Height}px`;
+         pageDiv.style.backgroundColor = bgColor;
+         pageDiv.style.padding = `${margin}px`;
+         pageDiv.style.boxSizing = "border-box";
+         pageDiv.style.display = "flex";
+         pageDiv.style.flexDirection = "column";
+         pageDiv.innerHTML = pagesHtml[0];
+         hiddenContainer.appendChild(pageDiv);
+
+         const dataUrl = await toPng(pageDiv, { quality: 1.0, pixelRatio: 2 });
+         const link = document.createElement("a");
+         link.download = `${song.toLowerCase().replace(/\s+/g, '-')}-letra-a4.png`;
+         link.href = dataUrl;
+         link.click();
+      } else {
+         // Exportar múltiples imágenes en ZIP
+         for (let i = 0; i < pagesHtml.length; i++) {
+            const pageDiv = document.createElement("div");
+            pageDiv.style.width = `${a4Width}px`;
+            pageDiv.style.height = `${a4Height}px`;
+            pageDiv.style.backgroundColor = bgColor;
+            pageDiv.style.padding = `${margin}px`;
+            pageDiv.style.boxSizing = "border-box";
+            pageDiv.style.display = "flex";
+            pageDiv.style.flexDirection = "column";
+            pageDiv.innerHTML = pagesHtml[i];
+            hiddenContainer.appendChild(pageDiv);
+
+            const dataUrl = await toPng(pageDiv, { quality: 1.0, pixelRatio: 2 });
+            const base64Data = dataUrl.replace(/^data:image\/(png|jpg);base64,/, "");
+            zip.file(`${song.toLowerCase().replace(/\s+/g, '-')}-pag-${i + 1}.png`, base64Data, { base64: true });
+            
+            // Limpiar
+            hiddenContainer.removeChild(pageDiv);
+         }
+
+         const content = await zip.generateAsync({ type: "blob" });
+         saveAs(content, `${song.toLowerCase().replace(/\s+/g, '-')}-letras.zip`);
+      }
+      
+      document.body.removeChild(hiddenContainer);
+      showToast("¡Exportación Completada " + (pagesHtml.length > 1 ? "en ZIP" : "") + "!");
     } catch (err) {
       console.error(err);
-      alert("Error al exportar PNG.");
+      showToast("Error al exportar PNG(s).");
     }
-  }, [song, lyrics]);
+  }, [song, lyrics, artist, settings.colorTheme, showToast]);
 
   const handleExportPDF = useCallback(() => {
     if (!lyrics) return;
