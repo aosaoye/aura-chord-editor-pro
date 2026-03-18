@@ -28,14 +28,6 @@ export default function SongEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const { user } = useUser();
 
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
   const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
 
   // --- Opciones Musicales de Sesión ---
@@ -612,31 +604,30 @@ export default function SongEditor() {
     }
   }, [song, songPrice]);
 
-  if (isMobile) {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-8 text-center pb-32 anim-in fade-in duration-500">
-        <span className="text-7xl mb-10 drop-shadow-2xl">📱</span>
-        <h1 className="text-3xl sm:text-5xl font-black tracking-tight mb-6 mt-4">Próximamente en nuestra app</h1>
-        <p className="text-muted-foreground text-lg sm:text-xl max-w-xl mx-auto leading-relaxed border-t border-border pt-6">
-          El estudio avanzado de transcripción requiere por ahora de una <span className="font-bold text-foreground">Tablet, Laptop o Escritorio</span> para operar correctamente los lienzos.
-        </p>
-        <p className="text-muted-foreground mt-4">
-           Aún así, tienes acceso total a explorar todas las obras creadas por nuestra comunidad.
-        </p>
-        <Link href="/community" className="mt-12 px-10 py-5 bg-foreground text-background dark:bg-primary dark:text-primary-foreground rounded-full font-black uppercase tracking-widest text-xs sm:text-sm hover:scale-105 transition-transform shadow-2xl">
-          Ver partituras de la comunidad
-        </Link>
-      </div>
-    );
-  }
+  const mobileBlocker = (
+    <div className="flex lg:hidden min-h-screen bg-background text-foreground flex-col items-center justify-center p-8 text-center pb-32 anim-in fade-in duration-500">
+      <span className="text-7xl mb-10 drop-shadow-2xl">📱</span>
+      <h1 className="text-3xl font-black tracking-tight mb-6 mt-4">Estudio no disponible</h1>
+      <p className="text-muted-foreground text-base max-w-xl mx-auto leading-relaxed border-t border-border pt-6">
+        El estudio avanzado de transcripción requiere de una <span className="font-bold text-foreground">Tablet, Laptop o Pantalla Grande</span> para operar los lienzos.
+      </p>
+      <p className="text-muted-foreground mt-4 text-sm">
+         Sin embargo, puedes explorar todas las obras públicas de nuestra comunidad.
+      </p>
+      <Link href="/community" className="mt-12 px-8 py-4 bg-foreground text-background dark:bg-primary dark:text-primary-foreground rounded-full font-black uppercase tracking-widest text-xs hover:scale-105 transition-transform shadow-2xl text-center">
+        Ver Comunidad
+      </Link>
+    </div>
+  );
 
   // Pantalla 1: Importador (Awwwards Style)
   if (!song) {
     return (
-      <div className={`min-h-screen bg-background text-foreground transition-all duration-700 ease-in-out ${isAnimating ? 'opacity-0' : 'opacity-100'} ${colorTheme}`}>
-
-        {/* Navigation Premium */}
-        <Navbar variant="default" />
+      <>
+        {mobileBlocker}
+        <div className={`hidden lg:block min-h-screen bg-background text-foreground transition-all duration-700 ease-in-out ${isAnimating ? 'opacity-0' : 'opacity-100'} ${colorTheme}`}>
+          {/* Navigation Premium */}
+          <Navbar variant="default" />
 
         {/* Hero Form */}
         <div className="pt-32 sm:pt-48 pb-24 px-6 sm:px-10 max-w-4xl mx-auto flex flex-col gap-12 sm:gap-20">
@@ -737,7 +728,8 @@ export default function SongEditor() {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </>
     );
   }
 
@@ -756,11 +748,13 @@ export default function SongEditor() {
   const activeMarginClass = marginMap[editorMargin];
 
   return (
-    <div className={`min-h-screen bg-background text-foreground transition-colors duration-500 overflow-hidden font-sans selection:bg-primary selection:text-white ${colorTheme} ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
+    <>
+      {mobileBlocker}
+      <div className={`hidden lg:flex min-h-screen flex-col bg-background text-foreground transition-colors duration-500 overflow-hidden font-sans selection:bg-primary selection:text-white ${colorTheme} ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
 
-      {/* Top Fixed Navbar */}
-      <Navbar
-        variant="editor"
+        {/* Top Fixed Navbar */}
+        <Navbar
+          variant="editor"
         className={isPreviewMode ? 'hidden' : ''}
         centerContent={
           <div className="hidden lg:flex items-center gap-12 text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
@@ -1424,20 +1418,18 @@ export default function SongEditor() {
           />
         </div>
       </div>
-    )
-  }
+    )}
 
-  {/* TOAST ELEGANTE */ }
-  {
-    toastMsg && (
+    {/* TOAST ELEGANTE */}
+    {toastMsg && (
       <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
         <div className="bg-foreground text-background px-6 py-3 rounded-full text-xs font-bold tracking-widest uppercase shadow-2xl flex items-center gap-3">
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
           {toastMsg}
         </div>
       </div>
-    )
-  }
-    </div >
+    )}
+    </div>
+  </>
   );
-} 
+}
