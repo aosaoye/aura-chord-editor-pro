@@ -145,3 +145,4 @@ export default function Navbar({ variant = "default", className = "", centerCont
     </nav>
   );
 }
+ 

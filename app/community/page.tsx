@@ -18,7 +18,7 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
         title: {
           contains: query,
           mode: "insensitive"
-        }
+        }  ,
       } : {})
     },
     include: {

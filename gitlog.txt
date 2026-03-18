@@ -1,0 +1,5 @@
+897515c fix(deps): install gsap and lucide-react with pnpm to update lockfile
+2a8544b feat: complete ui redesign based on references (Home, Mobile Dock, Apple Live Teleprompter)
+c095d63 feat: setup marketplace prices, real ratings, notifications and fix community follower counts
+a0e42d8 fix: disable greedy section column break to maximize fill per column as requested
+98941f2 feat: improve roman numerals and multi-song document titles styling to match user request
