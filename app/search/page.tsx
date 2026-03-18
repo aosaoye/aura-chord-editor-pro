@@ -534,16 +534,7 @@ export default function LyricsSearchPage() {
 
   return (
     <div className={`min-h-screen bg-background text-foreground transition-colors duration-500 font-sans selection:bg-primary selection:text-white ${settings.colorTheme}`}>
-      <Navbar 
-        centerContent={
-          <div className="hidden lg:flex items-center gap-12 text-[10px] font-bold tracking-[0.2em] text-gray-400 uppercase">
-            <Link href="/" className="cursor-pointer hover:text-black dark:hover:text-white transition-colors">Inicio</Link>
-            <span className="cursor-pointer text-black dark:text-white border-b-2 border-black dark:border-white pb-1">Buscador</span>
-            <Link href="/settings" className="cursor-pointer hover:text-black dark:hover:text-white transition-colors">Configuración</Link>
-            <Link href="/editor" className="cursor-pointer hover:text-black dark:hover:text-white transition-colors">Estudio</Link>
-          </div>
-        }
-      />
+      <Navbar />
       
       <div className="pt-36 pb-32 px-6 sm:px-10 max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-both">
         

@@ -261,6 +261,14 @@ export default function SongEditor() {
     });
   }, []);
 
+  const handleDeleteSection = useCallback((sectionId: string) => {
+    setSong((currentSong) => {
+      if (!currentSong) return currentSong;
+      const updatedSections = currentSong.sections.filter(s => s.id !== sectionId);
+      return { ...currentSong, sections: updatedSections };
+    });
+  }, []);
+
   const handleSectionTypeChange = useCallback((sectionId: string, newType: string) => {
     setSong((currentSong) => {
       if (!currentSong) return currentSong;
@@ -1084,7 +1092,7 @@ export default function SongEditor() {
         {song && paginateSong(song, baseLinesPerColumn, activeColumns).map((page, index) => (
           <div
             key={page.id}
-            className={`a4-page bg-background text-foreground ${activeMarginClass} overflow-hidden lg:shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.15)] transition-all duration-500 relative flex flex-col justify-start w-full lg:w-[210mm] lg:min-w-[210mm] min-h-[80vh] lg:h-[297mm] ring-0 lg:ring-1 lg:ring-border origin-top rounded-xl lg:rounded-none border border-border lg:border-none
+            className={`a4-page bg-background text-foreground ${activeMarginClass} overflow-visible relative lg:shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.15)] transition-all duration-500 flex flex-col justify-start w-full lg:w-[210mm] lg:min-w-[210mm] min-h-[80vh] lg:h-[297mm] ring-0 lg:ring-1 lg:ring-border origin-top rounded-xl lg:rounded-none border border-border lg:border-none
                 ${isPreviewMode ? 'transform shrink-0 scale-[0.6] sm:scale-75 lg:scale-[0.85] -mt-[40mm] sm:-mt-[20mm] lg:-mt-[10mm]' : 'shrink-0 lg:snap-center'}
               `}
           >
@@ -1216,6 +1224,18 @@ export default function SongEditor() {
                             }
                             return null;
                           })()}
+
+                          {!isReadOnly && (
+                            <button
+                              onClick={() => handleDeleteSection(section.id)}
+                              className="opacity-0 group-hover/secHeader:opacity-100 transition-opacity text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 p-1.5 rounded active:scale-95"
+                              title="Eliminar esta estrofa"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                              </svg>
+                            </button>
+                          )}
                         </div>
                       )}
 
