@@ -4,11 +4,15 @@ import Navbar from "../components/Navbar";
 import { PrismaClient } from "@prisma/client";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { auth } from "@clerk/nextjs/server";
+import GsapWrapper from "../components/GsapWrapper";
+import StarRatingInteractive from "../components/StarRatingInteractive";
 
 const prisma = new PrismaClient();
 
 export default async function CommunityPage({ searchParams }: { searchParams: { q?: string } }) {
   const query = searchParams.q || "";
+  const { userId } = await auth();
 
   // Buscamos canciones públicas recientes
   const publicSongs = await prisma.song.findMany({
@@ -35,7 +39,7 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
         }
       },
       ratings: {
-        select: { value: true }
+        select: { value: true, userId: true }
       }
     },
     orderBy: { updatedAt: "desc" },
@@ -48,14 +52,15 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
       
       <main className="flex-1 w-full max-w-[1200px] mx-auto p-6 md:p-10 lg:p-12">
         
-        <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-5 duration-700">
-           <div className="inline-flex items-center justify-center p-3 bg-primary/10 text-primary rounded-full mb-6">
-              <Globe size={32} />
-           </div>
-           <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4">Comunidad Global</h1>
-           <p className="text-muted-foreground text-lg max-w-xl mx-auto font-light mb-10">
-             Descubre la música de otros creadores, encuentra inspiración y sigue a tus compositores favoritos.
-           </p>
+        <GsapWrapper animationType="fade-up" duration={1}>
+          <div className="text-center mb-12">
+             <div className="inline-flex items-center justify-center p-3 bg-primary/10 text-primary rounded-full mb-6">
+                <Globe size={32} />
+             </div>
+             <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4">Comunidad Global</h1>
+             <p className="text-muted-foreground text-lg max-w-xl mx-auto font-light mb-10">
+               Descubre la música de otros creadores, encuentra inspiración y sigue a tus compositores favoritos.
+             </p>
 
            <form className="max-w-2xl mx-auto relative group flex items-center shadow-lg rounded-full overflow-hidden border border-border bg-white dark:bg-zinc-900 focus-within:border-primary transition-colors">
               <Search className="absolute left-6 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
@@ -70,13 +75,16 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
                 Buscar
               </button>
            </form>
-        </div>
+          </div>
+        </GsapWrapper>
 
         {query && (
-          <p className="mb-6 text-muted-foreground">Resultados para: <span className="text-foreground font-bold">"{query}"</span></p>
+          <GsapWrapper animationType="fade-in" delay={0.2}>
+            <p className="mb-6 text-muted-foreground">Resultados para: <span className="text-foreground font-bold">"{query}"</span></p>
+          </GsapWrapper>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-150">
+        <GsapWrapper animationType="stagger-children" delay={0.3} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {publicSongs.length === 0 ? (
             <div className="col-span-full py-20 text-center flex flex-col items-center">
                <Music size={48} className="text-muted-foreground/30 mb-4" />
@@ -84,7 +92,7 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
                <p className="text-muted-foreground mt-2">Prueba a buscar otro nombre o sé el primero en publicar una obra magistral.</p>
             </div>
           ) : (
-            publicSongs.map((song) => (
+            (publicSongs as any[]).map((song) => (
                <div key={song.id} className="group bg-white dark:bg-zinc-900 border border-border rounded-3xl p-6 flex flex-col justify-between hover:border-primary hover:shadow-xl transition-all duration-300 relative overflow-hidden">
                  
                  <div className="flex justify-between items-start z-10 mb-6">
@@ -114,10 +122,19 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
                          const avgRating = song.ratings.length > 0
                            ? (song.ratings.reduce((acc: number, r: { value: number }) => acc + r.value, 0) / song.ratings.length).toFixed(1)
                            : "0";
+                         
+                         const myRating = userId ? song.ratings.find((r: { userId: string, value: number }) => r.userId === userId)?.value || 0 : 0;
+                         const isOwner = userId === song.user.clerkId;
+
                          return (
-                           <span title="Valoración de la Obra" className={`flex items-center gap-1 ${song.ratings.length > 0 ? "text-amber-500" : "text-muted-foreground"}`}>
-                             ★ {avgRating}
-                           </span>
+                           <div className="flex items-center gap-2 ml-auto" title={isOwner ? "No puedes votar tu propia obra" : "Valora esta obra"}>
+                             <StarRatingInteractive 
+                               songId={song.id} 
+                               myInitialRating={myRating} 
+                               readOnly={!userId || isOwner} 
+                             />
+                             <span className="text-[10px] font-bold text-muted-foreground">({avgRating})</span>
+                           </div>
                          );
                        })()}
                      </div>
@@ -152,7 +169,7 @@ export default async function CommunityPage({ searchParams }: { searchParams: { 
                </div>
             ))
           )}
-        </div>
+        </GsapWrapper>
 
       </main>
     </div>

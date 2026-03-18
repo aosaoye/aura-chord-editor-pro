@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import PublicToggle from "./PublicToggle";
 import DeleteSongButton from "./DeleteSongButton";
+import GsapWrapper from "../components/GsapWrapper";
 
 const prisma = new PrismaClient();
 
@@ -72,22 +73,24 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
         {/* Main Content Dashboard */}
         <main className="flex-1 overflow-y-auto p-6 md:p-10 lg:p-12 relative">
            
-           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-6">
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-light tracking-tight text-foreground">
-                  {handleGreetings()}, <span className="font-bold">{user?.firstName || "Compositor"}</span>
-                </h1>
-                <p className="text-muted-foreground mt-2 font-medium">Aquí está un resumen de tu espacio creativo.</p>
-              </div>
+           <GsapWrapper animationType="fade-in" duration={1}>
+             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-6">
+                <div>
+                  <h1 className="text-3xl sm:text-4xl font-light tracking-tight text-foreground">
+                    {handleGreetings()}, <span className="font-bold">{user?.firstName || "Compositor"}</span>
+                  </h1>
+                  <p className="text-muted-foreground mt-2 font-medium">Aquí está un resumen de tu espacio creativo.</p>
+                </div>
 
-              <Link href="/editor?new=true" className="bg-primary text-primary-foreground px-6 py-3 rounded-full text-xs font-bold tracking-[0.1em] uppercase hover:scale-105 active:scale-95 transition-all shadow-[0_10px_20px_rgba(var(--primary-raw),0.2)] flex items-center gap-2 whitespace-nowrap">
-                <Plus size={16} />
-                Añadir nueva obra
-              </Link>
-           </div>
+                <Link href="/editor?new=true" className="bg-primary text-primary-foreground px-6 py-3 rounded-full text-xs font-bold tracking-[0.1em] uppercase hover:scale-105 active:scale-95 transition-all shadow-[0_10px_20px_rgba(var(--primary-raw),0.2)] flex items-center gap-2 whitespace-nowrap">
+                  <Plus size={16} />
+                  Añadir nueva obra
+                </Link>
+             </div>
+           </GsapWrapper>
 
            {/* Metrics Grid */}
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+           <GsapWrapper animationType="stagger-children" className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12" delay={0.2}>
              
              <div className="bg-background border border-border rounded-3xl p-6 flex flex-col justify-between shadow-sm relative overflow-hidden group">
                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all"></div>
@@ -115,7 +118,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
                )}
              </div>
 
-           </div>
+           </GsapWrapper>
 
            {/* Works Grid */}
            <div className="w-full">
@@ -131,7 +134,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
                   </Link>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <GsapWrapper animationType="stagger-children" delay={0.4} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {songs.map((song) => (
                     <div key={song.id} className="relative group">
                       <PublicToggle songId={song.id} initialIsPublic={song.isPublic ?? false} />
@@ -159,7 +162,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
                       </Link>
                     </div>
                   ))}
-                </div>
+                </GsapWrapper>
               )}
            </div>
 
