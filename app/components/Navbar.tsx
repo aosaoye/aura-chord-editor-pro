@@ -13,9 +13,12 @@ interface NavbarProps {
   className?: string;
   centerContent?: React.ReactNode;
   rightContent?: React.ReactNode;
+  saveStatus?: 'idle' | 'dirty' | 'saving' | 'saved' | 'error';
+  lastSaved?: Date | null;
+  forceSave?: () => void;
 }
 
-export default function Navbar({ variant = "default", className = "", centerContent, rightContent }: NavbarProps) {
+export default function Navbar({ variant = "default", className = "", centerContent, rightContent, saveStatus, lastSaved, forceSave }: NavbarProps) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 

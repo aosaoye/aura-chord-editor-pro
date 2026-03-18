@@ -1,7 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { getAuth, currentUser } from "@clerk/nextjs/server";
-import { PrismaClient } from "@prisma/client";
-import { NextRequest } from "next/server";
+import { PrismaClient, Prisma } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -21,7 +20,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Faltan datos de la canción" }, { status: 400 });
     }
 
-    // Asegurar que el usuario existe en nuestra base de datos (Sincronización lazy)
     let dbUser = await prisma.user.findUnique({
       where: { clerkId: userId },
     });
@@ -37,7 +35,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Verificar si la canción ya existe y pertenece al usuario
     let savedSong;
     
     // 1. Verificación Fuerte de Plagio y Duplicación
@@ -45,53 +42,50 @@ export async function POST(req: NextRequest) {
       const existing = await prisma.song.findUnique({ where: { id: song.id } });
       if (existing) {
         if (existing.userId !== userId) {
-          return NextResponse.json({ error: "🔒 Bloqueo de Plagio: Las obras de otros creadores no pueden sobrescribirse ni republicarse." }, { status: 403 });
+          return NextResponse.json({ error: "🔒 Bloqueo de Plagio: Las obras de otros creadores no pueden sobrescribirse." }, { status: 403 });
         }
         
-        // Es nuestro, lo actualizamos
-        const savedSong = await prisma.song.update({
+        // 🚀 SENIOR FIX: Llamada tipada correctamente. Prisma espera que parsedData sea Prisma.InputJsonValue
+        savedSong = await prisma.song.update({
           where: { id: song.id },
           data: {
             title: song.title,
             bpm: song.bpm || 120,
-            parsedData: JSON.stringify(song),
+            parsedData: song as Prisma.InputJsonValue, 
             price: price != null ? Number(price) : undefined,
-          } as any
+          }
         });
         return NextResponse.json({ success: true, savedSong }, { status: 200 });
       }
     }
 
-    // 1B. Verificación Fija por Metadatos del JSON
     if (song.metadata?.originalCreatorId && song.metadata.originalCreatorId !== userId) {
         return NextResponse.json({ error: "🔒 Bloqueo por Huella Digital: Este archivo ChordPro contiene metadatos de otro compositor." }, { status: 403 });
     }
 
-    // Insertar Sellado Criptográfico / Huella Digital
     song.metadata = {
       originalCreatorId: userId,
       authorName: dbUser?.name || "Autor Verificado"
     };
 
-    // 2. Verificar si el usuario ya alcanzó el límite del plan gratuito para creación nueva
     const isPro = dbUser.stripeSubscriptionId != null;
     const userSongsCount = await prisma.song.count({ where: { userId } });
 
     if (!isPro && userSongsCount >= 3) {
       return NextResponse.json(
         { error: "Límite del plan gratuito alcanzado. Actualiza a Pro para composiciones ilimitadas." },
-        { status: 402 } // 402 Payment Required
+        { status: 402 }
       );
     }
 
-    // Si no existe o es un id temporal generado en frontend, creamos uno nuevo
-    savedSong = await (prisma.song as any).create({
+    // 🚀 SENIOR FIX: Sin `as any`
+    savedSong = await prisma.song.create({
       data: {
         userId,
         title: song.title,
         bpm: song.bpm || 120,
         rawLyrics: "(Letra generada)", 
-        parsedData: JSON.stringify(song),
+        parsedData: song as Prisma.InputJsonValue,
         price: price != null ? Number(price) : 0,
       },
     });
@@ -103,21 +97,55 @@ export async function POST(req: NextRequest) {
   }
 }
 
+// app/api/songs/route.ts (Actualización Senior)
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const session = getAuth(req);
+    const userId = session?.userId;
+    if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+    const body = await req.json();
+    const { id, parsedData, title, bpm } = body;
+
+    if (!id) return NextResponse.json({ error: "ID de obra requerido" }, { status: 400 });
+
+    // 🚀 SENIOR FIX: Verificación fuerte de autoría antes de actualizar
+    const song = await prisma.song.findUnique({ where: { id }, select: { userId: true } });
+    if (!song) return NextResponse.json({ error: "Obra no encontrada" }, { status: 404 });
+    if (song.userId !== userId) return NextResponse.json({ error: "🔒 Bloqueo de Seguridad: No eres el autor de esta obra." }, { status: 403 });
+
+    // Actualización parcial
+    const updatedSong = await prisma.song.update({
+      where: { id },
+      data: {
+        // Solo actualizamos si nos pasan el dato
+        ...(parsedData && { parsedData: parsedData as Prisma.InputJsonValue }),
+        ...(title && { title }),
+        ...(bpm && { bpm: Number(bpm) }),
+      },
+    });
+
+    return NextResponse.json({ success: true, song: updatedSong }, { status: 200 });
+  } catch (error) {
+    console.error("Error en autoguardado:", error);
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const session = getAuth(req);
     const userId = session?.userId;
     
-    if (!userId) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
+    if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
     const urlParams = new URL(req.url);
     const id = urlParams.searchParams.get("id");
 
     if (id) {
-       // Buscar canción específica (puede ser pública o del usuario)
-       const song = await (prisma as any).song.findUnique({
+       // 🚀 SENIOR FIX: Todo fuertemente tipado
+       const song = await prisma.song.findUnique({
           where: { id },
           include: { 
             user: { select: { name: true, clerkId: true } },
@@ -125,20 +153,18 @@ export async function GET(req: NextRequest) {
           }
        });
        
-       if (!song) {
-           return NextResponse.json({ error: "Obra no encontrada" }, { status: 404 });
-       }
+       if (!song) return NextResponse.json({ error: "Obra no encontrada" }, { status: 404 });
 
-       if ((song as any).userId !== userId && !(song as any).isPublic) {
+       if (song.userId !== userId && !song.isPublic) {
            return NextResponse.json({ error: "No tienes permiso para ver esta obra" }, { status: 403 });
        }
        
        let hasPurchased = false;
        let isPreviewRestriction = false;
 
-       // Marketplace: Preview Restriction para obras de pago
-       if ((song as any).price && (song as any).price > 0 && (song as any).userId !== userId) {
-          const purchase = await (prisma as any).purchase.findUnique({
+       // Marketplace: Preview Restriction
+       if (song.price && song.price > 0 && song.userId !== userId) {
+          const purchase = await prisma.purchase.findUnique({
             where: {
               userId_songId: { userId, songId: song.id }
             }
@@ -147,18 +173,16 @@ export async function GET(req: NextRequest) {
           if (purchase) {
              hasPurchased = true;
           } else {
-             // Aplicar censura o scrub del contenido para generar un preview
              try {
-                const parsed = JSON.parse(song.parsedData);
-                // Censura Extrema: Dejamos solo la primera sección...
+                // Casteamos a 'any' solo para la manipulación en memoria antes de enviarlo
+                const parsed = song.parsedData as any;
                 parsed.sections = parsed.sections.slice(0, 1);
-                // ...y solo la primera línea de la primera estrofa
                 if (parsed.sections.length > 0) {
                     parsed.sections[0].lines = parsed.sections[0].lines.slice(0, 1);
                 }
-                parsed.isPreviewRestriction = true; // Avisamos al editor
-                song.parsedData = JSON.stringify(parsed);
-                song.rawLyrics = "[CONTENIDO PROTEGIDO]\n\nEsta obra es premium y está protegida por derechos de su compositor. Adquiere el acceso permanente para visualizar, editar y exportar la partitura y acordes completos.";
+                parsed.isPreviewRestriction = true; 
+                song.parsedData = parsed;
+                song.rawLyrics = "[CONTENIDO PROTEGIDO] Adquiere el acceso permanente para visualizar completo.";
                 isPreviewRestriction = true;
              } catch(e) {
                 song.rawLyrics = "[CONTENIDO PROTEGIDO]";
@@ -166,17 +190,10 @@ export async function GET(req: NextRequest) {
           }
        }
 
-       // Incluimos parsedData
-       return NextResponse.json({ 
-         success: true, 
-         songs: [song], 
-         hasPurchased, 
-         isPreviewRestriction 
-       }, { status: 200 });
+       return NextResponse.json({ success: true, songs: [song], hasPurchased, isPreviewRestriction }, { status: 200 });
     }
 
-    // Listado normal del usuario
-    const songs = await (prisma.song as any).findMany({
+    const songs = await prisma.song.findMany({
       where: { userId },
       orderBy: { updatedAt: "desc" },
       select: { id: true, title: true, bpm: true, updatedAt: true, createdAt: true, parsedData: true, isPublic: true, price: true }
@@ -190,42 +207,23 @@ export async function GET(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  // (Mantén tu código DELETE exactamente igual, solo asegúrate de no usar "as any")
   try {
     const session = getAuth(req);
     const userId = session?.userId;
-    
-    if (!userId) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
+    if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
     const urlParams = new URL(req.url);
     const id = urlParams.searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "ID de obra requerido" }, { status: 400 });
 
-    if (!id) {
-      return NextResponse.json({ error: "ID de obra requerido" }, { status: 400 });
-    }
+    const song = await prisma.song.findUnique({ where: { id }, select: { userId: true } });
+    if (!song) return NextResponse.json({ error: "Obra no encontrada" }, { status: 404 });
+    if (song.userId !== userId) return NextResponse.json({ error: "Sin permiso" }, { status: 403 });
 
-    // Verificar propiedad
-    const song = await prisma.song.findUnique({
-      where: { id },
-      select: { userId: true }
-    });
-
-    if (!song) {
-      return NextResponse.json({ error: "Obra no encontrada" }, { status: 404 });
-    }
-
-    if (song.userId !== userId) {
-      return NextResponse.json({ error: "No tienes permiso para eliminar esta obra" }, { status: 403 });
-    }
-
-    await prisma.song.delete({
-      where: { id }
-    });
-
+    await prisma.song.delete({ where: { id } });
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error("Error al eliminar la obra:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }

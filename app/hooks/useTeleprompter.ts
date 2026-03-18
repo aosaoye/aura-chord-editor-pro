@@ -20,6 +20,7 @@ export function useTeleprompter(song: Song | null) {
 
   const startTimeRef = useRef<number | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const isPlayingRef = useRef(false);
 
   // 1. RECALCULAR TIMELINE DINÁMICO (SOPORTA REPETICIONES x4)
   const timeline = useMemo(() => {
@@ -97,6 +98,8 @@ export function useTeleprompter(song: Song | null) {
 
   // 2. Bucle ultra-rápido de requestAnimationFrame
   const loop = useCallback((currentTimeTimestamp: number) => {
+    if (!isPlayingRef.current) return; // FIX: Prevenir ejecución zombi
+
     if (!startTimeRef.current) startTimeRef.current = currentTimeTimestamp;
     const elapsedSeconds = (currentTimeTimestamp - startTimeRef.current) / 1000;
 
@@ -109,26 +112,28 @@ export function useTeleprompter(song: Song | null) {
       if (elapsedSeconds >= cue.startTime && elapsedSeconds < cue.endTime) {
         currentActiveLine = cue.lineId;
         
-        // Motor Sub-Cronológico: Averiguando qué acorde pisa exactamente este segundo
+        // Bucle inverso (Motor Sub-Cronológico)
         if (cue.chords.length > 0) {
           currentActiveChord = cue.chords[0].chord; 
-          for (const cc of cue.chords) {
-             if (elapsedSeconds >= cc.startTime) {
-               currentActiveChord = cc.chord;
+          for (let i = cue.chords.length - 1; i >= 0; i--) {
+             if (elapsedSeconds >= cue.chords[i].startTime) {
+               currentActiveChord = cue.chords[i].chord;
+               break;
              }
           }
         }
-        break;
+        break; 
       }
     }
 
     // Auto-Pause Inteligente Premium (Al terminar la canción)
     if (currentTimeline.length > 0 && elapsedSeconds >= currentTimeline[currentTimeline.length - 1].endTime) {
        setIsPlaying(false);
+       isPlayingRef.current = false;
        setActiveLineId(null);
        setActiveChord(null);
        startTimeRef.current = null;
-       return; // Detiene el bucle forzadamente e impide requestAnimationFrame
+       return; 
     }
 
     setActiveLineId((prev) => {
@@ -142,12 +147,15 @@ export function useTeleprompter(song: Song | null) {
     });
 
     // Enlazamos al MISMO loop, pero leeremos de timelineRef
-    animationFrameRef.current = requestAnimationFrame(loop);
-  }, []); // Sin dependencias de estado para que sea infinito e inmutable
+    if (isPlayingRef.current) {
+      animationFrameRef.current = requestAnimationFrame(loop);
+    }
+  }, []); 
 
   const togglePlay = useCallback(() => {
     setIsPlaying((prev) => {
       const nextIsPlaying = !prev;
+      isPlayingRef.current = nextIsPlaying; // Actualizar ref sincrónicamente
       
       if (nextIsPlaying) {
         // Al darle al Play
@@ -158,6 +166,7 @@ export function useTeleprompter(song: Song | null) {
         if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
         setActiveLineId(null);
         setActiveChord(null);
+        startTimeRef.current = null; // Reiniciar startTime para evitar saltos al reanudar
       }
       
       return nextIsPlaying;

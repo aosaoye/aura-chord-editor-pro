@@ -28,21 +28,19 @@ export default function LandingPage() {
 
           <div className="relative z-10 w-full mt-4 sm:mt-0">
             <h1 className="text-[16vw] sm:text-[13vw] lg:text-[10vw] font-black tracking-tighter leading-[0.8] text-foreground">
-              Acordes que<br/>
-              <span className="font-light italic text-muted-foreground tracking-tight">trascienden.</span>
+              Composición<br/>
+              <span className="font-light italic text-muted-foreground tracking-tight">sin fricción.</span>
             </h1>
           </div>
 
           <div className="flex justify-start lg:justify-end mt-12 sm:mt-16 relative z-10 lg:-mt-20 pr-0 lg:pr-32">
             <div className="max-w-full sm:max-w-md lg:max-w-xl border-t border-border pt-8 sm:pt-10">
               <p className="text-muted-foreground font-light text-xl sm:text-2xl leading-relaxed">
-                Cada proyecto de <span className="font-bold text-foreground">AuraChords</span> es una pieza única 
-                de arquitectura musical. No anotamos simples acordes, 
-                creamos escenarios profesionales para tu inspiración.
+                <span className="font-bold text-foreground">ChordPro Pro</span> es el lienzo inteligente que te permite llevar una idea a la partitura masterizada en minutos. Estructura, silabea y armoniza de forma fluida, sin batallas técnicas.
               </p>
               <div className="mt-8 sm:mt-12 flex items-center gap-6 text-[10px] sm:text-[10px] font-bold tracking-[0.3em] uppercase text-foreground">
                  <Link href="/editor?new=true" className="bg-primary text-primary-foreground px-8 sm:px-10 py-4 rounded-full text-[10px] sm:text-xs hover:bg-primary/80 transition-all hover:scale-105 active:scale-95 shadow-[0_15px_30px_rgba(var(--primary-raw),0.2)] flex items-center gap-3">
-                   Crear Ahora <ArrowRight size={16} />
+                   Comienza a componer gratis <ArrowRight size={16} />
                  </Link>
               </div>
             </div>
@@ -69,9 +67,13 @@ export default function LandingPage() {
         {/* Section: Ventajas & Características */}
         <div className="mt-40 mb-20 relative">
           <GsapWrapper animationType="fade-up">
-            <div className="text-center max-w-3xl mx-auto mb-20">
-              <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-6">El Estándar Profesional</h2>
-              <p className="text-muted-foreground text-lg leading-relaxed">Diseñado por músicos para músicos. AuraChords combina la potencia de un editor en tiempo real con la elegancia de una presentación fluida.</p>
+            <div className="text-center max-w-4xl mx-auto mb-20">
+              <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-8 text-muted-foreground">
+                ¿Cansado de que tus partituras se desconfiguren al cambiar el tono, o de no saber dónde caen los acordes en el móvil?
+              </h2>
+              <p className="text-foreground text-2xl leading-relaxed font-light">
+                La arquitectura silábica de <span className="font-bold">ChordPro Pro</span> garantiza que tus acordes y letras estén sincronizados al milímetro, en cualquier dispositivo y en cualquier tono.
+              </p>
             </div>
           </GsapWrapper>
 
@@ -87,6 +89,23 @@ export default function LandingPage() {
                 <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">{feature.desc}</p>
               </div>
             ))}
+          </GsapWrapper>
+
+          {/* Social Proof */}
+          <GsapWrapper animationType="fade-in" className="mt-32 max-w-4xl mx-auto text-center">
+            <div className="bg-primary/5 border border-primary/20 rounded-3xl p-10 sm:p-16 relative">
+               <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-6xl text-primary opacity-50 font-serif">"</span>
+               <p className="text-2xl sm:text-3xl font-light italic leading-relaxed text-foreground mb-8">
+                 Probé Aura Chord Editor Pro en un ensayo y por fin mi banda dejó de equivocarse de acorde. El teleprompter es una maravilla.
+               </p>
+               <div className="flex items-center justify-center gap-4">
+                 <div className="w-12 h-12 rounded-full bg-zinc-800 bg-[url('https://images.pexels.com/photos/1040880/pexels-photo-1040880.jpeg')] bg-cover bg-center"></div>
+                 <div className="text-left">
+                   <p className="font-bold text-sm">Alejandro M.</p>
+                   <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Director Musical</p>
+                 </div>
+               </div>
+            </div>
           </GsapWrapper>
         </div>
 

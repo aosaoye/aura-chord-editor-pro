@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { PresentationControls, Environment, ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
@@ -123,39 +123,40 @@ export default function Piano3D({ activeKeys, themeColor = "#f59e0b" }: { active
       </div>
 
       <Canvas camera={{ position: [0, 10, 22], fov: 35 }} shadows>
-        <ambientLight intensity={0.7} />
-        <spotLight position={[0, 20, 12]} intensity={1.5} castShadow penumbra={1} angle={0.6} />
-        
-        {/* Interactive Camera Controls (Orbital VR Feel) */}
-        <PresentationControls 
-          global 
-          rotation={[0, 0, 0]} 
-          polar={[-Math.PI / 2, Math.PI / 2]} 
-          azimuth={[-Math.PI, Math.PI]}
-          cursor={true}
-        >
-          <group position={[-10, 0, 0]}> {/* Centro del piano */}
-            
-            {keys.map((k) => (
-               <PianoKey 
-                 key={k.index} 
-                 data={k} 
-                 isActive={activeKeys.includes(k.index)} 
-                 themeColor={themeColor} 
-               />
-            ))}
+        <Suspense fallback={null}>
+          <ambientLight intensity={0.7} />
+          <spotLight position={[0, 20, 12]} intensity={1.5} castShadow penumbra={1} angle={0.6} />
+          
+          <PresentationControls 
+            global 
+            rotation={[0, 0, 0]} 
+            polar={[-Math.PI / 2, Math.PI / 2]} 
+            azimuth={[-Math.PI, Math.PI]}
+            cursor={true}
+          >
+            <group position={[-10, 0, 0]}> {/* Centro del piano */}
+              
+              {keys.map((k) => (
+                 <PianoKey 
+                   key={k.index} 
+                   data={k} 
+                   isActive={activeKeys.includes(k.index)} 
+                   themeColor={themeColor} 
+                 />
+              ))}
 
-            {/* Falso cuerpo del teclado (Madera oscura o plástico premium) */}
-            <mesh position={[10, -0.6, -1]} receiveShadow castShadow>
-               <boxGeometry args={[23, 0.5, 7]} />
-               <meshStandardMaterial color="#0a0a0a" roughness={0.8} />
-            </mesh>
+              {/* Falso cuerpo del teclado (Madera oscura o plástico premium) */}
+              <mesh position={[10, -0.6, -1]} receiveShadow castShadow>
+                 <boxGeometry args={[23, 0.5, 7]} />
+                 <meshStandardMaterial color="#0a0a0a" roughness={0.8} />
+              </mesh>
 
-          </group>
-        </PresentationControls>
-        
-        {/* Entorno de Reflejo para sensación fotorealista (drei) */}
-        <Environment preset="forest" />
+            </group>
+          </PresentationControls>
+          
+          {/* Entorno de Reflejo para sensación fotorealista (drei) */}
+          <Environment preset="forest" />
+        </Suspense>
       </Canvas>
     </div>
   );

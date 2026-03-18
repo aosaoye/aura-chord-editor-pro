@@ -1,0 +1,10 @@
+Lockfile is up to date, resolution step is skipped
+Already up to date
+
+. postinstall$ prisma generate
+. postinstall: Environment variables loaded from .env
+. postinstall: Prisma schema loaded from prisma\schema.prisma
+. postinstall: Error: 
+. postinstall: EPERM: operation not permitted, rename 'C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\node_modules\.pnpm\@prisma+client@6.4.1_prisma_e697c467828edf08e3025d15c7caddbc\node_modules\.prisma\client\query_engine-windows.dll.node.tmp10596' -> 'C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\node_modules\.pnpm\@prisma+client@6.4.1_prisma_e697c467828edf08e3025d15c7caddbc\node_modules\.prisma\client\query_engine-windows.dll.node'
+. postinstall: Failed
+ÔÇëELIFECYCLEÔÇë Command failed with exit code 1.

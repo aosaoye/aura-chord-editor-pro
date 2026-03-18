@@ -4,12 +4,15 @@ import { useState, useRef } from "react";
 import { toPng } from "html-to-image";
 import { formatChordText } from "../helpers/chordFormatter";
 
+// Omitir Generar Portada temporalmente (es opcional)
 export default function ExportModal({
   song,
   colorTheme,
   onClose,
   onExportPDF,
-  onExportPNG
+  onExportPNG,
+  includeDictionary = true,
+  setIncludeDictionary
 }: any) {
   const [activeTab, setActiveTab] = useState("documentos"); // documentos | redes
   const [isExporting, setIsExporting] = useState(false);
@@ -97,13 +100,18 @@ export default function ExportModal({
                    <label className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">Ajustes Avanzados</label>
                    <div className="flex flex-col gap-2">
                      <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-accent/50 transition-colors">
-                       <input type="checkbox" className="w-4 h-4 accent-primary" defaultChecked />
-                       <span className="text-xs font-semibold">Generar Portada de Obra</span>
+                       <input 
+                         type="checkbox" 
+                         className="w-4 h-4 accent-primary" 
+                         checked={includeDictionary}
+                         onChange={(e) => setIncludeDictionary(e.target.checked)}
+                       />
+                       <span className="text-xs font-semibold">Diagramas al Final</span>
                      </label>
                      <label className="flex items-center justify-between gap-3 p-3 border border-border rounded-xl cursor-not-allowed opacity-50 relative overflow-hidden group hover:bg-accent/50 transition-colors" title="Próximamente">
                        <div className="flex items-center gap-3">
                          <input type="checkbox" className="w-4 h-4" disabled />
-                         <span className="text-xs font-semibold line-through">Diagramas al Final</span>
+                         <span className="text-xs font-semibold line-through">Generar Portada</span>
                        </div>
                        <span className="text-[8px] bg-primary/20 text-primary px-2 py-1 rounded-sm uppercase font-bold tracking-widest">Pronto</span>
                      </label>

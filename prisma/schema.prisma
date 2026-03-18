@@ -37,6 +37,8 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
+// prisma/schema.prisma (Fragmento)
+
 model Song {
   id     String @id @default(uuid())
   userId String // Foreign key to User
@@ -45,10 +47,13 @@ model Song {
   title      String
   bpm        Int    @default(120)
   rawLyrics  String @db.Text
-  parsedData String @db.Text // Store the JSON serialized Song object from ChordPro
+  
+  // 🚀 SENIOR FIX: Usamos el tipo nativo Json en lugar de String @db.Text
+  // Esto permite hacer queries avanzadas dentro del JSON en el futuro.
+  parsedData Json   
 
-  isPublic Boolean @default(false) // Visibility toggle para la comunidad
-  price    Float?  @default(0) // Marketplace feature: 0 es Gratis, > 0 es de pago
+  isPublic Boolean @default(false)
+  price    Float?  @default(0)
 
   devotionals DevotionalSong[]
   ratings     SongRating[]
