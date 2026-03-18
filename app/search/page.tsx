@@ -218,8 +218,29 @@ export default function LyricsSearchPage() {
     }
   }, [lyrics]);
 
-  const handleSendToEditor = useCallback(() => {
+  const handleSendToEditor = useCallback(async () => {
     if (!lyrics) return;
+
+    // Check if there is an existing unsaved draft in the editor
+    const storedSong = localStorage.getItem("chordpro-draft-song");
+    if (storedSong) {
+      try {
+         const parsedStored = JSON.parse(storedSong);
+         if (parsedStored && parsedStored.title) {
+            // Silently persist the old draft to the database
+            await fetch("/api/songs", {
+               method: "POST",
+               headers: { "Content-Type": "application/json" },
+               body: JSON.stringify({ song: parsedStored })
+            });
+         }
+      } catch (e) {
+         console.error("No se pudo guardar el borrador automáticamente", e);
+      }
+      // Remove it so the new search lyrics can take its place freshly
+      localStorage.removeItem("chordpro-draft-song");
+    }
+
     localStorage.setItem("chordpro-draft-lyrics", lyrics);
     
     // Capitalize first letters of song and artist for a better title
