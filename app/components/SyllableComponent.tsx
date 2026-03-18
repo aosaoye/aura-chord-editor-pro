@@ -20,10 +20,15 @@ export default function SyllableComponent({ syllable, onChordChange, nextHasChor
   const [isEditing, setIsEditing] = useState(false);
 
   const handleClick = useCallback(() => {
-     if (readOnly) return;
+     if (readOnly) {
+         if (chord) {
+             window.dispatchEvent(new CustomEvent('piano-play-chord', { detail: chord }));
+         }
+         return;
+     }
      window.dispatchEvent(new CustomEvent('chord-picker-opened', { detail: id }));
      setIsEditing(true);
-  }, [id, readOnly]);
+  }, [id, readOnly, chord]);
 
   useEffect(() => {
     const handlePickerOpened = (e: CustomEvent) => {
@@ -37,14 +42,19 @@ export default function SyllableComponent({ syllable, onChordChange, nextHasChor
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLSpanElement>) => {
-      if (readOnly) return;
+      if (readOnly) {
+         if (event.key === "Enter" || event.key === " ") {
+            if (chord) window.dispatchEvent(new CustomEvent('piano-play-chord', { detail: chord }));
+         }
+         return;
+      }
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         window.dispatchEvent(new CustomEvent('chord-picker-opened', { detail: id }));
         setIsEditing(true);
       }
     },
-    [id, readOnly]
+    [id, readOnly, chord]
   );
 
   const handleSave = useCallback((newChord: Chord | null) => {

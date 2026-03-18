@@ -28,6 +28,16 @@ export default function SongEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const { user } = useUser();
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
+
   // --- Opciones Musicales de Sesión ---
   const [songKey, setSongKey] = useState('C');
 
@@ -71,8 +81,17 @@ export default function SongEditor() {
       }))));
       if (foundChord) setActive3DChord(foundChord);
     };
+
+    const handlePianoPlay = (e: CustomEvent) => {
+      setActive3DChord(e.detail);
+    };
+
     window.addEventListener('chord-picker-opened', handlePickerOpened as EventListener);
-    return () => window.removeEventListener('chord-picker-opened', handlePickerOpened as EventListener);
+    window.addEventListener('piano-play-chord', handlePianoPlay as EventListener);
+    return () => {
+      window.removeEventListener('chord-picker-opened', handlePickerOpened as EventListener);
+      window.removeEventListener('piano-play-chord', handlePianoPlay as EventListener);
+    }
   }, [song]);
 
   // Actualizar Acorde 3D cronológicamente guiado por el motor del Teleprompter
@@ -593,6 +612,24 @@ export default function SongEditor() {
     }
   }, [song, songPrice]);
 
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-8 text-center pb-32 anim-in fade-in duration-500">
+        <span className="text-7xl mb-10 drop-shadow-2xl">📱</span>
+        <h1 className="text-3xl sm:text-5xl font-black tracking-tight mb-6 mt-4">Próximamente en nuestra app</h1>
+        <p className="text-muted-foreground text-lg sm:text-xl max-w-xl mx-auto leading-relaxed border-t border-border pt-6">
+          El estudio avanzado de transcripción requiere por ahora de una <span className="font-bold text-foreground">Tablet, Laptop o Escritorio</span> para operar correctamente los lienzos.
+        </p>
+        <p className="text-muted-foreground mt-4">
+           Aún así, tienes acceso total a explorar todas las obras creadas por nuestra comunidad.
+        </p>
+        <Link href="/community" className="mt-12 px-10 py-5 bg-foreground text-background dark:bg-primary dark:text-primary-foreground rounded-full font-black uppercase tracking-widest text-xs sm:text-sm hover:scale-105 transition-transform shadow-2xl">
+          Ver partituras de la comunidad
+        </Link>
+      </div>
+    );
+  }
+
   // Pantalla 1: Importador (Awwwards Style)
   if (!song) {
     return (
@@ -1092,7 +1129,7 @@ export default function SongEditor() {
         {song && paginateSong(song, baseLinesPerColumn, activeColumns).map((page, index) => (
           <div
             key={page.id}
-            className={`a4-page bg-background text-foreground ${activeMarginClass} overflow-hidden relative lg:shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.15)] transition-all duration-500 flex flex-col justify-start w-full lg:w-[210mm] lg:min-w-[210mm] min-h-[80vh] lg:min-h-[297mm] ring-0 lg:ring-1 lg:ring-border origin-top rounded-xl lg:rounded-none border border-border lg:border-none
+            className={`a4-page bg-background text-foreground ${activeMarginClass} overflow-hidden relative lg:shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.15)] transition-all duration-500 flex flex-col justify-start w-full lg:w-[210mm] lg:min-w-[210mm] h-[80vh] lg:h-[297mm] ring-0 lg:ring-1 lg:ring-border origin-top rounded-xl lg:rounded-none border border-border lg:border-none
                 ${isPreviewMode ? 'transform shrink-0 scale-[0.6] sm:scale-75 lg:scale-[0.85] -mt-[40mm] sm:-mt-[20mm] lg:-mt-[10mm]' : 'shrink-0 lg:snap-center'}
               `}
           >
@@ -1165,11 +1202,40 @@ export default function SongEditor() {
             )}
 
             {/* CONTENIDO DE LA PÁGINA (COLUMNAS MASONRY DINÁMICAS) */}
-            <div className={`grid grid-cols-1 ${({ 1: 'md:grid-cols-1', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-4' } as Record<number, string>)[page.columns.length] || 'md:grid-cols-1'} gap-8 sm:gap-12 w-full mt-2 flex-1 items-start`}>
+            <div className={`grid grid-cols-1 ${({ 1: 'md:grid-cols-1', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-4' } as Record<number, string>)[page.columns.length] || 'md:grid-cols-1'} gap-8 sm:gap-12 w-full mt-2 flex-1 items-start overflow-hidden`}>
               {page.columns.map((col, colIdx) => (
                 <div key={`col-${page.id}-${colIdx}`} className="col-span-1 flex flex-col gap-10">
                   {col.map((section, sIdx) => (
-                    <div key={`${section.id}-${sIdx}`} className="flex flex-col gap-6 relative group break-inside-avoid">
+                    <div 
+                      key={`${section.id}-${sIdx}`} 
+                      className={`flex flex-col gap-6 relative group break-inside-avoid ${!isReadOnly ? 'cursor-grab active:cursor-grabbing hover:bg-black/5 dark:hover:bg-white/5 rounded-xl p-2 -m-2 transition-colors' : ''} ${draggedSectionId === section.id ? 'opacity-30' : ''}`}
+                      draggable={!isReadOnly}
+                      onDragStart={(e) => {
+                        if (isReadOnly) return;
+                        setDraggedSectionId(section.id);
+                        e.dataTransfer.effectAllowed = 'move';
+                      }}
+                      onDragOver={(e) => {
+                         if (isReadOnly || !draggedSectionId || draggedSectionId === section.id) return;
+                         e.preventDefault();
+                         e.dataTransfer.dropEffect = 'move';
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (isReadOnly || !draggedSectionId || draggedSectionId === section.id) return;
+                        
+                        const currentSections = [...song.sections];
+                        const fromIdx = currentSections.findIndex(s => s.id === draggedSectionId);
+                        const toIdx = currentSections.findIndex(s => s.id === section.id);
+                        if (fromIdx !== -1 && toIdx !== -1) {
+                           const [removed] = currentSections.splice(fromIdx, 1);
+                           currentSections.splice(toIdx, 0, removed);
+                           setSong({ ...song, sections: currentSections });
+                        }
+                        setDraggedSectionId(null);
+                      }}
+                      onDragEnd={() => setDraggedSectionId(null)}
+                    >
 
                       {/* Título de la sección si existe y NO es continuación */}
                       {section.title && !section.isContinuation && (
