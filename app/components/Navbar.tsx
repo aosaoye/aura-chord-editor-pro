@@ -65,8 +65,9 @@ export default function Navbar({ variant = "default", className = "", centerCont
       
       {/* Desktop Navigation */}
       {centerContent || (
-        <div className="hidden lg:flex items-center gap-12 text-[10px] font-bold tracking-[0.2em] uppercase">
+        <div className="hidden lg:flex items-center gap-10 text-[10px] font-bold tracking-[0.2em] uppercase">
           <Link href="/" className={linkClass("/")}>Inicio</Link>
+          <Link href="/search" className={linkClass("/search")}>Buscar Letras</Link>
           <Link href="/community" className={linkClass("/community")}>Comunidad</Link>
           <Link href="/pricing" className={linkClass("/pricing")}>Planes (Pro)</Link>
         </div>
@@ -116,6 +117,7 @@ export default function Navbar({ variant = "default", className = "", centerCont
           {centerContent ? centerContent : (
             <div className="flex flex-col gap-6 text-sm font-bold tracking-[0.2em] uppercase">
               <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/")}>Inicio</Link>
+              <Link href="/search" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/search")}>Buscar Letras</Link>
               <Link href="/community" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/community")}>Comunidad</Link>
               <Link href="/pricing" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/pricing")}>Planes (Pro)</Link>
             </div>

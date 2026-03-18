@@ -34,10 +34,17 @@ export default function PublicToggle({ songId, initialIsPublic }: { songId: stri
       onClick={toggleVisibility}
       disabled={loading}
       className={`absolute top-4 right-4 z-20 p-2 rounded-full backdrop-blur-md shadow-sm transition-all focus:outline-none 
+        ${loading ? 'opacity-80 scale-95 cursor-wait' : ''}
         ${isPublic ? 'bg-primary/10 text-primary hover:bg-primary/20 hover:scale-110' : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground hover:scale-110'}`}
       title={isPublic ? "Pública (Ocultar)" : "Privada (Hacer pública)"}
     >
-      {isPublic ? <Globe size={16} /> : <Lock size={16} />}
+      {loading ? (
+        <span className="w-4 h-4 block rounded-full border-[2px] border-current border-t-transparent animate-spin"></span>
+      ) : isPublic ? (
+        <Globe size={16} />
+      ) : (
+        <Lock size={16} />
+      )}
     </button>
   );
 }
