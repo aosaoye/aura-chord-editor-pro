@@ -22,9 +22,9 @@ export default function Footer() {
             </div>
             <div className="flex flex-col gap-4">
                <h4 className="font-bold uppercase tracking-widest text-[10px] text-primary">Legal</h4>
-               <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Términos</Link>
-               <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacidad</Link>
-               <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contacto</Link>
+               <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Términos</Link>
+               <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacidad</Link>
+               <a href="mailto:22.osaoye@gmail.com" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contacto</a>
             </div>
           </div>
        </div>

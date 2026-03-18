@@ -56,9 +56,17 @@ function PianoKey({
   const targetY = isActive ? (data.isBlack ? 0.35 : -0.25) : (data.isBlack ? 0.5 : 0);
   const targetRotX = isActive ? 0.05 : 0;
   
-  // Use useMemo for geometry shapes instead of declaring inline to avoid recreation
-  const dims = data.isBlack ? [0.6, 0.8, 4] : [0.95, 1, 6];
+  const dims = useMemo(() => data.isBlack ? [0.6, 0.8, 4] : [0.95, 1, 6], [data.isBlack]);
   const color = data.isBlack ? "#111" : "#fff";
+
+  const colorMap: Record<string, string> = {
+    "theme-amber": "#d97706", "theme-forest": "#047857", "theme-blue": "#2563eb",
+    "theme-red": "#dc2626", "theme-orange": "#ea580c", "theme-cyan": "#0891b2",
+    "theme-purple": "#9333ea", "theme-lime": "#65a30d", "theme-teal": "#0d9488",
+    "theme-indigo": "#4f46e5", "theme-violet": "#7c3aed", "theme-fuchsia": "#c026d3",
+    "theme-rose": "#e11d48", "theme-slate": "#475569", "theme-gray": "#4b5563", "theme-zinc": "#52525b"
+  };
+  const activeHex = colorMap[themeColor] || "#7c3aed";
 
   useFrame((state, delta) => {
     if (!meshRef.current || !materialRef.current) return;
@@ -69,7 +77,7 @@ function PianoKey({
 
     // Color Lerp: if active, blend between base color and theme, otherwise return to base
     const baseColor = new THREE.Color(color);
-    const activeColor = new THREE.Color(themeColor);
+    const activeColor = new THREE.Color(activeHex);
     
     if (isActive) {
        materialRef.current.color.lerp(activeColor, 10 * delta);

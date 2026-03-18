@@ -57,7 +57,7 @@ export default function Navbar({ variant = "default", className = "", centerCont
           <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-lg border border-border group-hover:scale-105 transition-transform duration-300">
              <Image src="/images/logo.png" alt="AuraChords Logo" fill className="object-cover" />
           </div>
-          <span className="font-black text-2xl tracking-tighter italic whitespace-nowrap group-hover:text-primary transition-colors duration-300">
+          <span className="font-black text-xl sm:text-2xl tracking-tighter italic whitespace-nowrap group-hover:text-primary transition-colors duration-300">
             AURA<span className="font-light">CHORDS</span>
           </span>
         </Link>

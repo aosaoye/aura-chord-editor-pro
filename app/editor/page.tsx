@@ -993,15 +993,23 @@ export default function SongEditor() {
                 <div className="flex items-center gap-3">
                   <span className="text-lg font-bold">€</span>
                   <input
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    value={songPrice || 0}
-                    onChange={(e) => setSongPrice(Number(e.target.value))}
+                    type="text"
+                    inputMode="numeric"
+                    value={songPrice > 0 ? songPrice : ""}
+                    placeholder="0"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9.]/g, '');
+                      if (!val) { setSongPrice(0); return; }
+                      // Limpiar leading zero solo si es numero entero, permitiendo escribir "0.5"
+                      const parsed = val.length > 1 && val.startsWith('0') && !val.startsWith('0.') ? val.substring(1) : val;
+                      setSongPrice(Number(parsed));
+                    }}
                     className="flex-1 bg-transparent border-b border-gray-200 dark:border-gray-800 py-2 text-sm font-medium outline-none focus:border-primary text-foreground transition-colors"
                   />
                 </div>
-                <p className="text-[9px] font-light text-gray-500 mt-1">Deja 0 para compartir libremente en la comunidad.</p>
+                <p className={`text-[9px] font-bold mt-1 ${songPrice > 0 ? "text-primary" : "text-gray-500 font-light"}`}>
+                  {songPrice > 0 ? `Se publicará como Obra Premium por €${songPrice}.` : "Deja 0 para compartir libremente en la comunidad."}
+                </p>
               </div>
             )}
 
@@ -1145,15 +1153,27 @@ export default function SongEditor() {
                     <div className="h-px bg-gray-200 dark:bg-gray-800 flex-1 min-w-[50px] max-w-[200px]"></div>
 
                     <div className="flex items-center gap-2">
-                      <StarRatingInteractive
-                        songId={song.id}
-                        myInitialRating={user ? ((song as any).ratings?.find((r: any) => r.userId === user?.id)?.value || 0) : 0}
-                        readOnly={!user || !isReadOnly}
-                      />
-                      <span className="text-[10px] uppercase tracking-widest font-bold opacity-30">
-                        {((song as any).ratings?.reduce((acc: number, r: any) => acc + r.value, 0) / Math.max((song as any).ratings?.length || 1, 1)).toFixed(1)} / 5.0
-                      </span>
-                    </div>                    </div>
+                      {!isReadOnly ? (
+                        <div className="flex items-center gap-2 text-yellow-500">
+                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" /></svg>
+                           <span className="text-[10px] uppercase tracking-widest font-bold">
+                             {Math.max((song as any).ratings?.length || 0, 0) > 0 ? (((song as any).ratings?.reduce((acc: number, r: any) => acc + r.value, 0) / (song as any).ratings?.length)).toFixed(1) : "0.0"} / 5.0
+                           </span>
+                        </div>
+                      ) : (
+                        <>
+                          <StarRatingInteractive
+                            songId={song.id}
+                            myInitialRating={user ? ((song as any).ratings?.find((r: any) => r.userId === user?.id)?.value || 0) : 0}
+                            readOnly={!user}
+                          />
+                          <span className="text-[10px] uppercase tracking-widest font-bold opacity-30">
+                            {Math.max((song as any).ratings?.length || 0, 0) > 0 ? (((song as any).ratings?.reduce((acc: number, r: any) => acc + r.value, 0) / (song as any).ratings?.length)).toFixed(1) : "0.0"} / 5.0
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )
             ) : (

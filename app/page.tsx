@@ -6,7 +6,7 @@ import { Music, Smartphone, Zap, DollarSign, Crown, Lock, ArrowRight, ShieldChec
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-hidden selection:bg-primary selection:text-white font-sans relative transition-colors duration-500">
+    <div className="min-h-screen w-full max-w-[100vw] bg-background text-foreground overflow-hidden overflow-x-hidden selection:bg-primary selection:text-white font-sans relative transition-colors duration-500">
       
       {/* Decorative huge background letters */}
       <GsapWrapper animationType="fade-in" duration={2} delay={0.5} className="absolute top-32 left-0 w-full h-[60vh] overflow-hidden pointer-events-none flex items-center justify-center -z-10 select-none">
@@ -17,7 +17,7 @@ export default function LandingPage() {
       <Navbar variant="transparent" className="mix-blend-normal backdrop-blur-md" />
 
       {/* Hero Section */}
-      <main className="pb-20 px-6 sm:px-12 lg:px-16 max-w-[1800px] mx-auto flex flex-col justify-center relative pt-24">
+      <main className="pb-20 px-4 sm:px-12 lg:px-16 w-full max-w-[1800px] mx-auto flex flex-col justify-center relative pt-24">
         
         <GsapWrapper animationType="fade-up" duration={1} delay={0.1}>
           <div className="my-10">
@@ -26,22 +26,22 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="relative z-10 w-full">
-            <h1 className="text-[13vw] lg:text-[10vw] font-black tracking-tighter leading-[0.8] text-foreground">
+          <div className="relative z-10 w-full mt-4 sm:mt-0">
+            <h1 className="text-[16vw] sm:text-[13vw] lg:text-[10vw] font-black tracking-tighter leading-[0.8] text-foreground">
               Acordes que<br/>
-              <span className="font-light italic text-muted-foreground">trascienden.</span>
+              <span className="font-light italic text-muted-foreground tracking-tight">trascienden.</span>
             </h1>
           </div>
 
-          <div className="flex justify-start lg:justify-end mt-16 relative z-10 lg:-mt-20 pr-4 lg:pr-32">
-            <div className="max-w-md lg:max-w-xl border-t border-border pt-10">
+          <div className="flex justify-start lg:justify-end mt-12 sm:mt-16 relative z-10 lg:-mt-20 pr-0 lg:pr-32">
+            <div className="max-w-full sm:max-w-md lg:max-w-xl border-t border-border pt-8 sm:pt-10">
               <p className="text-muted-foreground font-light text-xl sm:text-2xl leading-relaxed">
                 Cada proyecto de <span className="font-bold text-foreground">AuraChords</span> es una pieza única 
                 de arquitectura musical. No anotamos simples acordes, 
                 creamos escenarios profesionales para tu inspiración.
               </p>
-              <div className="mt-12 flex items-center gap-6 text-[10px] font-bold tracking-[0.3em] uppercase text-foreground">
-                 <Link href="/editor" className="bg-primary text-primary-foreground px-10 py-4 rounded-full text-xs hover:bg-primary/80 transition-all hover:scale-105 active:scale-95 shadow-[0_15px_30px_rgba(var(--primary-raw),0.2)] flex items-center gap-3">
+              <div className="mt-8 sm:mt-12 flex items-center gap-6 text-[10px] sm:text-[10px] font-bold tracking-[0.3em] uppercase text-foreground">
+                 <Link href="/editor" className="bg-primary text-primary-foreground px-8 sm:px-10 py-4 rounded-full text-[10px] sm:text-xs hover:bg-primary/80 transition-all hover:scale-105 active:scale-95 shadow-[0_15px_30px_rgba(var(--primary-raw),0.2)] flex items-center gap-3">
                    Crear Ahora <ArrowRight size={16} />
                  </Link>
               </div>
@@ -50,17 +50,17 @@ export default function LandingPage() {
         </GsapWrapper>
 
         {/* Visual Showcase (Hero Banner) */}
-        <GsapWrapper animationType="scale-up" duration={1.2} delay={0.3} className="w-full mt-24 lg:mt-32 aspect-[21/9] bg-zinc-950 rounded-[40px] relative group shadow-2xl border border-white/5 overflow-hidden flex flex-col justify-end p-8 sm:p-14 lg:p-24 bg-[url('https://images.pexels.com/photos/7521300/pexels-photo-7521300.jpeg')] bg-cover bg-center">
+        <GsapWrapper animationType="scale-up" duration={1.2} delay={0.3} className="w-full mt-20 lg:mt-32 aspect-[4/3] sm:aspect-video lg:aspect-[21/9] bg-zinc-950 rounded-[30px] lg:rounded-[40px] relative group shadow-2xl border border-white/5 overflow-hidden flex flex-col justify-end p-6 sm:p-14 lg:p-24 bg-[url('https://images.pexels.com/photos/7521300/pexels-photo-7521300.jpeg')] bg-cover bg-center">
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90 group-hover:scale-105 group-hover:opacity-100 transition-all duration-1000 ease-in-out"></div>
           <div className="absolute top-0 right-0 w-full lg:w-2/3 h-full lg:h-2/3 bg-primary/20 blur-[120px] mix-blend-screen pointer-events-none"></div>
 
-          <div className="relative z-10 w-full flex flex-col lg:flex-row justify-between items-start lg:items-end gap-10">
+          <div className="relative z-10 w-full flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 sm:gap-10">
             <div>
-               <h2 className="text-3xl sm:text-5xl lg:text-5xl font-light text-white tracking-tight mb-4 leading-[1.1]">
+               <h2 className="text-3xl sm:text-5xl lg:text-5xl font-light text-white tracking-tight mb-2 sm:mb-4 leading-[1.1]">
                  Música que <br className="hidden lg:block"/><span className="font-bold italic">cuenta tu historia.</span>
                </h2>
             </div>
-            <Link href="/community" className="backdrop-blur-xl bg-white/10 border border-white/20 text-white px-8 sm:px-12 py-4 rounded-full text-xs font-bold tracking-[0.2em] uppercase hover:bg-white/20 hover:scale-105 transition-all text-center">
+            <Link href="/community" className="backdrop-blur-xl bg-white/10 border border-white/20 text-white px-6 sm:px-12 py-3 sm:py-4 rounded-full text-[10px] sm:text-xs font-bold tracking-[0.2em] uppercase hover:bg-white/20 hover:scale-105 transition-all w-full sm:w-auto text-center">
               Explorar la Comunidad
             </Link>
           </div>
@@ -81,23 +81,23 @@ export default function LandingPage() {
               { icon: <Smartphone size={24}/>, title: 'Teleprompter 3D', desc: 'Modo presentación inmersivo a pantalla completa optimizado para iPad y móviles en vivo.' },
               { icon: <Zap size={24}/>, title: 'Renderizado en Tiempo Real', desc: 'Escribe letras, usa tags como [Verso] y experimenta la magía del Canvas auto-generado.' }
             ].map((feature, i) => (
-              <div key={i} className="bg-muted/30 border border-border rounded-3xl p-10 hover:border-primary/50 transition-colors group">
-                <div className="w-16 h-16 bg-background rounded-2xl flex items-center justify-center text-primary mb-8 shadow-sm group-hover:scale-110 transition-transform">{feature.icon}</div>
-                <h3 className="text-2xl font-bold mb-4">{feature.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{feature.desc}</p>
+              <div key={i} className="bg-muted/30 border border-border rounded-[2rem] p-6 sm:p-10 hover:border-primary/50 transition-colors group">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-background rounded-2xl flex items-center justify-center text-primary mb-6 sm:mb-8 shadow-sm group-hover:scale-110 transition-transform">{feature.icon}</div>
+                <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">{feature.title}</h3>
+                <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">{feature.desc}</p>
               </div>
             ))}
           </GsapWrapper>
         </div>
 
         {/* Section: Premium / Marketplace */}
-        <div className="my-40 lg:my-56 bg-zinc-950 text-white rounded-[40px] p-8 sm:p-16 lg:p-24 relative overflow-hidden flex flex-col lg:flex-row items-center gap-16 shadow-2xl">
-           <div className="absolute top-0 right-0 w-1/2 h-full bg-primary/10 blur-[150px] pointer-events-none"></div>
+        <div className="my-32 lg:my-56 bg-zinc-950 text-white rounded-[30px] lg:rounded-[40px] p-6 sm:p-16 lg:p-24 relative overflow-hidden flex flex-col lg:flex-row items-center gap-12 lg:gap-16 shadow-2xl w-full">
+           <div className="absolute top-0 right-0 w-full lg:w-1/2 h-full bg-primary/10 blur-[100px] pointer-events-none"></div>
            
            <GsapWrapper animationType="fade-in" className="flex-1 relative z-10 w-full">
-              <span className="text-primary font-bold tracking-[0.3em] uppercase text-xs flex items-center gap-2 mb-6"><Crown size={16}/> Nivel Creador Pro</span>
-              <h2 className="text-4xl sm:text-6xl font-black tracking-tighter mb-8 leading-[1.1]">No solo compongas.<br /><span className="text-muted-foreground font-light">Monetiza tu arte.</span></h2>
-              <p className="text-zinc-400 text-lg leading-relaxed mb-10 max-w-xl">
+              <span className="text-primary font-bold tracking-[0.3em] uppercase text-[10px] sm:text-xs flex items-center gap-2 mb-4 sm:mb-6"><Crown size={16}/> Nivel Creador Pro</span>
+              <h2 className="text-3xl sm:text-6xl font-black tracking-tighter mb-4 sm:mb-8 leading-[1.1]">No solo compongas.<br /><span className="text-muted-foreground font-light">Monetiza tu arte.</span></h2>
+              <p className="text-zinc-400 text-base sm:text-lg leading-relaxed mb-8 max-w-xl">
                  AuraChords no es solo un editor, es un Marketplace de élite. Crea transcripciones premium, fija un precio, y vende tus obras directamente a miles de músicos en la plataforma.
               </p>
               

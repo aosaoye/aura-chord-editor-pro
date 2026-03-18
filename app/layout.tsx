@@ -33,8 +33,8 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
-        <body className={`${jakartaSans.variable} antialiased`}>
+      <html lang="en" suppressHydrationWarning className="overflow-x-hidden">
+        <body className={`${jakartaSans.variable} antialiased overflow-x-hidden w-full max-w-[100vw]`}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
