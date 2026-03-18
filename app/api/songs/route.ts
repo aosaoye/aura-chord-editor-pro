@@ -40,11 +40,16 @@ export async function POST(req: NextRequest) {
     // Verificar si la canción ya existe y pertenece al usuario
     let savedSong;
     
-    // El id vendrá dentro de song si estamos editando
+    // 1. Verificación Fuerte de Plagio y Duplicación
     if (song.id && song.id.length > 20) {
       const existing = await prisma.song.findUnique({ where: { id: song.id } });
-      if (existing && existing.userId === userId) {
-        savedSong = await prisma.song.update({
+      if (existing) {
+        if (existing.userId !== userId) {
+          return NextResponse.json({ error: "🔒 Bloqueo de Plagio: Las obras de otros creadores no pueden sobrescribirse ni republicarse." }, { status: 403 });
+        }
+        
+        // Es nuestro, lo actualizamos
+        const savedSong = await prisma.song.update({
           where: { id: song.id },
           data: {
             title: song.title,
@@ -57,7 +62,18 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 1. Verificar si el usuario ya alcanzó el límite del plan gratuito para creación nueva
+    // 1B. Verificación Fija por Metadatos del JSON
+    if (song.metadata?.originalCreatorId && song.metadata.originalCreatorId !== userId) {
+        return NextResponse.json({ error: "🔒 Bloqueo por Huella Digital: Este archivo ChordPro contiene metadatos de otro compositor." }, { status: 403 });
+    }
+
+    // Insertar Sellado Criptográfico / Huella Digital
+    song.metadata = {
+      originalCreatorId: userId,
+      authorName: dbUser?.name || "Autor Verificado"
+    };
+
+    // 2. Verificar si el usuario ya alcanzó el límite del plan gratuito para creación nueva
     const isPro = dbUser.stripeSubscriptionId != null;
     const userSongsCount = await prisma.song.count({ where: { userId } });
 
@@ -134,8 +150,12 @@ export async function GET(req: NextRequest) {
              // Aplicar censura o scrub del contenido para generar un preview
              try {
                 const parsed = JSON.parse(song.parsedData);
-                // Dejamos solo las 2 primeras secciones del JSON ChordPro (Preview)
-                parsed.sections = parsed.sections.slice(0, 2);
+                // Censura Extrema: Dejamos solo la primera sección...
+                parsed.sections = parsed.sections.slice(0, 1);
+                // ...y solo la primera línea de la primera estrofa
+                if (parsed.sections.length > 0) {
+                    parsed.sections[0].lines = parsed.sections[0].lines.slice(0, 1);
+                }
                 parsed.isPreviewRestriction = true; // Avisamos al editor
                 song.parsedData = JSON.stringify(parsed);
                 song.rawLyrics = "[CONTENIDO PROTEGIDO]\n\nEsta obra es premium y está protegida por derechos de su compositor. Adquiere el acceso permanente para visualizar, editar y exportar la partitura y acordes completos.";

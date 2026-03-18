@@ -831,16 +831,18 @@ export default function SongEditor() {
                 onClick={() => setIsExportModalOpen(true)}
                 className="px-6 py-3 bg-foreground text-background text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-50 border-r border-background/20 flex items-center gap-2"
               >
-                📥 Exportar Pro
+               Exportar Pro
               </button>
 
-              <button
-                onClick={handleSaveSong}
-                disabled={isSaving || isExporting}
-                className="px-6 py-3 bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase hover:text-white transition-colors disabled:opacity-50 flex items-center gap-2"
-              >
-                {isSaving ? "Guardando..." : "Guardar en la Nube"}
-              </button>
+              {!isReadOnly && (
+                <button
+                  onClick={handleSaveSong}
+                  disabled={isSaving || isExporting}
+                  className="px-6 py-3 bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase hover:text-white transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isSaving ? "Guardando..." : "Guardar en la Nube"}
+                </button>
+              )}
             </div>
           </div>
         }

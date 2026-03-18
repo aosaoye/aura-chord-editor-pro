@@ -40,5 +40,9 @@ export interface Song {
     title: string,
     bpm: number,
     timeSignature?: string, // e.g. "4/4", "3/4"
-    sections: Section[]
+    sections: Section[],
+    metadata?: {
+        originalCreatorId?: string,
+        authorName?: string
+    }
 }
