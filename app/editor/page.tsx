@@ -738,7 +738,7 @@ export default function SongEditor() {
 
   const hasMultipleSongs = Array.isArray(song?.sections) && song.sections.filter(s => s.title && /^\d+\.\s/.test(s.title)).length > 1;
   const activeColumns = editorColumns > 0 ? editorColumns : (hasMultipleSongs ? 2 : 1);
-  const baseLinesPerColumn = fontSize.includes('2xl') ? 11 : fontSize.includes('xl') ? 14 : fontSize.includes('sm') ? 22 : 18;
+  const baseLinesPerColumn = fontSize.includes('2xl') ? 9 : fontSize.includes('xl') ? 12 : fontSize.includes('sm') ? 20 : 15;
 
   const marginMap = {
     'estrecho': 'p-4 sm:p-6 lg:p-8',
@@ -1127,11 +1127,6 @@ export default function SongEditor() {
                 ${isPreviewMode ? 'transform shrink-0 scale-[0.6] sm:scale-75 lg:scale-[0.85] -mt-[40mm] sm:-mt-[20mm] lg:-mt-[10mm]' : 'shrink-0 lg:snap-center'}
               `}
           >
-            {/* Controles de Número de Página */}
-            <div className="absolute bottom-8 right-12 text-[10px] font-bold text-gray-300 dark:text-gray-700">
-              {index + 1}
-            </div>
-
             {/* HEADER DE PAGINA CONDICIONAL */}
             {index === 0 ? (
               hasMultipleSongs ? (
@@ -1196,7 +1191,7 @@ export default function SongEditor() {
             )}
 
             {/* CONTENIDO DE LA PÁGINA (COLUMNAS MASONRY DINÁMICAS) */}
-            <div className={`grid grid-cols-1 ${({ 1: 'md:grid-cols-1', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-4' } as Record<number, string>)[page.columns.length] || 'md:grid-cols-1'} gap-8 sm:gap-12 w-full mt-2 flex-1 items-start overflow-hidden`}>
+            <div className={`grid grid-cols-1 ${({ 1: 'md:grid-cols-1', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-4' } as Record<number, string>)[page.columns.length] || 'md:grid-cols-1'} gap-8 sm:gap-12 w-full mt-2 flex-1 items-start mb-20`}>
               {page.columns.map((col, colIdx) => (
                 <div key={`col-${page.id}-${colIdx}`} className="col-span-1 flex flex-col gap-10">
                   {col.map((section, sIdx) => (
@@ -1375,11 +1370,14 @@ export default function SongEditor() {
               ))}
             </div>
 
-            {/* FOOTER POR PÁGINA */}
-            <div className="absolute bottom-0 left-0 w-full pt-6 pb-6 sm:pb-8 lg:pb-12 px-8 sm:px-12 lg:px-16 border-t border-transparent flex justify-between items-end text-right opacity-50 shrink-0">
-              <div className="w-full absolute top-0 left-8 right-8 sm:left-12 sm:right-12 lg:left-16 lg:right-16 h-px bg-gray-100 dark:bg-gray-800"></div>
+            {/* FOOTER POR PÁGINA (Solid Z-20 Blocker with Fade Mask) */}
+            <div className="absolute bottom-0 left-0 w-full h-[5rem] lg:h-[6rem] bg-background z-20 flex justify-between items-end px-8 sm:px-12 lg:px-16 pb-6 sm:pb-8 lg:pb-12 text-muted-foreground/60 shrink-0">
+              {/* Fade gradient to mask overflowing grid text gracefully */}
+              <div className="absolute bottom-full left-0 w-full h-[4rem] bg-gradient-to-t from-background to-transparent pointer-events-none"></div>
+              
+              <div className="w-full absolute top-0 left-8 right-8 sm:left-12 sm:right-12 lg:left-16 lg:right-16 h-px bg-border/30"></div>
               <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
-                Mastered with <span className="font-black inline-block px-1">ChordPro</span>
+                Aura <span className="font-black inline-block px-1 text-primary">Chords</span>
               </p>
               <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
                 {new Date().getFullYear()} - PÁG {index + 1}
