@@ -257,7 +257,7 @@ export default function LyricsSearchPage() {
       document.body.appendChild(hiddenContainer);
 
       const stanzas = lyrics.split(/\n\s*\n/);
-      const cols = 2; 
+      const cols = 3; 
       
       const linesPerColumnCover = 28; // Cabecera ocupa espacio
       const linesPerColumnNormal = 38; 

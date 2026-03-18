@@ -114,9 +114,32 @@ export default function SyllableComponent({ syllable, onChordChange, nextHasChor
       {isEditing && (
         <>
           {/* Fondo para cerrar en móvil */}
-          <div className="fixed inset-0 z-[190] sm:hidden bg-black/20 backdrop-blur-sm animate-in fade-in" onClick={handleCancel} />
+          <div className="fixed inset-0 z-[990] sm:hidden bg-black/20 backdrop-blur-sm animate-in fade-in" onClick={handleCancel} />
           
-          <div className="fixed bottom-0 left-0 w-full sm:absolute sm:top-full sm:left-0 sm:w-auto sm:bottom-auto z-[200] sm:mt-2 text-black">
+          <div 
+             ref={(node) => {
+                if (node && node.parentElement && !node.dataset.positioned) {
+                   const rect = node.parentElement.getBoundingClientRect();
+                   node.style.top = `${rect.bottom + 8}px`;
+                   node.style.left = `${rect.left}px`;
+                   
+                   // Adjust if off-screen to the right
+                   const popoverWidth = 300; 
+                   if (rect.left + popoverWidth > window.innerWidth) {
+                      node.style.left = `${window.innerWidth - popoverWidth - 20}px`;
+                   }
+                   
+                   // Adjust if off-screen to the bottom
+                   if (rect.bottom + 200 > window.innerHeight) {
+                      node.style.top = `${rect.top - 200}px`;
+                   }
+                   
+                   node.dataset.positioned = "true";
+                }
+             }}
+             className="fixed bottom-0 left-0 w-full sm:w-auto sm:bottom-auto z-[999] text-black shadow-2xl rounded-xl"
+             style={{ position: 'fixed' }}
+          >
             <ChordEditorMenu
               initialChord={chord}
               onSave={handleSave}

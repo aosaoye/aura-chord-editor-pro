@@ -708,7 +708,7 @@ export default function SongEditor() {
   const isReadOnly = song?.userId && user?.id ? song.userId !== user.id : false;
 
   const hasMultipleSongs = Array.isArray(song?.sections) && song.sections.filter(s => s.title && /^\d+\.\s/.test(s.title)).length > 1;
-  const activeColumns = editorColumns > 0 ? editorColumns : 2;
+  const activeColumns = editorColumns > 0 ? editorColumns : (hasMultipleSongs ? 2 : 1);
   const baseLinesPerColumn = fontSize.includes('2xl') ? 11 : fontSize.includes('xl') ? 14 : fontSize.includes('sm') ? 22 : 18;
 
   const marginMap = {
@@ -1092,7 +1092,7 @@ export default function SongEditor() {
         {song && paginateSong(song, baseLinesPerColumn, activeColumns).map((page, index) => (
           <div
             key={page.id}
-            className={`a4-page bg-background text-foreground ${activeMarginClass} overflow-visible relative lg:shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.15)] transition-all duration-500 flex flex-col justify-start w-full lg:w-[210mm] lg:min-w-[210mm] min-h-[80vh] lg:h-[297mm] ring-0 lg:ring-1 lg:ring-border origin-top rounded-xl lg:rounded-none border border-border lg:border-none
+            className={`a4-page bg-background text-foreground ${activeMarginClass} overflow-hidden relative lg:shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.15)] transition-all duration-500 flex flex-col justify-start w-full lg:w-[210mm] lg:min-w-[210mm] min-h-[80vh] lg:min-h-[297mm] ring-0 lg:ring-1 lg:ring-border origin-top rounded-xl lg:rounded-none border border-border lg:border-none
                 ${isPreviewMode ? 'transform shrink-0 scale-[0.6] sm:scale-75 lg:scale-[0.85] -mt-[40mm] sm:-mt-[20mm] lg:-mt-[10mm]' : 'shrink-0 lg:snap-center'}
               `}
           >
@@ -1303,12 +1303,13 @@ export default function SongEditor() {
             </div>
 
             {/* FOOTER POR PÁGINA */}
-            <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800 flex justify-between items-end text-right opacity-50 shrink-0">
+            <div className="absolute bottom-0 left-0 w-full pt-6 pb-6 sm:pb-8 lg:pb-12 px-8 sm:px-12 lg:px-16 border-t border-transparent flex justify-between items-end text-right opacity-50 shrink-0">
+              <div className="w-full absolute top-0 left-8 right-8 sm:left-12 sm:right-12 lg:left-16 lg:right-16 h-px bg-gray-100 dark:bg-gray-800"></div>
               <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
                 Mastered with <span className="font-black inline-block px-1">ChordPro</span>
               </p>
               <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
-                {new Date().getFullYear()}
+                {new Date().getFullYear()} - PÁG {index + 1}
               </p>
             </div>
           </div>
