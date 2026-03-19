@@ -33,6 +33,14 @@ export interface Section {
     repeat?: number      // Numero de repeticiones (ej. x2, x4)
 }
 
+export interface LayoutSettings {
+  columns: 1 | 2 | 3 | 4;
+  baseFontSize: number;
+  chordFontSize: number;
+  lineHeight: number;
+  fontFamily: 'sans' | 'serif' | 'mono';
+}
+
 export interface Song {
     id: string,
     userId?: string,
@@ -41,8 +49,11 @@ export interface Song {
     bpm: number,
     timeSignature?: string, // e.g. "4/4", "3/4"
     sections: Section[],
+    layout?: LayoutSettings, // Configuraciones visuales propias de la canción
     metadata?: {
         originalCreatorId?: string,
-        authorName?: string
+        authorName?: string,
+        offlineSavedAt?: string,
+        isOfflineCopy?: boolean
     }
 }

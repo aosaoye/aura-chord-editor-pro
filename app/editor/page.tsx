@@ -389,6 +389,26 @@ export default function SongEditor() {
     });
   }, []);
 
+  const handleMergeWithNext = useCallback((sectionId: string) => {
+    setSong((currentSong) => {
+      if (!currentSong) return currentSong;
+      const index = currentSong.sections.findIndex(s => s.id === sectionId);
+      if (index === -1 || index >= currentSong.sections.length - 1) return currentSong;
+
+      const newSections = [...currentSong.sections];
+      const currentSection = newSections[index];
+      const nextSection = newSections[index + 1];
+
+      // Merge lines
+      currentSection.lines = [...currentSection.lines, ...nextSection.lines];
+      
+      // Remove next section
+      newSections.splice(index + 1, 1);
+      
+      return { ...currentSong, sections: newSections };
+    });
+  }, []);
+
   const handleSectionTypeChange = useCallback((sectionId: string, newType: string) => {
     setSong((currentSong) => {
       if (!currentSong) return currentSong;
@@ -1439,6 +1459,13 @@ export default function SongEditor() {
 
                               {!isReadOnly && (
                                 <div className="flex items-center gap-1 opacity-0 group-hover/secHeader:opacity-100 transition-opacity">
+                                  <button
+                                    onClick={() => handleMergeWithNext(section.id)}
+                                    className="text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 p-1.5 rounded active:scale-95 transition-all text-[8px] sm:text-[9px] font-bold tracking-widest uppercase mr-1"
+                                    title="Unir con la siguiente estrofa"
+                                  >
+                                    ↑ Unir
+                                  </button>
                                   <button
                                     onClick={() => handleDuplicateSection(section.id)}
                                     className="text-gray-300 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 p-1.5 rounded active:scale-95 transition-all"
