@@ -26,6 +26,7 @@ const Piano3D = dynamic(() => import('../components/Piano3D'), {
   ssr: false, // Fundamental para librerías 3D (Three.js) que dependen de 'window'
   loading: () => <div className="h-64 w-full bg-gray-100 animate-pulse rounded-xl flex items-center justify-center text-gray-400">Cargando motor 3D...</div>
 });
+const GuitarTuner = dynamic(() => import('../components/GuitarTuner'), { ssr: false });
 import ExportModal from "../components/ExportModal";
 import { useAutosaveSong } from "../hooks/useAutosaveSong";
 import { offlineStorage } from "../utils/offlineStorage";
@@ -37,6 +38,7 @@ export default function SongEditor() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isTunerOpen, setIsTunerOpen] = useState(false);
   const { user } = useUser();
 
   const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
@@ -92,6 +94,27 @@ export default function SongEditor() {
   const [editorColumns, setEditorColumns] = useState<number>(0);
   const [editorMargin, setEditorMargin] = useState<'estrecho' | 'normal' | 'amplio'>('normal');
   const [active3DChord, setActive3DChord] = useState<Chord | null>(null);
+
+  const hasMultipleSongs = Array.isArray(song?.sections) && song.sections.filter(s => s.title && /^\d+\.\s/.test(s.title)).length > 1;
+  const activeColumns = editorColumns > 0 ? editorColumns : (song?.layout?.columns || (hasMultipleSongs ? 2 : 1));
+  
+  const layout = song?.layout || {
+    columns: activeColumns as 1|2|3|4,
+    baseFontSize: fontSize.includes('2xl') ? 24 : fontSize.includes('xl') ? 20 : fontSize.includes('sm') ? 14 : 16,
+    chordFontSize: 14,
+    lineHeight: lineHeight.includes('loose') ? 2.5 : lineHeight.includes('tight') ? 1.5 : 2,
+    fontFamily: (fontFamily.includes('serif') ? 'serif' : fontFamily.includes('mono') ? 'mono' : 'sans') as 'sans' | 'serif' | 'mono',
+    alignment: alignment || 'justify-start',
+    notation: notation || 'english',
+    showChords: true
+  };
+
+  const updateLayout = useCallback((updates: Partial<typeof layout>) => {
+    if (!song) return;
+    setSong(prev => prev ? { ...prev, layout: { ...layout, ...updates } } as any : prev);
+  }, [layout, song, setSong]);
+
+  const baseLinesPerColumn = Math.floor(800 / ((layout.baseFontSize || 16) * (layout.lineHeight || 2)));
 
   // Hook del Teleprompter
   const { isPlaying, activeLineId, activeChord, togglePlay } = useTeleprompter(song);
@@ -912,28 +935,6 @@ export default function SongEditor() {
   // Si la canción está en BDD (tiene userId), y mi ID no coincide (o no estoy logueado), es solo de Lectura!
   const isReadOnly = song?.userId ? song.userId !== user?.id : false;
 
-  const hasMultipleSongs = Array.isArray(song?.sections) && song.sections.filter(s => s.title && /^\d+\.\s/.test(s.title)).length > 1;
-  const activeColumns = editorColumns > 0 ? editorColumns : (song?.layout?.columns || (hasMultipleSongs ? 2 : 1));
-  
-  const layout = song?.layout || {
-    columns: activeColumns as 1|2|3|4,
-    baseFontSize: fontSize.includes('2xl') ? 24 : fontSize.includes('xl') ? 20 : fontSize.includes('sm') ? 14 : 16,
-    chordFontSize: 14,
-    lineHeight: lineHeight.includes('loose') ? 2.5 : lineHeight.includes('tight') ? 1.5 : 2,
-    fontFamily: (fontFamily.includes('serif') ? 'serif' : fontFamily.includes('mono') ? 'mono' : 'sans') as 'sans' | 'serif' | 'mono',
-    alignment: alignment || 'justify-start',
-    notation: notation || 'english',
-    showChords: true
-  };
-
-  const updateLayout = useCallback((updates: Partial<typeof layout>) => {
-    if (!song) return;
-    setSong(prev => prev ? { ...prev, layout: { ...layout, ...updates } } as any : prev);
-  }, [layout, song, setSong]);
-
-  // Dynamic pagination calculation depending on precise layout spacing
-  const baseLinesPerColumn = Math.floor(800 / ((layout.baseFontSize || 16) * (layout.lineHeight || 2)));
-
   const marginMap = {
     'estrecho': 'px-4 pt-4 pb-[8rem] sm:px-6 sm:pt-6 lg:px-8 lg:pt-8 lg:pb-[10rem]',
     'normal': 'px-6 pt-6 pb-[8rem] sm:px-10 sm:pt-10 lg:px-16 lg:pt-16 lg:pb-[10rem]',
@@ -973,7 +974,16 @@ export default function SongEditor() {
             </div>
           }
           rightContent={
-            <div className="flex items-center gap-4 w-full lg:w-auto overflow-x-auto pb-4 lg:pb-0 hide-scrollbar mt-4 lg:mt-0">
+            <div className="flex items-center gap-2 lg:gap-4 w-full lg:w-auto overflow-x-auto hide-scrollbar mt-4 lg:mt-0 pb-1 lg:pb-0">
+              <button
+                onClick={() => setIsTunerOpen(true)}
+                className="text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-3 rounded-full text-foreground border border-transparent hover:border-border hover:bg-accent transition-colors shrink-0 flex items-center gap-2"
+                title="Afinador Inteligente"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M8 6h8"/><path d="M8 14h8"/><path d="M8 18h8"/></svg>
+                Afinador
+              </button>
+
               <button
                 onClick={() => {
                   if (isPreviewMode && isPlaying) togglePlay();
@@ -1020,22 +1030,25 @@ export default function SongEditor() {
                   <button
                     onClick={handleSaveSong}
                     disabled={isSaving || isExporting}
-                    className="px-6 py-3 bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase hover:text-white transition-colors disabled:opacity-50 flex items-center justify-center min-w-[180px]"
+                    className="px-6 py-3 bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase hover:text-white transition-colors disabled:opacity-50 flex items-center justify-center min-w-[140px] whitespace-nowrap"
                   >
                     {isSaving || autosaveStatus === 'saving' ? (
-                      <span className="animate-pulse">Autoguardando...</span>
+                      <span className="animate-pulse">Guardando...</span>
                     ) : autosaveStatus === 'dirty' ? (
-                      'Modificado...'
+                      'Borrador Local'
                     ) : autosaveStatus === 'saved' && lastSaved ? (
                       `Nube: ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                     ) : autosaveStatus === 'error' ? (
                       <span className="text-red-200">Error guardando</span>
                     ) : (
-                      "Guardar en la Nube"
+                      'Guardar'
                     )}
                   </button>
                 )}
               </div>
+              
+              {/* Spacer para que en móviles no se pegue al borde derecho al hacer scroll */}
+              <div className="w-2 lg:hidden shrink-0"></div>
             </div>
           }
         />
@@ -1795,6 +1808,10 @@ export default function SongEditor() {
           onExportPDF={handleExportToPDF}
           onExportPNG={handleExportToImage}
         />
+      )}
+
+      {isTunerOpen && (
+        <GuitarTuner onClose={() => setIsTunerOpen(false)} />
       )}
 
       {/* MODAL OFFLINE PROFESIONAL */}
