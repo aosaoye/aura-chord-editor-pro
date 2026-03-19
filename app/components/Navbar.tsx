@@ -57,12 +57,28 @@ export default function Navbar({ variant = "default", className = "", centerCont
     <nav className={navClasses}>
       <div className="flex-shrink-0 flex items-center">
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-lg border border-border group-hover:scale-105 transition-transform duration-300">
-             <Image src="/images/logo.png" alt="AuraChords Logo" fill className="object-cover" />
+          
+          {/* ISOTIPO SVG HIGH-QUALITY (Exact Logo 2 Style) */}
+          <div className="relative w-8 h-8 sm:w-10 sm:h-10 transform group-hover:scale-110 transition-transform duration-300">
+            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full" style={{ filter: "drop-shadow(0px 0px 6px rgba(6, 182, 212, 0.4))" }}>
+              <defs>
+                 <linearGradient id="aura-grad-exact" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#6366f1" /> {/* Deep Indigo / Violet  */}
+                    <stop offset="100%" stopColor="#06b6d4" /> {/* Bright Cyan */}
+                 </linearGradient>
+              </defs>
+              {/* Círculo Principal */}
+              <circle cx="20" cy="20" r="11" stroke="url(#aura-grad-exact)" strokeWidth="4" />
+              {/* Línea cruzada que sobresale el círculo (Tensión/Cuerda) */}
+              <path d="M6 34 L34 6" stroke="url(#aura-grad-exact)" strokeWidth="4" strokeLinecap="butt" />
+            </svg>
           </div>
-          <span className="font-black text-xl sm:text-2xl tracking-tighter italic whitespace-nowrap group-hover:text-primary transition-colors duration-300">
-            AURA<span className="font-light">CHORDS</span>
+
+          {/* TIPOGRAFÍA DINÁMICA */}
+          <span className="font-black text-xl sm:text-2xl tracking-tighter whitespace-nowrap text-foreground group-hover:opacity-80 transition-opacity duration-300">
+            Aura<span className="font-light">Chords</span>
           </span>
+
         </Link>
       </div>
       
