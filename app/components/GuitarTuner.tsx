@@ -3,7 +3,7 @@
 import { useTuner } from "../hooks/useTuner";
 
 export default function GuitarTuner({ onClose }: { onClose: () => void }) {
-  const { isListening, startTuning, stopTuning, pitch, closestString, cents } = useTuner();
+  const { isListening, startTuning, stopTuning, pitch, closestString, cents, error } = useTuner();
 
   // El estado ideal es cuando la diferencia está entre -3 y +3 cents
   const isInTune = Math.abs(cents) <= 3;
@@ -21,11 +21,17 @@ export default function GuitarTuner({ onClose }: { onClose: () => void }) {
       </button>
 
       <div className="flex flex-col items-center w-full max-w-md p-8">
-        
         <h2 className="text-sm tracking-[0.3em] font-bold text-gray-500 uppercase mb-16">Afinador Inteligente</h2>
 
-        {/* DIAL PRINCIPAL */}
-        <div className="relative w-72 h-36 mb-12 flex justify-center overflow-hidden">
+        {error ? (
+          <div className="flex flex-col items-center justify-center h-48 bg-red-500/10 border border-red-500/20 rounded-2xl p-6 text-center">
+            <span className="text-red-500 mb-2 font-bold uppercase tracking-widest text-xs">Error de Micrófono</span>
+            <p className="text-gray-400 text-sm max-w-xs">{error}</p>
+          </div>
+        ) : (
+          <>
+            {/* DIAL PRINCIPAL */}
+            <div className="relative w-72 h-36 mb-12 flex justify-center overflow-hidden">
           {/* Arco decorativo fondo */}
           <div className="absolute top-0 w-72 h-72 rounded-full border-2 border-gray-800 border-t-transparent border-l-transparent -rotate-45" />
           
@@ -71,10 +77,19 @@ export default function GuitarTuner({ onClose }: { onClose: () => void }) {
             </div>
           )}
         </div>
+      </>
+    )}
 
         {/* CONTROLES */}
         <div className="mt-20">
-          {!isListening ? (
+          {error ? (
+             <button 
+               onClick={onClose}
+               className="px-12 py-4 bg-white/10 text-white text-xs font-bold uppercase tracking-[0.2em] rounded-full hover:bg-white/20 active:scale-95 transition-all"
+             >
+               Cerrar
+             </button>
+          ) : !isListening ? (
              <button 
                onClick={startTuning}
                className="px-12 py-4 bg-white text-black text-xs font-bold uppercase tracking-[0.2em] rounded-full hover:scale-105 active:scale-95 transition-all"

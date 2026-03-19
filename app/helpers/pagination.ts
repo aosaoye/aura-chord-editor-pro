@@ -13,88 +13,90 @@ export interface Page {
   id: string;
   index: number;
   columns: PageSection[][];
+  maxUsedLines: number;
 }
 
 export function paginateSong(song: Song, linesPerColumn: number = 17, columnsPerPage: number = 3): Page[] {
   const allColumns: PageSection[][] = [];
+  const columnLinesCount: number[] = [];
   
   let currentLinesCount = 0;
   let currentColumnSections: PageSection[] = [];
 
   song.sections.forEach(section => {
     let unpaginatedLines = [...section.lines];
-    // Extraemos la altura dinámica para convertir píxeles a su equivalente en "Líneas Puras de Texto"
-    // textLineHeight es típicamente unos 30px (16px * 1.2 + gap de 10px). 
-    const textLineHeight = (song.layout?.baseFontSize || 16) * 1.2 + Math.max(0.25, ((song.layout?.lineHeight || 1.5) - 1)) * 16;
-    
-    // Una sección aporta físicamente en el DOM: gap-6/gap-8 (32px) del parent column 
-    // Si tiene título, el H2 añade otros ~20px y activa el gap-6 interno de la sección (24px) = 44px
-    // Convertimos esos píxeles en el "Costo de Líneas"
-    const sectionOverheadPx = 32 + (section.title ? 44 : 0);
-    const sectionOverheadCost = sectionOverheadPx / textLineHeight;
-
     let isContinuation = false;
 
-    // Si es el inicio de una sección, restamos su overhead directamente del availableSpace
-    const titleSpace = sectionOverheadCost;
-
     while (unpaginatedLines.length > 0) {
-      let availableSpace = linesPerColumn - currentLinesCount;
-      if (!isContinuation) {
-        availableSpace -= titleSpace;
-      }
+      const UI_SHOWS_CHORD_SPACER = song.layout?.showChords !== false;
+      const baseFontSize = song.layout?.baseFontSize || 16;
+      const chordFontSize = song.layout?.chordFontSize || 14;
+      const lineHeightFactor = song.layout?.lineHeight || 2.0;
 
-      if (availableSpace <= 0) {
+      const chordBoxHeight = UI_SHOWS_CHORD_SPACER ? (chordFontSize * 1.5 + 2) : 0; // +2px for mb-0.5
+      const textBoxHeight = baseFontSize * lineHeightFactor;
+      const lineGap = 16; // sm:gap-4 CSS exact value 
+      
+      const singleLinePhysicalPx = chordBoxHeight + textBoxHeight;
+      const rowGap = baseFontSize * 1.5; // rowGap: '1.5em'
+      const wrappedLineAddedPx = singleLinePhysicalPx + rowGap; 
+
+      // Section header label (text-[10px] + padding) + mt-1 (4px)
+      const titlePhysicalPx = !isContinuation ? 19 : 0; 
+      // Available content box (899px) minus Top Header (~108px) = ~790px.
+      // Use 780px to leave a perfect microscopic safe-zone margin.
+      const MAX_PIXELS_PER_COLUMN = 780; 
+      let availablePixels = MAX_PIXELS_PER_COLUMN - currentLinesCount - titlePhysicalPx;
+      
+      if (availablePixels <= (singleLinePhysicalPx + lineGap) && currentColumnSections.length > 0) {
         allColumns.push(currentColumnSections);
+        columnLinesCount.push(currentLinesCount);
         currentColumnSections = [];
         currentLinesCount = 0;
-        availableSpace = linesPerColumn - (!isContinuation ? titleSpace : 0);
+        availablePixels = MAX_PIXELS_PER_COLUMN - titlePhysicalPx;
       }
 
-      let costAccumulator = 0;
+      let usedPixelsAccumulator = 0;
       let linesToTakeCount = 0;
 
       for (let i = 0; i < unpaginatedLines.length; i++) {
         const line = unpaginatedLines[i];
-        const hasChords = line.words.some(w => w.syllables.some(s => !!s.chord));
+        const charWidthRatio = 0.6; 
         
-        // Approximate character length of the entire line
-        const charLength = line.words.reduce((sum, w) => sum + w.syllables.reduce((sSum, s) => sSum + s.text.length, 0), 0) + line.words.length;
-        
-        // Estimación de ancho en píxeles
-        const baseFontSize = song.layout?.baseFontSize || 16;
-        const charWidth = baseFontSize * 0.55; // Width of a letter on average
-        const linePixelWidth = charLength * charWidth;
+        let linePixelWidth = 0;
+        line.words.forEach((word) => {
+           let wordWidth = 0;
+           word.syllables.forEach((s) => {
+              const textW = s.text.length * baseFontSize * charWidthRatio;
+              let chordLen = 0;
+              if (s.chord) {
+                  const c = s.chord as any;
+                  chordLen = (c.rootNote?.length || 1) + (c.variation?.length || 0) + (c.bassNote ? 1 + c.bassNote.length : 0);
+              }
+              const chordW = chordLen * chordFontSize * charWidthRatio;
+              wordWidth += Math.max(textW, chordW);
+           });
+           linePixelWidth += wordWidth;
+        });
 
-        // Calculamos el ancho disponible para la columna en A4 horizontal
-        const totalA4ContentWidth = 794 - (64 * 2); // 794px menos padding lateral (~128px)
-        const gapPx = 32; // gap-8
+        linePixelWidth += Math.max(0, line.words.length - 1) * 16;
+
+        const totalA4ContentWidth = 794 - (64 * 2); 
+        const gapPx = 32; 
         const columnWidthPx = (totalA4ContentWidth - (gapPx * (columnsPerPage - 1))) / columnsPerPage;
         
-        // Si la línea es más larga que la columna, contaremos múltiples líneas (wrap)
         const wrapCycles = Math.max(1, Math.ceil(linePixelWidth / columnWidthPx));
 
-        // Calculamos el costo dinámico real basado en los estilos CSS exactos
-        const chordLineHeight = textLineHeight + ((song.layout?.chordFontSize || 14) * 1.5);
-        const chordRatio = chordLineHeight / textLineHeight;
-        
-        let lineCost = hasChords ? chordRatio : 1;
-
+        // Cada línea "ocupa" su altura más el gap-4 (16px) que la separa de la siguiente
+        let currentLinePixels = singleLinePhysicalPx + lineGap;
         if (wrapCycles > 1) {
-            // Cada salto de línea (wrap) añade textLineHeight + rowGap ('1.5em')
-            const wrapAddedPx = (baseFontSize * 1.2) + (baseFontSize * 1.5);
-            const extraWrapCost = wrapAddedPx / textLineHeight;
-            lineCost += (wrapCycles - 1) * extraWrapCost; 
+            // Un wrap añade otra caja entera de línea más rowGap
+            currentLinePixels += (wrapCycles - 1) * wrappedLineAddedPx; 
         }
 
-        // Add extra line cost if the interlineado is customized (since baseLinesPerColumn is an average estimate)
-        if (song.layout?.lineHeight && song.layout.lineHeight > 2.0 && columnsPerPage > 1) {
-            // Un pequeño ajuste defensivo si el interlineado es enorme y la columna muy estrecha
-            lineCost += 0.2;
-        }
-
-        if (costAccumulator + lineCost <= availableSpace || linesToTakeCount === 0) {
-           costAccumulator += lineCost;
+        // Add line forcefully if it's the very first line of a brand new column
+        if (usedPixelsAccumulator + currentLinePixels <= availablePixels || linesToTakeCount === 0) {
+           usedPixelsAccumulator += currentLinePixels;
            linesToTakeCount++;
         } else {
            break;
@@ -110,16 +112,17 @@ export function paginateSong(song: Song, linesPerColumn: number = 17, columnsPer
         isContinuation
       });
 
-      currentLinesCount += costAccumulator + (isContinuation ? 0 : titleSpace);
+      currentLinesCount += usedPixelsAccumulator + titlePhysicalPx;
       isContinuation = true;
     }
     
-    // Add extra padding spacing after section finishes inside column
-    currentLinesCount += 1.5; 
+    // Al cerrar la sección, sumamos el gap entre secciones (sm:gap-8 en DOM = 32px)
+    currentLinesCount += 32; 
   });
 
   if (currentColumnSections.length > 0) {
     allColumns.push(currentColumnSections);
+    columnLinesCount.push(currentLinesCount);
   }
 
   // Ahora empaquetamos las columnas dinámicamente según 'columnsPerPage' en Páginas A4
@@ -127,16 +130,19 @@ export function paginateSong(song: Song, linesPerColumn: number = 17, columnsPer
 
   for (let i = 0; i < allColumns.length; i += columnsPerPage) {
     const pageColumns: PageSection[][] = [];
+    let maxUsedLines = 0;
     for (let c = 0; c < columnsPerPage; c++) {
       if (allColumns[i + c]) {
          pageColumns.push(allColumns[i + c]);
+         maxUsedLines = Math.max(maxUsedLines, columnLinesCount[i + c]);
       }
     }
     
     pages.push({
       id: `page-${i / columnsPerPage}`,
       index: Math.floor(i / columnsPerPage),
-      columns: pageColumns
+      columns: pageColumns,
+      maxUsedLines
     });
   }
 

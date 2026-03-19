@@ -58,6 +58,8 @@ export function useTuner() {
   const [closestString, setClosestString] = useState<{ note: string, freq: number, string: number } | null>(null);
   const [cents, setCents] = useState<number>(0);
 
+  const [error, setError] = useState<string | null>(null);
+
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -65,6 +67,13 @@ export function useTuner() {
 
   const startTuning = useCallback(async () => {
     try {
+      setError(null);
+      
+      // En HTTP puro fuera de localhost, navigator.mediaDevices es undefined por seguridad del navegador.
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("El acceso al micrófono requiere una conexión segura (HTTPS) o localhost.");
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       
@@ -78,16 +87,22 @@ export function useTuner() {
 
       setIsListening(true);
       updatePitch();
-    } catch (err) {
-      console.error("No se pudo acceder al micrófono", err);
-      alert("Por favor, permite el acceso al micrófono para usar el afinador.");
+    } catch (err: any) {
+      // Evitamos usar alert() o console.error para no disparar el overlay rojo del entorno de desarrollo de Next.js
+      setError(err.message === "El acceso al micrófono requiere una conexión segura (HTTPS) o localhost." 
+        ? err.message 
+        : "Permiso denegado o micrófono no encontrado.");
     }
   }, []);
 
   const stopTuning = useCallback(() => {
     if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
     if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
-    if (audioCtxRef.current) audioCtxRef.current.close();
+    
+    // Evitar crasheo si el contexto ya estaba cerrado o fallido
+    if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+      audioCtxRef.current.close().catch(() => {});
+    }
     setIsListening(false);
     setPitch(0);
     setCents(0);
@@ -129,5 +144,5 @@ export function useTuner() {
     return stopTuning; // Cleanup on unmount
   }, [stopTuning]);
 
-  return { isListening, startTuning, stopTuning, pitch, closestString, cents };
+  return { isListening, startTuning, stopTuning, pitch, closestString, cents, error };
 }

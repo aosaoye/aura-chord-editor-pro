@@ -35,7 +35,9 @@ export function useAutosaveSong(song: Song | null, isPlaying: boolean, onSaveSuc
              setStatus('dirty'); 
              return;
          }
-         throw new Error("Error en servidor");
+         // Next.js dev server a veces intercepta errores lanzados en hooks async
+         setStatus('error');
+         return;
       }
 
       setStatus('saved');
@@ -43,7 +45,7 @@ export function useAutosaveSong(song: Song | null, isPlaying: boolean, onSaveSuc
       prevSongRef.current = JSON.stringify(song);
       if (onSaveSuccess) onSaveSuccess();
     } catch (error) {
-      console.error("Autosave failed:", error);
+      // console.error("Autosave failed:", error); // Evitamos console.error para no disparar overlay
       setStatus('error');
     }
   }, [song, onSaveSuccess]);

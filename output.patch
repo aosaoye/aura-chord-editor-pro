@@ -1,0 +1,2761 @@
+diff --git a/app/api/marketplace/connect/route.ts b/app/api/marketplace/connect/route.ts
+index 5f18175..781f45d 100644
+--- a/app/api/marketplace/connect/route.ts
++++ b/app/api/marketplace/connect/route.ts
+@@ -1,9 +1,9 @@
+ import { NextResponse } from "next/server";
+ import { getAuth } from "@clerk/nextjs/server";
+-import { PrismaClient } from "@prisma/client";
++import { db } from "@/lib/db";
+ import { NextRequest } from "next/server";
+ 
+-const prisma = new PrismaClient();
++const prisma = db;
+ 
+ export async function POST(req: NextRequest) {
+   try {
+diff --git a/app/api/marketplace/purchase/route.ts b/app/api/marketplace/purchase/route.ts
+index ca05fed..1161235 100644
+--- a/app/api/marketplace/purchase/route.ts
++++ b/app/api/marketplace/purchase/route.ts
+@@ -1,9 +1,9 @@
+ import { NextResponse } from "next/server";
+ import { getAuth } from "@clerk/nextjs/server";
+-import { PrismaClient } from "@prisma/client";
++import { db } from "@/lib/db";
+ import { NextRequest } from "next/server";
+ 
+-const prisma = new PrismaClient();
++const prisma = db;
+ 
+ export async function POST(req: NextRequest) {
+   try {
+@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
+     }
+ 
+     // Verificar si ya la ha comprado
+-    const existingPurchase = await (prisma as any).purchase.findUnique({
++    const existingPurchase = await db.purchase.findUnique({
+       where: {
+         userId_songId: { userId, songId }
+       }
+diff --git a/app/api/notifications/route.ts b/app/api/notifications/route.ts
+index c5f014a..8537682 100644
+--- a/app/api/notifications/route.ts
++++ b/app/api/notifications/route.ts
+@@ -1,8 +1,8 @@
+ import { NextResponse, NextRequest } from "next/server";
+ import { getAuth } from "@clerk/nextjs/server";
+-import { PrismaClient } from "@prisma/client";
++import { db } from "@/lib/db";
+ 
+-const prisma = new PrismaClient();
++const prisma = db;
+ 
+ export async function GET(req: NextRequest) {
+   try {
+@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
+       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+     }
+ 
+-    const notifications = await (prisma as any).notification.findMany({
++    const notifications = await db.notification.findMany({
+       where: { userId },
+       orderBy: { createdAt: "desc" },
+       take: 20
+@@ -36,7 +36,7 @@ export async function PATCH(req: NextRequest) {
+     }
+ 
+     // Mark all as read
+-    await (prisma as any).notification.updateMany({
++    await db.notification.updateMany({
+       where: { userId, read: false },
+       data: { read: true }
+     });
+diff --git a/app/api/songs/[id]/rate/route.ts b/app/api/songs/[id]/rate/route.ts
+index f1000f0..f47a23f 100644
+--- a/app/api/songs/[id]/rate/route.ts
++++ b/app/api/songs/[id]/rate/route.ts
+@@ -1,8 +1,8 @@
+ import { NextResponse } from "next/server";
+ import { auth } from "@clerk/nextjs/server";
+-import { PrismaClient } from "@prisma/client";
++import { db } from "@/lib/db";
+ 
+-const prisma = new PrismaClient();
++const prisma = db;
+ 
+ export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+   try {
+@@ -29,7 +29,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
+     }
+ 
+     // Upsert rating (Create if not exists, update if exists)
+-    const newRating = await (prisma as any).songRating.upsert({
++    const newRating = await db.songRating.upsert({
+       where: {
+          userId_songId: {
+             userId: userId,
+diff --git a/app/api/songs/[id]/visibility/route.ts b/app/api/songs/[id]/visibility/route.ts
+index b16415b..6f30079 100644
+--- a/app/api/songs/[id]/visibility/route.ts
++++ b/app/api/songs/[id]/visibility/route.ts
+@@ -1,8 +1,8 @@
+ import { NextResponse, NextRequest } from "next/server";
+ import { getAuth } from "@clerk/nextjs/server";
+-import { PrismaClient } from "@prisma/client";
++import { db } from "@/lib/db";
+ 
+-const prisma = new PrismaClient();
++const prisma = db;
+ 
+ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+   try {
+@@ -18,13 +18,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
+     const { isPublic } = body;
+ 
+     // Verify ownership
+-    const song = await (prisma as any).song.findUnique({ where: { id } });
++    const song = await db.song.findUnique({ where: { id } });
+     
+     if (!song || song.userId !== userId) {
+       return NextResponse.json({ error: "Obra no encontrada o no tienes permiso" }, { status: 404 });
+     }
+ 
+-    const updatedSong = await (prisma as any).song.update({
++    const updatedSong = await db.song.update({
+       where: { id },
+       data: { isPublic },
+       include: {
+@@ -41,7 +41,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
+     if (isPublic && !song.isPublic) {
+         const followers = updatedSong.user?.followers || [];
+         if (followers.length > 0) {
+-           await (prisma as any).notification.createMany({
++           await db.notification.createMany({
+              data: followers.map((f: any) => ({
+                userId: f.followerId,
+                message: `${updatedSong.user?.name || 'Un músico'} ha publicado una nueva partitura: "${updatedSong.title}"`,
+diff --git a/app/api/songs/route.ts b/app/api/songs/route.ts
+index a1004ea..67fe929 100644
+--- a/app/api/songs/route.ts
++++ b/app/api/songs/route.ts
+@@ -1,8 +1,9 @@
+ import { NextResponse, NextRequest } from "next/server";
+ import { getAuth, currentUser } from "@clerk/nextjs/server";
+-import { PrismaClient, Prisma } from "@prisma/client";
++import { db } from "@/lib/db";
++import { Prisma } from '@prisma/client';
+ 
+-const prisma = new PrismaClient();
++const prisma = db;
+ 
+ export async function POST(req: NextRequest) {
+   try {
+diff --git a/app/api/users/[id]/follow/route.ts b/app/api/users/[id]/follow/route.ts
+index c0dccb4..3c77583 100644
+--- a/app/api/users/[id]/follow/route.ts
++++ b/app/api/users/[id]/follow/route.ts
+@@ -1,8 +1,8 @@
+ import { NextResponse, NextRequest } from "next/server";
+ import { getAuth, currentUser } from "@clerk/nextjs/server";
+-import { PrismaClient } from "@prisma/client";
++import { db } from "@/lib/db";
+ 
+-const prisma = new PrismaClient();
++const prisma = db;
+ 
+ export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+   try {
+diff --git a/app/community/page.tsx b/app/community/page.tsx
+index 9c6da7d..5654852 100644
+--- a/app/community/page.tsx
++++ b/app/community/page.tsx
+@@ -2,7 +2,7 @@ import Link from "next/link";
+ import { Search, Music, Users, Clock, Globe, Star } from "lucide-react";
+ import Navbar from "../components/Navbar";
+ import Footer from "../components/Footer";
+-import { PrismaClient } from "@prisma/client";
++import { db } from "@/lib/db";
+ import { format } from "date-fns";
+ import { es } from "date-fns/locale";
+ import { auth } from "@clerk/nextjs/server";
+@@ -10,7 +10,7 @@ import GsapWrapper from "../components/GsapWrapper";
+ import CommunityClient from "./CommunityClient";
+ 
+ 
+-const prisma = new PrismaClient();
++const prisma = db;
+ 
+ export default async function CommunityPage() {
+   const { userId } = await auth();
+diff --git a/app/components/EditorSettingsSidebar.tsx b/app/components/EditorSettingsSidebar.tsx
+new file mode 100644
+index 0000000..c76d2b6
+--- /dev/null
++++ b/app/components/EditorSettingsSidebar.tsx
+@@ -0,0 +1,242 @@
++import React from "react";
++import { useState } from "react";
++import Link from "next/link";
++import { LayoutSettings } from "../config/config";
++import type { Song, Chord } from "../config/config";
++import { parseTextToSong } from "../config/parseTextToSong";
++import { formatChordText, NotationType } from "../helpers/chordFormatter";
++import InteractiveCapoSelector from "./InteractiveCapoSelector";
++
++interface EditorSettingsSidebarProps {
++  isReadOnly: boolean;
++  songPrice: number;
++  setSongPrice: (price: number) => void;
++  handleTranspose: (val: number) => void;
++  show3DPiano: boolean;
++  setShow3DPiano: (val: boolean) => void;
++  editorColumns: number;
++  setEditorColumns: (val: number) => void;
++  layout: any;
++  updateLayout: (updates: Partial<any>) => void;
++  songKey: string;
++  setSongKey: (key: string) => void;
++  includeChordsDictionary: boolean;
++  setIncludeChordsDictionary: (val: boolean) => void;
++}
++
++export default function EditorSettingsSidebar({
++  isReadOnly,
++  songPrice,
++  setSongPrice,
++  handleTranspose,
++  show3DPiano,
++  setShow3DPiano,
++  editorColumns,
++  setEditorColumns,
++  layout,
++  updateLayout,
++  songKey,
++  setSongKey,
++  includeChordsDictionary,
++  setIncludeChordsDictionary
++}: EditorSettingsSidebarProps) {
++  return (
++    <aside className="w-full lg:w-64 bg-background rounded-xl shadow-lg lg:shadow-xl border border-border p-5 sm:p-6 flex flex-col gap-6 lg:gap-8 static lg:sticky top-36 z-30 shrink-0">
++      <div className="pb-4 border-b border-border">
++        <h3 className="text-xs font-bold tracking-[0.2em] uppercase text-foreground">Sesión Activa</h3>
++        <p className="text-[10px] text-muted-foreground mt-1">Herramientas globales de partitura.</p>
++      </div>
++
++      <div className="flex flex-col gap-6">
++        {!isReadOnly && (
++          <div className="flex flex-col gap-2">
++            <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Precio en Marketplace</label>
++            <div className="flex items-center gap-3">
++              <span className="text-lg font-bold">€</span>
++              <input
++                type="text"
++                inputMode="numeric"
++                value={songPrice > 0 ? songPrice : ""}
++                placeholder="0"
++                onChange={(e) => {
++                  const val = e.target.value.replace(/[^0-9.]/g, '');
++                  if (!val) { setSongPrice(0); return; }
++                  const parsed = val.length > 1 && val.startsWith('0') && !val.startsWith('0.') ? val.substring(1) : val;
++                  setSongPrice(Number(parsed));
++                }}
++                className="flex-1 bg-transparent border-b border-gray-200 dark:border-gray-800 py-2 text-sm font-medium outline-none focus:border-primary text-foreground transition-colors"
++              />
++            </div>
++            <p className={`text-[9px] font-bold mt-1 ${songPrice > 0 ? "text-primary" : "text-gray-500 font-light"}`}>
++              {songPrice > 0 ? `Se publicará como Obra Premium por €${songPrice}.` : "Deja 0 para compartir libremente en la comunidad."}
++            </p>
++          </div>
++        )}
++
++        <div className="flex flex-col gap-2">
++          <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Transpositor Inteligente</label>
++          <div className="flex bg-gray-50 dark:bg-[#1a1a1a] rounded border border-gray-200 dark:border-gray-800 overflow-hidden">
++            <button onClick={() => handleTranspose(-1)} className="flex-1 py-3 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 border-r border-gray-200 dark:border-gray-800 transition-colors">-1</button>
++            <button onClick={() => handleTranspose(1)} className="flex-1 py-3 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">+1</button>
++          </div>
++          <p className="text-[9px] font-light text-gray-500 mt-1">Sube o baja medio tono todos los acordes al instante.</p>
++        </div>
++
++        <div className="flex flex-col gap-2">
++          <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Visor Inmersivo</label>
++          <button
++            onClick={() => setShow3DPiano(!show3DPiano)}
++            className={`py-3 px-4 rounded-lg flex items-center justify-between transition-colors shadow-sm text-xs font-bold uppercase tracking-widest border ${show3DPiano ? 'bg-primary text-primary-foreground border-transparent' : 'bg-transparent text-foreground border-gray-200 dark:border-gray-800 hover:border-primary/50'}`}
++          >
++            <span className="flex items-center gap-3">Mostrar Piano 3D</span>
++            <span className={`text-[10px] px-2 py-0.5 rounded-full ${show3DPiano ? 'bg-primary-foreground/20' : 'bg-muted text-muted-foreground'}`}>{show3DPiano ? 'ACTIVO' : 'OFF'}</span>
++          </button>
++        </div>
++
++        <div className="flex flex-col gap-2">
++          <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Diseño de Página (Columnas)</label>
++          <div className="flex bg-gray-50 dark:bg-[#1a1a1a] rounded border border-gray-200 dark:border-gray-800 overflow-hidden">
++            {[0, 1, 2, 3].map((colVal) => (
++              <button
++                key={colVal}
++                onClick={() => {
++                  setEditorColumns(colVal);
++                  updateLayout({ columns: colVal });
++                }}
++                className={`flex-1 py-3 text-xs font-bold transition-colors border-r last:border-r-0 border-gray-200 dark:border-gray-800
++                ${(editorColumns === colVal || layout.columns === colVal)
++                    ? 'bg-primary text-primary-foreground'
++                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800'
++                  }`}
++              >
++                {colVal === 0 ? 'AUTO' : colVal}
++              </button>
++            ))}
++          </div>
++        </div>
++
++        <div className="flex flex-col gap-2">
++          <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Tipografía y Separación</label>
++          <div className="grid grid-cols-2 gap-3">
++            <div className="flex flex-col">
++              <span className="text-[10px] text-gray-400 mb-1">Letra (px)</span>
++              <input 
++                type="number" 
++                value={layout.baseFontSize || 16}
++                onChange={(e) => updateLayout({ baseFontSize: Number(e.target.value) || 16 })}
++                className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded py-2 px-3 text-sm focus:border-primary outline-none transition-colors"
++              />
++            </div>
++            <div className="flex flex-col">
++              <span className="text-[10px] text-gray-400 mb-1">Interlineado</span>
++              <input 
++                type="number" 
++                step="0.1"
++                value={layout.lineHeight || 2}
++                onChange={(e) => updateLayout({ lineHeight: Number(e.target.value) || 2 })}
++                className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded py-2 px-3 text-sm focus:border-primary outline-none transition-colors"
++              />
++            </div>
++          </div>
++          <div className="flex flex-col mt-1">
++              <span className="text-[10px] text-gray-400 mb-1">Acordes (px)</span>
++              <input 
++                type="number" 
++                value={layout.chordFontSize || 14}
++                onChange={(e) => updateLayout({ chordFontSize: Number(e.target.value) || 14 })}
++                className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded py-2 px-3 text-sm focus:border-primary outline-none transition-colors"
++              />
++            </div>
++        </div>
++
++        <div className="flex flex-col gap-2">
++          <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Alineación</label>
++          <div className="flex bg-gray-50 dark:bg-[#1a1a1a] rounded border border-gray-200 dark:border-gray-800 overflow-hidden">
++            {[
++              { id: 'justify-start', icon: 'M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12' },
++              { id: 'justify-center', icon: 'M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5' },
++              { id: 'justify-end', icon: 'M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25' }
++            ].map((align) => (
++              <button
++                key={align.id}
++                onClick={() => updateLayout({ alignment: align.id })}
++                className={`flex-1 py-3 flex justify-center items-center transition-colors border-r last:border-r-0 border-gray-200 dark:border-gray-800
++                ${layout.alignment === align.id
++                    ? 'bg-primary text-primary-foreground'
++                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800'
++                  }`}
++              >
++                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d={align.icon} /></svg>
++              </button>
++            ))}
++          </div>
++        </div>
++
++        {layout.notation === 'roman' && (
++          <div className="flex flex-col gap-2">
++            <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Tono Base (Romanos)</label>
++            <select
++              value={songKey} onChange={(e) => setSongKey(e.target.value)}
++              className="w-full bg-transparent border-b border-gray-200 dark:border-gray-800 py-2 text-sm text-gray-800 dark:text-white outline-none cursor-pointer"
++            >
++              {['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'].map(k => (
++                <option key={k} value={k}>{k}</option>
++              ))}
++            </select>
++          </div>
++        )}
++        
++        <div className="flex flex-col gap-2 mt-2">
++          <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Instrumento</label>
++          <div className="flex bg-gray-50 dark:bg-[#1a1a1a] rounded border border-gray-200 dark:border-gray-800 overflow-hidden">
++            <button
++              onClick={() => updateLayout({ instrument: 'piano' })}
++              className={`flex-1 py-3 text-xs font-bold transition-colors border-r border-gray-200 dark:border-gray-800
++              ${(!layout.instrument || layout.instrument === 'piano') ? 'bg-primary text-primary-foreground' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800'}`}
++            >
++              Piano
++            </button>
++            <button
++              onClick={() => updateLayout({ instrument: 'guitar' })}
++              className={`flex-1 py-3 text-xs font-bold transition-colors
++              ${layout.instrument === 'guitar' ? 'bg-primary text-primary-foreground' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800'}`}
++            >
++              Guitarra
++            </button>
++          </div>
++        </div>
++
++        {layout.instrument === 'guitar' && (
++          <div className="flex flex-col gap-2 mt-2">
++            <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Capo (Traste)</label>
++            <InteractiveCapoSelector 
++              currentCapo={layout.capo || 0}
++              onChange={(newCapo) => updateLayout({ capo: newCapo })}
++            />
++          </div>
++        )}
++      </div>
++
++      <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-800 flex flex-col gap-4">
++         <button
++            onClick={() => setIncludeChordsDictionary(!includeChordsDictionary)}
++            className={`py-2 px-4 rounded flex items-center justify-between transition-colors shadow-sm text-[10px] font-bold uppercase tracking-widest border ${includeChordsDictionary ? 'bg-primary text-primary-foreground border-transparent' : 'bg-transparent text-foreground border-gray-200 dark:border-gray-800 hover:border-primary/50'}`}
++          >
++            <span>Diccionario de Acordes</span>
++            <div className={`w-3 h-3 rounded-full ${includeChordsDictionary ? 'bg-white' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
++          </button>
++         <button
++            onClick={() => updateLayout({ showChords: !layout.showChords })}
++            className={`py-2 px-4 rounded flex items-center justify-between transition-colors shadow-sm text-[10px] font-bold uppercase tracking-widest border ${!layout.showChords ? 'bg-primary text-primary-foreground border-transparent' : 'bg-transparent text-foreground border-gray-200 dark:border-gray-800 hover:border-primary/50'}`}
++          >
++            <span>Ocultar Letra (Solo Acordes)</span>
++            <div className={`w-3 h-3 rounded-full ${!layout.showChords ? 'bg-white' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
++          </button>
++        <Link href="/settings" className="text-[10px] font-bold tracking-[0.2em] uppercase text-primary hover:text-black dark:hover:text-white transition-colors flex items-center justify-between group">
++          Abrir Ajustes Globales
++          <span className="transform group-hover:translate-x-1 transition-transform">→</span>
++        </Link>
++      </div>
++    </aside>
++  );
++}
+diff --git a/app/components/GuitarTuner.tsx b/app/components/GuitarTuner.tsx
+index abf5618..db7ee70 100644
+--- a/app/components/GuitarTuner.tsx
++++ b/app/components/GuitarTuner.tsx
+@@ -34,7 +34,7 @@ export default function GuitarTuner({ onClose }: { onClose: () => void }) {
+ 
+           {/* LA AGUJA */}
+           <div 
+-            className="absolute bottom-0 w-1 h-32 origin-bottom transition-transform duration-100 ease-out"
++            className="absolute bottom-0 w-1 h-32 origin-bottom transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
+             style={{ 
+               transform: `rotate(${hasSignal ? needleRotation : 0}deg)`,
+               backgroundColor: hasSignal ? (isInTune ? '#22c55e' : '#ef4444') : '#374151',
+@@ -59,14 +59,14 @@ export default function GuitarTuner({ onClose }: { onClose: () => void }) {
+               <p className="text-gray-500 font-mono mt-4 text-sm">{pitch.toFixed(1)} Hz</p>
+               
+               <div className="mt-6 flex items-center gap-4">
+-                 <span className={`text-xs font-bold uppercase tracking-widest ${cents < -3 ? 'text-red-500' : 'text-gray-700'}`}>Bajo</span>
+-                 <span className={`w-3 h-3 rounded-full ${isInTune ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-gray-800'}`} />
+-                 <span className={`text-xs font-bold uppercase tracking-widest ${cents > 3 ? 'text-red-500' : 'text-gray-700'}`}>Alto</span>
++                 <span className={`text-xs font-bold uppercase tracking-widest transition-colors duration-300 ${cents < -3 ? 'text-red-500' : 'text-gray-700'}`}>Bajo</span>
++                 <span className={`w-3 h-3 rounded-full transition-all duration-300 ${isInTune ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-gray-800'}`} />
++                 <span className={`text-xs font-bold uppercase tracking-widest transition-colors duration-300 ${cents > 3 ? 'text-red-500' : 'text-gray-700'}`}>Alto</span>
+               </div>
+             </>
+           ) : (
+             <div className="flex flex-col items-center justify-center h-full text-gray-600">
+-              <span className="text-6xl font-black tracking-tighter mb-4">-</span>
++              <span className="text-6xl font-black tracking-tighter mb-4 transition-colors">-</span>
+               <p className="text-sm font-bold tracking-widest uppercase">Esperando señal...</p>
+             </div>
+           )}
+@@ -79,7 +79,7 @@ export default function GuitarTuner({ onClose }: { onClose: () => void }) {
+                onClick={startTuning}
+                className="px-12 py-4 bg-white text-black text-xs font-bold uppercase tracking-[0.2em] rounded-full hover:scale-105 active:scale-95 transition-all"
+              >
+-               Activar Micrófono
++               Comenzar
+              </button>
+           ) : (
+              <button 
+diff --git a/app/components/InteractiveCapoSelector.tsx b/app/components/InteractiveCapoSelector.tsx
+new file mode 100644
+index 0000000..7b746be
+--- /dev/null
++++ b/app/components/InteractiveCapoSelector.tsx
+@@ -0,0 +1,151 @@
++"use client";
++
++import { useState } from "react";
++import { useFloating, offset, flip, shift, autoUpdate, useClick, useDismiss, useInteractions, FloatingPortal } from "@floating-ui/react";
++
++interface InteractiveCapoSelectorProps {
++  currentCapo: number;
++  onChange: (newCapo: number) => void;
++}
++
++export default function InteractiveCapoSelector({ currentCapo, onChange }: InteractiveCapoSelectorProps) {
++  const [isOpen, setIsOpen] = useState(false);
++  const [tempCapo, setTempCapo] = useState(currentCapo);
++
++  const { refs, floatingStyles, context } = useFloating({
++    open: isOpen,
++    onOpenChange: (open) => {
++      setIsOpen(open);
++      if (open) setTempCapo(currentCapo); // Reset temp to current when opening
++    },
++    placement: "right-start",
++    whileElementsMounted: autoUpdate,
++    middleware: [offset(16), flip(), shift({ padding: 10 })],
++  });
++
++  const click = useClick(context);
++  const dismiss = useDismiss(context);
++  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
++
++  return (
++    <>
++      <div className="flex items-center gap-2">
++        <button
++          onClick={() => onChange(Math.max(0, currentCapo - 1))}
++          className="w-8 h-10 rounded bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 flex items-center justify-center font-bold text-lg hover:border-primary/50 transition-colors"
++        >
++          -
++        </button>
++
++        <button
++          ref={refs.setReference}
++          {...getReferenceProps()}
++          className="flex-1 h-10 bg-white dark:bg-[#161616] border border-gray-200 dark:border-gray-800 rounded font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center text-foreground hover:border-primary hover:text-primary transition-all active:scale-95 shadow-sm"
++          title="Abrir selector visual de Capo"
++        >
++          {currentCapo > 0 ? `TRASTE ${currentCapo}` : 'SIN CAPO'}
++        </button>
++
++        <button
++          onClick={() => onChange(Math.min(12, currentCapo + 1))}
++          className="w-8 h-10 rounded bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 flex items-center justify-center font-bold text-lg hover:border-primary/50 transition-colors"
++        >
++          +
++        </button>
++      </div>
++
++      {isOpen && (
++        <FloatingPortal>
++          <div
++            ref={refs.setFloating}
++            style={floatingStyles}
++            {...getFloatingProps()}
++            className="z-[9999] bg-white dark:bg-[#1a1a1a] p-4 shadow-2xl border border-gray-100 dark:border-gray-800 rounded-xl flex flex-col items-center animate-in fade-in zoom-in-95 duration-200"
++          >
++            <div className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-3 w-full text-center">
++              Seleccionar Traste
++            </div>
++
++            <div className="relative w-[140px] h-[340px] bg-slate-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-t-lg shadow-inner flex overflow-hidden">
++              {/* Cuerdas */}
++              <div className="absolute inset-0 flex justify-between px-3 pointer-events-none">
++                {[...Array(6)].map((_, i) => (
++                  <div key={i} className="w-[1.5px] h-full bg-slate-300 dark:bg-slate-600 shadow-[1px_0_2px_rgba(0,0,0,0.1)]"></div>
++                ))}
++              </div>
++
++              {/* Trastes (Filas interactivas) */}
++              <div className="absolute inset-0 flex flex-col pt-2">
++                {[...Array(12)].map((_, fretIndex) => {
++                  const fretNumber = fretIndex + 1;
++                  const isHoveredOrSelected = tempCapo === fretNumber;
++                  const isTrueSelected = currentCapo === fretNumber;
++
++                  return (
++                    <div
++                      key={fretNumber}
++                      onClick={() => setTempCapo(fretNumber === tempCapo ? 0 : fretNumber)}
++                      className={`relative flex-1 group cursor-pointer border-b-2 border-slate-300 dark:border-slate-600 border-opacity-60 flex items-center transition-colors ${isHoveredOrSelected ? 'bg-primary/20 dark:bg-primary/30' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
++                    >
++                      {/* Marcadores de traste redondos clasicos */}
++                      {[3, 5, 7, 9].includes(fretNumber) && (
++                        <div className="absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-slate-200 dark:bg-slate-700 opacity-60"></div>
++                      )}
++                      {fretNumber === 12 && (
++                        <div className="absolute left-1/2 -translate-x-1/2 flex gap-3">
++                           <div className="w-2.5 h-2.5 rounded-full bg-slate-200 dark:bg-slate-700 opacity-60"></div>
++                           <div className="w-2.5 h-2.5 rounded-full bg-slate-200 dark:bg-slate-700 opacity-60"></div>
++                        </div>
++                      )}
++
++                      {/* Botonzazo de Cancelar X a la derecha cuando esta activo */}
++                      {isHoveredOrSelected && (
++                        <div 
++                          className="absolute -right-8 w-6 h-6 flex items-center justify-center text-red-500 font-bold hover:scale-110 active:scale-95 transition-transform"
++                          onClick={(e) => { e.stopPropagation(); setTempCapo(0); }}
++                        >
++                          ✕
++                        </div>
++                      )}
++
++                      {/* Dibujo del Capo */}
++                      {isHoveredOrSelected && (
++                        <div className="absolute inset-x-1 h-3/5 top-1/2 -translate-y-1/2 bg-slate-800 dark:bg-slate-200 rounded-[2px] shadow-lg flex items-center justify-between px-2 z-10">
++                           <span className="text-[8px] font-black text-white dark:text-black tracking-[0.2em]">CAPO</span>
++                           <span className="text-[7px] font-black text-white/50 dark:text-black/50">{fretNumber}ª</span>
++                        </div>
++                      )}
++
++                      {/* Numeración izquierda */}
++                      <span className={`absolute -left-5 text-[9px] font-bold ${isHoveredOrSelected ? 'text-primary' : 'text-gray-400'}`}>
++                        {fretNumber}
++                      </span>
++                    </div>
++                  );
++                })}
++              </div>
++            </div>
++
++            <div className="flex items-center gap-2 mt-4 w-full">
++              <button
++                onClick={() => setIsOpen(false)}
++                className="flex-1 py-2 rounded text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors"
++              >
++                Cancelar
++              </button>
++              <button
++                onClick={() => {
++                  onChange(tempCapo);
++                  setIsOpen(false);
++                }}
++                className="flex-[1.5] py-2 bg-primary text-primary-foreground rounded text-[10px] font-bold uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-md"
++              >
++                OK
++              </button>
++            </div>
++          </div>
++        </FloatingPortal>
++      )}
++    </>
++  );
++}
+diff --git a/app/components/LiveGuitarFretboard.tsx b/app/components/LiveGuitarFretboard.tsx
+new file mode 100644
+index 0000000..f0cb34c
+--- /dev/null
++++ b/app/components/LiveGuitarFretboard.tsx
+@@ -0,0 +1,154 @@
++"use client";
++
++import React, { useMemo } from 'react';
++import type { Chord } from '../config/config';
++import { getGuitarFingering } from '../helpers/guitarChords';
++
++const THEME_COLORS: Record<string, string> = {
++  "theme-purple": "#7c3aed",
++  "theme-blue": "#3b82f6",
++  "theme-green": "#10b981",
++  "theme-rose": "#e11d48",
++  "theme-orange": "#f97316",
++  "theme-yellow": "#eab308",
++  "theme-mono": "#171717"
++};
++
++const STRING_NAMES = ['E', 'A', 'D', 'G', 'B', 'e'];
++
++export default function LiveGuitarFretboard({ activeChord, themeColor = "theme-purple" }: { activeChord?: Chord | null, themeColor?: string }) {
++  const color = THEME_COLORS[themeColor] || "#7c3aed";
++
++  const numFrets = 14; 
++  const width = 800;
++  const height = 180;
++  
++  const leftMargin = 30; // Nut
++  const rightMargin = 20;
++  const topMargin = 20;
++  const bottomMargin = 20;
++
++  const stringSpacing = (height - topMargin - bottomMargin) / 5;
++  const fretSpacing = (width - leftMargin - rightMargin) / numFrets;
++
++  const fingering = useMemo(() => {
++    if (!activeChord) return null;
++    return getGuitarFingering(activeChord.rootNote, activeChord.variation);
++  }, [activeChord]);
++
++  const INLAY_FRETS = [3, 5, 7, 9, 12];
++
++  return (
++    <div className="w-full h-full flex items-center justify-center bg-transparent py-4">
++      <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" className="drop-shadow-2xl">
++        
++        {/* Wood Texture Background */}
++        <rect x={leftMargin} y={topMargin - 5} width={width - leftMargin - rightMargin} height={height - topMargin - bottomMargin + 10} fill="#1a1412" rx="2" />
++
++        {/* Frets */}
++        {Array.from({ length: numFrets + 1 }).map((_, i) => {
++          const x = leftMargin + i * fretSpacing;
++          const isNut = i === 0;
++          return (
++            <line
++              key={`fret-${i}`}
++              x1={x}
++              y1={topMargin - 5}
++              x2={x}
++              y2={height - bottomMargin + 5}
++              stroke={isNut ? "#e5e7eb" : "#4b5563"}
++              strokeWidth={isNut ? 5 : 2}
++            />
++          );
++        })}
++
++        {/* Fret Markers (Inlays) */}
++        {INLAY_FRETS.map(fret => {
++          if (fret > numFrets) return null;
++          const x = leftMargin + (fret - 0.5) * fretSpacing;
++          const yCenter = topMargin + (2.5 * stringSpacing);
++
++          if (fret === 12) {
++            // Double dots for 12th
++            return (
++              <g key={`inlay-${fret}`} opacity={0.3}>
++                <circle cx={x} cy={topMargin + 1.5 * stringSpacing} r={4} fill="#e5e7eb" />
++                <circle cx={x} cy={topMargin + 3.5 * stringSpacing} r={4} fill="#e5e7eb" />
++              </g>
++            );
++          }
++          return (
++             <circle key={`inlay-${fret}`} cx={x} cy={yCenter} r={5} fill="#e5e7eb" opacity={0.3} />
++          );
++        })}
++
++        {/* Fret Numbers below the neck */}
++        {Array.from({ length: numFrets }).map((_, i) => {
++           const x = leftMargin + (i + 0.5) * fretSpacing;
++           return (
++             <text key={`fn-${i}`} x={x} y={height - 2} fill="#6b7280" fontSize="10" textAnchor="middle" fontWeight="bold">
++               {i + 1}
++             </text>
++           )
++        })}
++
++        {/* Strings */}
++        {Array.from({ length: 6 }).map((_, i) => {
++          const y = topMargin + i * stringSpacing;
++          // Thicker strings at the top (visually index 0 is low E)
++          const thickness = 3 - (i * 0.4);
++          return (
++            <g key={`string-${i}`}>
++              {/* String Name on the left of nut */}
++              <text x={leftMargin - 15} y={y + 4} fill="#9ca3af" fontSize="12" fontWeight="bold" textAnchor="middle">
++                {STRING_NAMES[i]}
++              </text>
++              <line
++                x1={leftMargin}
++                y1={y}
++                x2={width - rightMargin}
++                y2={y}
++                stroke="#d1d5db"
++                strokeWidth={thickness}
++                opacity={0.8}
++              />
++            </g>
++          );
++        })}
++
++        {/* Pressed Notes */}
++        {fingering && fingering.frets.map((fretIndex, stringIndex) => {
++           const y = topMargin + stringIndex * stringSpacing;
++
++           if (fretIndex === -1) {
++             return (
++               <text key={`x-${stringIndex}`} x={leftMargin - 15} y={y + 4} fill="#ef4444" fontSize="14" fontWeight="black" textAnchor="middle" opacity={0.8}>
++                 X
++               </text>
++             );
++           }
++           if (fretIndex === 0) {
++             return (
++               <circle key={`o-${stringIndex}`} cx={leftMargin - 15} cy={y} r={6} fill="transparent" stroke={color} strokeWidth={2} />
++             );
++           }
++
++           // The actual pressed fret (absolute)
++           // If baseFret > 1, the fret index absolute = baseFret + relative - 1
++           // Our algorithm gives absolute frets directly!
++           if (fretIndex > 0 && fretIndex <= numFrets) {
++             const x = leftMargin + (fretIndex - 0.5) * fretSpacing;
++             return (
++               <g key={`note-${stringIndex}`} className="animate-in zoom-in duration-300">
++                 <circle cx={x} cy={y} r={12} fill={color} style={{ filter: `drop-shadow(0 0 10px ${color})` }} />
++                 {/* Inner glow dot */}
++                 <circle cx={x} cy={y} r={4} fill="#ffffff" opacity={0.5} />
++               </g>
++             );
++           }
++           return null;
++        })}
++      </svg>
++    </div>
++  );
++}
+diff --git a/app/components/MiniGuitar2D.tsx b/app/components/MiniGuitar2D.tsx
+new file mode 100644
+index 0000000..6c9381c
+--- /dev/null
++++ b/app/components/MiniGuitar2D.tsx
+@@ -0,0 +1,110 @@
++import React from 'react';
++import type { Chord } from '../config/config';
++import { getGuitarFingering } from '../helpers/guitarChords';
++
++const THEME_COLORS: Record<string, string> = {
++  "theme-purple": "#7c3aed",
++  "theme-blue": "#3b82f6",
++  "theme-green": "#10b981",
++  "theme-rose": "#e11d48",
++  "theme-orange": "#f97316",
++  "theme-yellow": "#eab308",
++  "theme-mono": "#171717"
++};
++
++export default function MiniGuitar2D({ chord, themeColor = "theme-purple", className = "" }: { chord: Chord, themeColor?: string, className?: string }) {
++  const { frets, baseFret } = getGuitarFingering(chord.rootNote, chord.variation);
++  const color = THEME_COLORS[themeColor] || "#7c3aed";
++
++  const numFrets = 5;
++  const width = 140;
++  const height = 180;
++  const topMargin = 30;
++  const leftMargin = 30;
++  const rightMargin = 10;
++  const bottomMargin = 10;
++
++  const stringSpacing = (width - leftMargin - rightMargin) / 5;
++  const fretSpacing = (height - topMargin - bottomMargin) / numFrets;
++
++  return (
++    <div className={`flex flex-col items-center ${className}`}>
++      <svg width="100%" viewBox={`0 0 ${width} ${height}`} className="drop-shadow-sm max-w-[140px]">
++        
++        {/* Number for base fret if it's > 1 */}
++        {baseFret > 1 && (
++          <text x={leftMargin - 15} y={topMargin + fretSpacing / 2 + 5} fontSize="14" fontWeight="bold" fill="currentColor" textAnchor="middle">
++            {baseFret}
++          </text>
++        )}
++
++        {/* Frets (Horizontal lines) */}
++        {Array.from({ length: numFrets + 1 }).map((_, i) => {
++          const y = topMargin + i * fretSpacing;
++          const isNut = baseFret === 1 && i === 0;
++          return (
++            <line
++              key={`fret-${i}`}
++              x1={leftMargin}
++              y1={y}
++              x2={width - rightMargin}
++              y2={y}
++              stroke="currentColor"
++              strokeWidth={isNut ? 4 : 1}
++              opacity={isNut ? 1 : 0.4}
++            />
++          );
++        })}
++
++        {/* Strings (Vertical lines) */}
++        {Array.from({ length: 6 }).map((_, i) => {
++          const x = leftMargin + i * stringSpacing;
++          return (
++            <line
++              key={`string-${i}`}
++              x1={x}
++              y1={topMargin}
++              x2={x}
++              y2={height - bottomMargin}
++              stroke="currentColor"
++              strokeWidth={1}
++              opacity={0.6}
++            />
++          );
++        })}
++
++        {/* Fingerings / Circles / X's / O's */}
++        {frets.map((fret, stringIndex) => {
++          const x = leftMargin + stringIndex * stringSpacing;
++
++          if (fret === -1) {
++            // Draw 'X'
++            return (
++              <text key={`note-${stringIndex}`} x={x} y={topMargin - 10} fontSize="12" fontWeight="bold" fill="#ef4444" textAnchor="middle">
++                X
++              </text>
++            );
++          }
++
++          if (fret === 0) {
++            // Draw 'O' (open string)
++            return (
++              <circle key={`note-${stringIndex}`} cx={x} cy={topMargin - 12} r={4} fill="transparent" stroke="currentColor" strokeWidth={1} opacity={0.5} />
++            );
++          }
++
++          // Draw filled circle for pressed fret
++          const renderFret = fret - baseFret;
++          // Only draw if within visual bounds
++          if (renderFret >= 0 && renderFret < numFrets) {
++            const y = topMargin + renderFret * fretSpacing + (fretSpacing / 2);
++            return (
++              <circle key={`note-${stringIndex}`} cx={x} cy={y} r={7} fill={color} />
++            );
++          }
++          return null;
++        })}
++      </svg>
++    </div>
++  );
++}
+diff --git a/app/components/MiniPiano2D.tsx b/app/components/MiniPiano2D.tsx
+index 635bf4f..51eb425 100644
+--- a/app/components/MiniPiano2D.tsx
++++ b/app/components/MiniPiano2D.tsx
+@@ -13,8 +13,8 @@ const THEME_COLORS: Record<string, string> = {
+ };
+ 
+ export default function MiniPiano2D({ chord, themeColor = "theme-purple", className = "" }: { chord: Chord, themeColor?: string, className?: string }) {
+-  // 14 teclas blancas = 2 octavas.
+-  const numOctaves = 2;
++  // 21 teclas blancas = 3 octavas.
++  const numOctaves = 3;
+   const keys = [];
+   
+   const OCTAVE_PATTERN = [
+@@ -46,14 +46,9 @@ export default function MiniPiano2D({ chord, themeColor = "theme-purple", classN
+   // Active keys start from C2 according to getChordKeys base calculation
+   const activeKeysRaw = getChordKeys(chord.rootNote, chord.variation, chord.bassNote);
+   
+-  // Normalize exactly to our 2 octaves so it matches the 0-23 index.
+-  const normalizedActiveKeys = activeKeysRaw.map(k => {
+-     let shifted = k;
+-     // Wrap cleanly inside the 2 octaves drawing block
+-     while(shifted < 0) shifted += 12;
+-     while(shifted >= 24) shifted -= 12; 
+-     return shifted;
+-  });
++  // No longer squish individual notes (wrapping distorts the voicing/inversion). 
++  // It fits within 3 octaves natively.
++  const normalizedActiveKeys = activeKeysRaw;
+ 
+   const totalWhiteKeys = numOctaves * 7;
+   const hexColor = THEME_COLORS[themeColor] || "#7c3aed";
+diff --git a/app/components/SyllableComponent.tsx b/app/components/SyllableComponent.tsx
+index 97b7a30..8d861cb 100644
+--- a/app/components/SyllableComponent.tsx
++++ b/app/components/SyllableComponent.tsx
+@@ -3,45 +3,68 @@
+ import { useState, useCallback } from "react";
+ import { 
+   useFloating, autoUpdate, offset, flip, shift, 
+-  useClick, useDismiss, useInteractions, FloatingPortal 
++  useClick, useDismiss, useInteractions, FloatingPortal, useHover, safePolygon 
+ } from '@floating-ui/react';
+ import type { Syllable, Chord } from "../config/config";
+ import ChordEditorMenu from "./ChordEditorMenu";
+ import { formatChordText, NotationType } from "../helpers/chordFormatter";
++import MiniGuitar2D from "./MiniGuitar2D";
++import { transposeChord } from "../helpers/transpose";
+ 
+ export interface SyllableProps {
+   syllable: Syllable;
++  capo?: number;
+   onChordChange: (syllableId: string, newChord: Chord | null) => void;
++  onGlobalChordChange?: (newChord: Chord | null) => void;
+   nextHasChord?: boolean;
+   notation?: NotationType;
+   songKey?: string;
+   readOnly?: boolean;
+   showChords?: boolean;
++  instrument?: 'piano' | 'guitar';
++  colorTheme?: string;
+ }
+ 
+ export default function SyllableComponent({ 
+-  syllable, onChordChange, nextHasChord = true, notation = 'english', songKey = 'C', readOnly = false, showChords = true
++  syllable, capo = 0, onChordChange, onGlobalChordChange, nextHasChord = true, notation = 'english', songKey = 'C', readOnly = false, showChords = true, instrument = 'piano', colorTheme
+ }: SyllableProps) {
+   const { id, text, chord } = syllable;
+-  const [isOpen, setIsOpen] = useState(false);
++  
++  // click menu state
++  const [isClickOpen, setIsClickOpen] = useState(false);
++  // hover panel state
++  const [isHoverOpen, setIsHoverOpen] = useState(false);
++  
++  const [replaceGlobal, setReplaceGlobal] = useState(false);
+ 
+-  // 🚀 SENIOR FIX: Floating UI gestiona el popover. Previene el layout thrashing y asegura 
+-  // que el menú nunca se salga de la pantalla del móvil.
+-  const { refs, floatingStyles, context } = useFloating({
+-    open: isOpen,
+-    onOpenChange: setIsOpen,
++  const { refs: clickRefs, floatingStyles: clickStyles, context: clickContext } = useFloating({
++    open: isClickOpen,
++    onOpenChange: setIsClickOpen,
+     placement: 'bottom-start',
+     whileElementsMounted: autoUpdate,
+-    middleware: [
+-      offset(8), // Separación de 8px entre sílaba y menú
+-      flip({ fallbackAxisSideDirection: 'end' }), // Si no cabe abajo, se voltea arriba
+-      shift({ padding: 10 }) // Evita que se salga por los bordes laterales de la pantalla
+-    ],
++    middleware: [ offset(8), flip({ fallbackAxisSideDirection: 'end' }), shift({ padding: 10 }) ],
+   });
+ 
+-  const click = useClick(context, { enabled: !readOnly });
+-  const dismiss = useDismiss(context);
+-  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
++  const { refs: hoverRefs, floatingStyles: hoverStyles, context: hoverContext } = useFloating({
++    open: isHoverOpen,
++    onOpenChange: setIsHoverOpen,
++    placement: 'top',
++    whileElementsMounted: autoUpdate,
++    middleware: [ offset(12), flip(), shift({ padding: 10 }) ],
++  });
++
++  const click = useClick(clickContext, { enabled: !readOnly });
++  const dismissClick = useDismiss(clickContext);
++
++  const hover = useHover(hoverContext, { 
++    enabled: !readOnly && instrument === 'guitar' && !!chord && !isClickOpen,
++    handleClose: safePolygon({ blockPointerEvents: true }),
++    delay: { open: 200, close: 100 }
++  });
++  const dismissHover = useDismiss(hoverContext);
++
++  const { getReferenceProps: getClickRefProps } = useInteractions([click, dismissClick]);
++  const { getReferenceProps: getHoverRefProps, getFloatingProps: getHoverFloatingProps } = useInteractions([hover, dismissHover]);
+ 
+   const handleActionClick = useCallback(() => {
+      if (chord) {
+@@ -49,23 +72,37 @@ export default function SyllableComponent({
+      }
+   }, [chord]);
+ 
+-  const handleSave = useCallback((newChord: Chord | null) => {
+-    setIsOpen(false);
+-    onChordChange(id, newChord);
+-  }, [id, onChordChange]);
++  const handleSaveClickMenu = useCallback((newChord: Chord | null) => {
++    setIsClickOpen(false);
++    if (replaceGlobal && onGlobalChordChange) {
++       onGlobalChordChange(newChord);
++    } else {
++       onChordChange(id, newChord);
++    }
++  }, [id, onChordChange, onGlobalChordChange, replaceGlobal]);
++
++  const handleSaveHoverMenu = useCallback(() => {
++    setIsHoverOpen(false);
++    // actually, in the hover menu, they select a new chord or apply it replacing all.
++    // Since we don't have variants right now, if "Cambiar todos" is active conceptually we would change them.
++    // wait, where do they pick the new chord if it's just the hover menu? They would click "Cambiar acorde", which opens the normal click menu!
++  }, []);
+ 
+   return (
+     <>
+       <span 
+-        ref={refs.setReference}
+-        {...getReferenceProps({
++        ref={(node) => {
++          clickRefs.setReference(node);
++          hoverRefs.setReference(node);
++        }}
++        {...getClickRefProps(getHoverRefProps({
+           onClick: handleActionClick,
+           onKeyDown: (e) => {
+             if ((e.key === "Enter" || e.key === " ") && chord) {
+               window.dispatchEvent(new CustomEvent('chord-picker-opened', { detail: { chord } }));
+             }
+           }
+-        })}
++        }))}
+         role="button"
+         tabIndex={0}
+         className={
+@@ -93,24 +130,74 @@ export default function SyllableComponent({
+         <span className="text-[length:var(--base-font)] text-foreground font-normal tracking-normal leading-tight">{text}</span>
+       </span>
+ 
+-      {/* Floating Portal teletransporta el menú al final del body para evitar problemas de Z-Index */}
+-      {isOpen && (
++      {/* Menú de Click Tradicional */}
++      {isClickOpen && (
+         <FloatingPortal>
+           <div className="fixed inset-0 z-[990] sm:hidden bg-black/20 backdrop-blur-sm animate-in fade-in" />
+           <div 
+-            ref={refs.setFloating} 
+-            style={floatingStyles} 
+-            {...getFloatingProps()}
++            ref={clickRefs.setFloating} 
++            style={clickStyles} 
+             className="z-[999] text-black shadow-2xl rounded-xl"
+           >
+             <ChordEditorMenu
+               initialChord={chord}
+-              onSave={handleSave}
+-              onCancel={() => setIsOpen(false)}
++              onSave={handleSaveClickMenu}
++              onCancel={() => setIsClickOpen(false)}
+             />
+           </div>
+         </FloatingPortal>
+       )}
++
++      {/* Hover Panel para Guitarra */}
++      {isHoverOpen && chord && instrument === 'guitar' && (
++        <FloatingPortal>
++          <div 
++            ref={hoverRefs.setFloating} 
++            style={hoverStyles} 
++            {...getHoverFloatingProps()}
++            className="z-[999] bg-white dark:bg-[#1a1a1a] p-4 shadow-2xl border border-gray-100 dark:border-gray-800 rounded-xl flex flex-col items-center gap-4 animate-in fade-in zoom-in-95 duration-200"
++          >
++            <div className="flex flex-col items-center gap-1 w-full">
++              {capo > 0 ? (
++                <span className="text-sm font-bold opacity-50 mb-1 flex items-center gap-1">
++                  <span>{formatChordText(chord, notation, songKey).root}{formatChordText(chord, notation, songKey).variation}</span>
++                  <span className="text-[10px] font-normal opacity-80">(forma de {formatChordText(transposeChord(chord, -capo)!, notation, songKey).root})</span>
++                </span>
++              ) : (
++                <span className="text-sm font-bold opacity-50 mb-1">{formatChordText(chord, notation, songKey).root}{formatChordText(chord, notation, songKey).variation}</span>
++              )}
++              <MiniGuitar2D chord={transposeChord(chord, -capo)!} themeColor={colorTheme} className="w-[100px] shadow-sm rounded-sm" />
++            </div>
++            
++            <button 
++               onClick={() => { setIsHoverOpen(false); setIsClickOpen(true); }}
++               className="text-[10px] w-full py-1.5 uppercase font-bold tracking-widest bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white rounded border border-transparent transition-colors"
++            >
++               Cambiar Acorde
++            </button>
++
++            <div className="border-t border-gray-100 dark:border-gray-800 w-full pt-3 flex flex-col gap-3">
++              <label className="flex items-center gap-2 cursor-pointer group">
++                <input 
++                  type="checkbox" 
++                  checked={replaceGlobal} 
++                  onChange={e => setReplaceGlobal(e.target.checked)}
++                  className="w-4 h-4 rounded text-primary focus:ring-primary focus:ring-opacity-25 border-gray-300 dark:border-gray-700 cursor-pointer" 
++                />
++                <span className="text-[10px] sm:text-xs text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
++                  Cambiar todos los <span className="font-bold">{formatChordText(chord, notation, songKey).root}</span>
++                </span>
++              </label>
++
++              <div className="flex items-center justify-between gap-3 w-full mt-2">
++                <button onClick={() => setIsHoverOpen(false)} className="text-[10px] w-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 font-bold text-gray-500 hover:text-gray-900 border border-transparent dark:text-gray-400 dark:hover:text-white uppercase tracking-widest transition-colors flex-1 text-center py-2 rounded">
++                  Cerrar
++                </button>
++              </div>
++            </div>
++          </div>
++        </FloatingPortal>
++      )}
+     </>
+   );
+ }
+\ No newline at end of file
+diff --git a/app/config/config.ts b/app/config/config.ts
+index bd38396..2027fa3 100644
+--- a/app/config/config.ts
++++ b/app/config/config.ts
+@@ -42,6 +42,8 @@ export interface LayoutSettings {
+   alignment?: 'justify-start' | 'justify-center' | 'justify-end';
+   notation?: 'english' | 'spanish' | 'roman';
+   showChords?: boolean;
++  capo?: number;
++  instrument?: 'piano' | 'guitar';
+ }
+ 
+ export interface Song {
+@@ -53,6 +55,9 @@ export interface Song {
+     timeSignature?: string, // e.g. "4/4", "3/4"
+     sections: Section[],
+     layout?: LayoutSettings, // Configuraciones visuales propias de la canción
++    isPreviewRestriction?: boolean,
++    price?: number,
++    ratings?: { userId: string; value: number }[],
+     metadata?: {
+         originalCreatorId?: string,
+         authorName?: string,
+diff --git a/app/config/song.ts b/app/config/song.ts
+index b02767f..a93f183 100644
+--- a/app/config/song.ts
++++ b/app/config/song.ts
+@@ -1,4 +1,4 @@
+-import type { Song, Section, Syllable, Word, Line } from "./config.js";
++import type { Song, Section, Syllable, Word, Line } from "./config";
+ 
+ export const song: Song = {
+   id: 'song-1',
+diff --git a/app/config/updateSyllableChord.ts b/app/config/updateSyllableChord.ts
+index 206071f..7c8fcbb 100644
+--- a/app/config/updateSyllableChord.ts
++++ b/app/config/updateSyllableChord.ts
+@@ -1,4 +1,4 @@
+-import type { Chord, Song } from "./config.js";
++import type { Chord, Song } from "./config";
+ 
+ export function updateSyllableChord(song: Song, id: string, chord: Chord | null): Song {
+     const songCopy = structuredClone(song);
+diff --git a/app/dashboard/marketplace/page.tsx b/app/dashboard/marketplace/page.tsx
+index f9d5d6b..52f7bd2 100644
+--- a/app/dashboard/marketplace/page.tsx
++++ b/app/dashboard/marketplace/page.tsx
+@@ -2,21 +2,32 @@ import Link from "next/link";
+ import { LayoutDashboard, Settings, Info, CreditCard, Wallet, AlertTriangle, TrendingUp, Music } from "lucide-react";
+ import Navbar from "../../components/Navbar";
+ import { getAuth } from "@clerk/nextjs/server";
+-import { PrismaClient } from "@prisma/client";
++import { db } from "@/lib/db";
+ import { format } from "date-fns";
+ import { es } from "date-fns/locale";
+ import GsapWrapper from "../../components/GsapWrapper";
+ import ConnectStripeButton from "../../components/ConnectStripeButton";
+ 
+-const prisma = new PrismaClient();
++import { Prisma } from "@prisma/client";
++
++const prisma = db;
++
++type SaleWithDetails = Prisma.PurchaseGetPayload<{
++  include: { 
++    song: { select: { title: true } };
++    user: { select: { name: true; email: true } };
++  };
++}>;
++
++type DbUser = Prisma.UserGetPayload<{}>;
+ 
+ export default async function MarketplaceDashboardPage() {
+   const { currentUser } = await import("@clerk/nextjs/server");
+   const user = await currentUser();
+   const userId = user?.id;
+ 
+-  let dbUser: any = null;
+-  let sales: any[] = [];
++  let dbUser: DbUser | null = null;
++  let sales: SaleWithDetails[] = [];
+   let totalRevenue = 0;
+ 
+   if (userId) {
+@@ -26,7 +37,7 @@ export default async function MarketplaceDashboardPage() {
+     
+     // Buscar ventas: Compras hechas por otros sobre mis canciones
+     if (dbUser) {
+-      sales = await (prisma as any).purchase.findMany({
++      sales = await db.purchase.findMany({
+         where: { song: { userId } },
+         include: { 
+           song: { select: { title: true } }, 
+@@ -35,14 +46,14 @@ export default async function MarketplaceDashboardPage() {
+         orderBy: { createdAt: "desc" },
+       });
+ 
+-      totalRevenue = sales.reduce((acc: number, curr: any) => acc + curr.amount, 0);
++      totalRevenue = sales.reduce((acc: number, curr) => acc + curr.amount, 0);
+     }
+   }
+ 
+   // Verificar si es un Creador Pro (Simulamos: si tiene stripeSubscriptionId o stripePriceId y quiere vender)
+   // En la vida real, requiere un Plan Creador específico. Aquí pedimos cualquier suscripción de pago o conectarse explícitamente.
+   const isCreatorPro = dbUser?.stripeSubscriptionId != null;
+-  const hasStripeConnect = (dbUser as any)?.stripeConnectAccountId != null;
++  const hasStripeConnect = dbUser?.stripeConnectAccountId != null;
+ 
+   return (
+     <div className="min-h-screen bg-background text-foreground font-sans relative overflow-hidden transition-colors duration-500 flex flex-col pt-[72px]">
+diff --git a/app/dashboard/page.tsx b/app/dashboard/page.tsx
+index 40e9b7e..ab90289 100644
+--- a/app/dashboard/page.tsx
++++ b/app/dashboard/page.tsx
+@@ -2,16 +2,19 @@ import Link from "next/link";
+ import { Plus, Folder, Clock, Music, Settings, LayoutDashboard, Globe } from "lucide-react";
+ import Navbar from "../components/Navbar";
+ import { getAuth } from "@clerk/nextjs/server";
+-import { PrismaClient } from "@prisma/client";
++import { db } from "@/lib/db";
+ import { format } from "date-fns";
+ import { es } from "date-fns/locale";
+ import PublicToggle from "./PublicToggle";
+ import DeleteSongButton from "./DeleteSongButton";
+ import GsapWrapper from "../components/GsapWrapper";
++import { Prisma } from "@prisma/client";
+ 
+-const prisma = new PrismaClient();
++const prisma = db;
+ 
+-export default async function DashboardPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
++type DashboardSong = Prisma.SongGetPayload<{}>;
++
++export default async function DashboardPage() {
+   // En Next.js App Router (Server Component) we need to use a different way to get user id if we want to run SSR
+   // But since we don't have the req object directly unless we pass it, it's easier to use currentUser()
+   const { currentUser } = await import("@clerk/nextjs/server");
+diff --git a/app/editor/page.tsx b/app/editor/page.tsx
+index f26a824..11d46ea 100644
+--- a/app/editor/page.tsx
++++ b/app/editor/page.tsx
+@@ -6,10 +6,12 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+ import { toPng } from "html-to-image";
+ import SyllableComponent from "../components/SyllableComponent";
+ import MiniPiano2D from '../components/MiniPiano2D';
++import MiniGuitar2D from '../components/MiniGuitar2D';
++import LiveGuitarFretboard from '../components/LiveGuitarFretboard';
+ import { Song, Chord, Word } from "../config/config";
+ import { parseTextToSong } from "../config/parseTextToSong";
+ import { jsPDF } from "jspdf";
+-import { transposeSong } from "../helpers/transpose";
++import { transposeSong, transposeChord } from "../helpers/transpose";
+ import { NotationType, formatChordText } from "../helpers/chordFormatter";
+ import { paginateSong } from "../helpers/pagination";
+ import { useGlobalSettings } from "../context/SettingsContext";
+@@ -20,16 +22,16 @@ import PurchaseButton from "../components/PurchaseButton";
+ import StarRatingInteractive from "../components/StarRatingInteractive";
+ import GsapWrapper from "../components/GsapWrapper";
+ import dynamic from 'next/dynamic';
++import ExportModal from "../components/ExportModal";
++import EditorSettingsSidebar from "../components/EditorSettingsSidebar";
++import { useAutosaveSong } from "../hooks/useAutosaveSong";
++import { offlineStorage } from "../utils/offlineStorage";
+ 
+-// En lugar de import Piano3D from '../components/Piano3D', haz esto:
+ const Piano3D = dynamic(() => import('../components/Piano3D'), {
+-  ssr: false, // Fundamental para librerías 3D (Three.js) que dependen de 'window'
++  ssr: false, 
+   loading: () => <div className="h-64 w-full bg-gray-100 animate-pulse rounded-xl flex items-center justify-center text-gray-400">Cargando motor 3D...</div>
+ });
+ const GuitarTuner = dynamic(() => import('../components/GuitarTuner'), { ssr: false });
+-import ExportModal from "../components/ExportModal";
+-import { useAutosaveSong } from "../hooks/useAutosaveSong";
+-import { offlineStorage } from "../utils/offlineStorage";
+ 
+ export default function SongEditor() {
+   const [song, setSong] = useState<Song | null>(null);
+@@ -98,7 +100,7 @@ export default function SongEditor() {
+   const hasMultipleSongs = Array.isArray(song?.sections) && song.sections.filter(s => s.title && /^\d+\.\s/.test(s.title)).length > 1;
+   const activeColumns = editorColumns > 0 ? editorColumns : (song?.layout?.columns || (hasMultipleSongs ? 2 : 1));
+   
+-  const layout = song?.layout || {
++  const layout = {
+     columns: activeColumns as 1|2|3|4,
+     baseFontSize: fontSize.includes('2xl') ? 24 : fontSize.includes('xl') ? 20 : fontSize.includes('sm') ? 14 : 16,
+     chordFontSize: 14,
+@@ -106,7 +108,10 @@ export default function SongEditor() {
+     fontFamily: (fontFamily.includes('serif') ? 'serif' : fontFamily.includes('mono') ? 'mono' : 'sans') as 'sans' | 'serif' | 'mono',
+     alignment: alignment || 'justify-start',
+     notation: notation || 'english',
+-    showChords: true
++    showChords: true,
++    capo: 0,
++    instrument: 'piano' as 'piano' | 'guitar',
++    ...(song?.layout || {})
+   };
+ 
+   const updateLayout = useCallback((updates: Partial<typeof layout>) => {
+@@ -114,7 +119,41 @@ export default function SongEditor() {
+     setSong(prev => prev ? { ...prev, layout: { ...layout, ...updates } } as any : prev);
+   }, [layout, song, setSong]);
+ 
+-  const baseLinesPerColumn = Math.floor(800 / ((layout.baseFontSize || 16) * (layout.lineHeight || 2)));
++  const handleGlobalChordChange = useCallback((oldChord: Chord, newChord: Chord | null) => {
++    if (!song) return;
++    setSong(prev => {
++      if (!prev) return prev;
++      const updatedSections = prev.sections.map(sec => ({
++        ...sec,
++        lines: sec.lines.map(line => ({
++          ...line,
++          words: line.words.map(w => ({
++            ...w,
++            syllables: w.syllables.map(s => {
++               if (s.chord && s.chord.rootNote === oldChord.rootNote && (s.chord.variation || "") === (oldChord.variation || "") && (s.chord.bassNote || "") === (oldChord.bassNote || "")) {
++                  return { ...s, chord: newChord ? { ...newChord, id: `chord-${Date.now()}-${Math.random().toString(36).substring(2, 9)}` } : null };
++               }
++               return s;
++            })
++          }))
++        }))
++      }));
++      return { ...prev, sections: updatedSections };
++    });
++  }, [song, setSong]);
++
++  // Cada línea tiene su propia font-size, además de un interlineado adaptable en el gap.
++  // Calculamos la altura real para que pagination reparta equitativamente sin desbordar la página A4.
++  const actualTextHeight = (layout.baseFontSize || 16) * 1.25;
++  const actualGap = Math.max(0.25, (layout.lineHeight || 1.5) - 1) * 16;
++  const textLineHeight = actualTextHeight + actualGap;
++  
++  // Maximum usable height of an A4 container minus headers and footers is roughly 820px.
++  // baseLinesPerColumn asume líneas sin acordes (cost = 1). paginateSong le sumará costo a las líneas con acordes.
++  // Usamos 740 como límite en lugar de 820 para garantizar una zona segura (Safe Zone) de ~80px 
++  // por encima del footer. Así, si el usuario infla el tamaño de fuente y el CSS hace wrap antes que 
++  // las matemáticas, tenemos margen físico de absorción.
++  const baseLinesPerColumn = Math.floor(740 / textLineHeight);
+ 
+   // Hook del Teleprompter
+   const { isPlaying, activeLineId, activeChord, togglePlay } = useTeleprompter(song);
+@@ -128,13 +167,10 @@ export default function SongEditor() {
+   // Escuchar cuando se hace clic en un acorde (manual) para mostrarlo en el 3D
+   useEffect(() => {
+     const handlePickerOpened = (e: CustomEvent) => {
+-      const sylId = e.detail;
+-      let foundChord: Chord | null = null;
+-      // Search the entire song for this syllable's chord
+-      song?.sections.forEach(s => s.lines.forEach(l => l.words.forEach(w => w.syllables.forEach(syl => {
+-        if (syl.id === sylId && syl.chord) foundChord = syl.chord;
+-      }))));
+-      if (foundChord) setActive3DChord(foundChord);
++      const detailChord = e.detail?.chord;
++      if (detailChord) {
++        setActive3DChord(detailChord);
++      }
+     };
+ 
+     const handlePianoPlay = (e: CustomEvent) => {
+@@ -279,13 +315,9 @@ export default function SongEditor() {
+       localStorage.removeItem("chordpro-draft-lyrics");
+       localStorage.removeItem("chordpro-draft-title");
+ 
+-      // Auto-procesamos la canción
+-      setIsAnimating(true);
+-      setTimeout(() => {
+-        const parsedSong = parseTextToSong(draftLyrics, draftTitle, 120, "4/4");
+-        setSong(parsedSong);
+-        setIsAnimating(false);
+-      }, 500);
++      // NOTA SENIOR: Ya no procesamos la canción de forma automática.
++      // El usuario solicitó detenerse obligatoriamente en el "Editor de Letra" (Importador)
++      // para poder separar estrofas de la letra exportada desde Search antes de generar los acordes.
+     } else {
+       // Mecanismo de Salto de Emergencia: Si la página se recargó, recuperar obra en proceso
+       const savedDraft = localStorage.getItem("chordpro-draft-song");
+@@ -419,11 +451,17 @@ export default function SongEditor() {
+       if (index === -1 || index >= currentSong.sections.length - 1) return currentSong;
+ 
+       const newSections = [...currentSong.sections];
+-      const currentSection = newSections[index];
+-      const nextSection = newSections[index + 1];
++      const currentSection = currentSong.sections[index];
++      const nextSection = currentSong.sections[index + 1];
+ 
+-      // Merge lines
+-      currentSection.lines = [...currentSection.lines, ...nextSection.lines];
++      // Create a brand new merged section to trigger React re-render properly
++      const mergedSection = {
++        ...currentSection,
++        lines: [...currentSection.lines, ...nextSection.lines],
++      };
++
++      // Replace the current section with the merged one
++      newSections[index] = mergedSection;
+       
+       // Remove next section
+       newSections.splice(index + 1, 1);
+@@ -612,7 +650,7 @@ export default function SongEditor() {
+   const handleExportToImage = useCallback(async () => {
+     if (!song || !pagesContainerRef.current) return;
+ 
+-    if ((song as any).isPreviewRestriction) {
++    if (song.isPreviewRestriction) {
+       showToast("🔒 Debes adquirir esta obra Premium para habilitar la descarga en imagen.");
+       return;
+     }
+@@ -701,7 +739,7 @@ export default function SongEditor() {
+   const handleExportToPDF = useCallback(async () => {
+     if (!song || !pagesContainerRef.current) return;
+ 
+-    if ((song as any).isPreviewRestriction) {
++    if (song.isPreviewRestriction) {
+       showToast("🔒 Debes adquirir esta obra Premium para habilitar la descarga en PDF.");
+       return;
+     }
+@@ -1187,172 +1225,46 @@ export default function SongEditor() {
+             </div>
+           )}
+           {!isPreviewMode && (
+-            <aside className="w-full lg:w-64 bg-background rounded-xl shadow-lg lg:shadow-xl border border-border p-5 sm:p-6 flex flex-col gap-6 lg:gap-8 static lg:sticky top-36 z-30 shrink-0">
+-              <div className="pb-4 border-b border-border">
+-                <h3 className="text-xs font-bold tracking-[0.2em] uppercase text-foreground">Sesión Activa</h3>
+-                <p className="text-[10px] text-muted-foreground mt-1">Herramientas globales de partitura.</p>
+-              </div>
+-
+-              <div className="flex flex-col gap-6">
+-                {!isReadOnly && (
+-                  <div className="flex flex-col gap-2">
+-                    <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Precio en Marketplace</label>
+-                    <div className="flex items-center gap-3">
+-                      <span className="text-lg font-bold">€</span>
+-                      <input
+-                        type="text"
+-                        inputMode="numeric"
+-                        value={songPrice > 0 ? songPrice : ""}
+-                        placeholder="0"
+-                        onChange={(e) => {
+-                          const val = e.target.value.replace(/[^0-9.]/g, '');
+-                          if (!val) { setSongPrice(0); return; }
+-                          // Limpiar leading zero solo si es numero entero, permitiendo escribir "0.5"
+-                          const parsed = val.length > 1 && val.startsWith('0') && !val.startsWith('0.') ? val.substring(1) : val;
+-                          setSongPrice(Number(parsed));
+-                        }}
+-                        className="flex-1 bg-transparent border-b border-gray-200 dark:border-gray-800 py-2 text-sm font-medium outline-none focus:border-primary text-foreground transition-colors"
+-                      />
+-                    </div>
+-                    <p className={`text-[9px] font-bold mt-1 ${songPrice > 0 ? "text-primary" : "text-gray-500 font-light"}`}>
+-                      {songPrice > 0 ? `Se publicará como Obra Premium por €${songPrice}.` : "Deja 0 para compartir libremente en la comunidad."}
+-                    </p>
+-                  </div>
+-                )}
+-
+-                <div className="flex flex-col gap-2">
+-                  <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Transpositor Inteligente</label>
+-                  <div className="flex bg-gray-50 dark:bg-[#1a1a1a] rounded border border-gray-200 dark:border-gray-800 overflow-hidden">
+-                    <button onClick={() => handleTranspose(-1)} className="flex-1 py-3 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 border-r border-gray-200 dark:border-gray-800 transition-colors">-1</button>
+-                    <button onClick={() => handleTranspose(1)} className="flex-1 py-3 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">+1</button>
+-                  </div>
+-                  <p className="text-[9px] font-light text-gray-500 mt-1">Sube o baja medio tono todos los acordes al instante.</p>
+-                </div>
+-
+-                <div className="flex flex-col gap-2">
+-                  <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Visor Inmersivo</label>
+-                  <button
+-                    onClick={() => setShow3DPiano(!show3DPiano)}
+-                    className={`py-3 px-4 rounded-lg flex items-center justify-between transition-colors shadow-sm text-xs font-bold uppercase tracking-widest border ${show3DPiano ? 'bg-primary text-primary-foreground border-transparent' : 'bg-transparent text-foreground border-gray-200 dark:border-gray-800 hover:border-primary/50'}`}
+-                  >
+-                    <span className="flex items-center gap-3">Mostrar Piano 3D</span>
+-                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${show3DPiano ? 'bg-primary-foreground/20' : 'bg-muted text-muted-foreground'}`}>{show3DPiano ? 'ACTIVO' : 'OFF'}</span>
+-                  </button>
+-                </div>
+-
+-                <div className="flex flex-col gap-2">
+-                  <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Diseño de Página (Columnas)</label>
+-                  <div className="flex bg-gray-50 dark:bg-[#1a1a1a] rounded border border-gray-200 dark:border-gray-800 overflow-hidden">
+-                    {[0, 1, 2, 3].map((colVal) => (
+-                      <button
+-                        key={colVal}
+-                        onClick={() => {
+-                          setEditorColumns(colVal);
+-                          updateLayout({ columns: colVal as any });
+-                        }}
+-                        className={`flex-1 py-3 text-xs font-bold transition-colors border-r last:border-r-0 border-gray-200 dark:border-gray-800
+-                        ${(editorColumns === colVal || layout.columns === colVal)
+-                            ? 'bg-primary text-primary-foreground'
+-                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800'
+-                          }`}
+-                      >
+-                        {colVal === 0 ? 'AUTO' : colVal}
+-                      </button>
+-                    ))}
+-                  </div>
+-                </div>
+-
+-                <div className="flex flex-col gap-2">
+-                  <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Tipografía y Separación</label>
+-                  <div className="grid grid-cols-2 gap-3">
+-                    <div className="flex flex-col">
+-                      <span className="text-[10px] text-gray-400 mb-1">Letra (px)</span>
+-                      <input 
+-                        type="number" 
+-                        value={layout.baseFontSize || 16}
+-                        onChange={(e) => updateLayout({ baseFontSize: Number(e.target.value) || 16 })}
+-                        className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded py-2 px-3 text-sm focus:border-primary outline-none transition-colors"
+-                      />
+-                    </div>
+-                    <div className="flex flex-col">
+-                      <span className="text-[10px] text-gray-400 mb-1">Interlineado</span>
+-                      <input 
+-                        type="number" 
+-                        step="0.1"
+-                        value={layout.lineHeight || 2}
+-                        onChange={(e) => updateLayout({ lineHeight: Number(e.target.value) || 2 })}
+-                        className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded py-2 px-3 text-sm focus:border-primary outline-none transition-colors"
+-                      />
+-                    </div>
+-                  </div>
+-                  <div className="flex flex-col mt-1">
+-                      <span className="text-[10px] text-gray-400 mb-1">Acordes (px)</span>
+-                      <input 
+-                        type="number" 
+-                        value={layout.chordFontSize || 14}
+-                        onChange={(e) => updateLayout({ chordFontSize: Number(e.target.value) || 14 })}
+-                        className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded py-2 px-3 text-sm focus:border-primary outline-none transition-colors"
+-                      />
+-                    </div>
+-                </div>
+-
+-                <div className="flex flex-col gap-2">
+-                  <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Alineación</label>
+-                  <div className="flex bg-gray-50 dark:bg-[#1a1a1a] rounded border border-gray-200 dark:border-gray-800 overflow-hidden">
+-                    {[
+-                      { id: 'justify-start', icon: 'M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12' },
+-                      { id: 'justify-center', icon: 'M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5' },
+-                      { id: 'justify-end', icon: 'M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25' }
+-                    ].map((align) => (
+-                      <button
+-                        key={align.id}
+-                        onClick={() => updateLayout({ alignment: align.id as any })}
+-                        className={`flex-1 py-3 flex justify-center items-center transition-colors border-r last:border-r-0 border-gray-200 dark:border-gray-800
+-                        ${layout.alignment === align.id
+-                            ? 'bg-primary text-primary-foreground'
+-                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800'
+-                          }`}
+-                      >
+-                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d={align.icon} /></svg>
+-                      </button>
+-                    ))}
+-                  </div>
+-                </div>
+-
+-                {layout.notation === 'roman' && (
+-                  <div className="flex flex-col gap-2">
+-                    <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Tono Base (Romanos)</label>
+-                    <select
+-                      value={songKey} onChange={(e) => setSongKey(e.target.value)}
+-                      className="w-full bg-transparent border-b border-gray-200 dark:border-gray-800 py-2 text-sm text-gray-800 dark:text-white outline-none cursor-pointer"
+-                    >
+-                      {['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'].map(k => (
+-                        <option key={k} value={k}>{k}</option>
+-                      ))}
+-                    </select>
+-                  </div>
+-                )}
+-              </div>
+-
+-              <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-800 flex flex-col gap-4">
+-                 <button
+-                    onClick={() => updateLayout({ showChords: !layout.showChords })}
+-                    className={`py-2 px-4 rounded flex items-center justify-between transition-colors shadow-sm text-[10px] font-bold uppercase tracking-widest border ${!layout.showChords ? 'bg-primary text-primary-foreground border-transparent' : 'bg-transparent text-foreground border-gray-200 dark:border-gray-800 hover:border-primary/50'}`}
+-                  >
+-                    <span>Ocultar Acordes</span>
+-                    <div className={`w-3 h-3 rounded-full ${!layout.showChords ? 'bg-white' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+-                  </button>
+-                <Link href="/settings" className="text-[10px] font-bold tracking-[0.2em] uppercase text-primary hover:text-black dark:hover:text-white transition-colors flex items-center justify-between group">
+-                  Abrir Ajustes Globales
+-                  <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+-                </Link>
+-              </div>
+-            </aside>
++            <EditorSettingsSidebar
++              isReadOnly={isReadOnly}
++              songPrice={songPrice}
++              setSongPrice={setSongPrice}
++              handleTranspose={handleTranspose}
++              show3DPiano={show3DPiano}
++              setShow3DPiano={setShow3DPiano}
++              editorColumns={editorColumns}
++              setEditorColumns={setEditorColumns}
++              layout={layout}
++              updateLayout={updateLayout}
++              songKey={songKey}
++              setSongKey={setSongKey}
++              includeChordsDictionary={includeChordsDictionary}
++              setIncludeChordsDictionary={setIncludeChordsDictionary}
++            />
+           )}
+ 
+           {/* MOTOR DE PAGINACIÓN A4 Y SLIDER HORIZONTAL */}
+           <div
+             ref={pagesContainerRef}
++            onDragOver={(e) => {
++              if(!isReadOnly) {
++                e.preventDefault(); // Permite soltar en área vacía
++              }
++            }}
++            onDrop={(e) => {
++              if (isReadOnly || !draggedSectionId) return;
++              e.preventDefault();
++              
++              // Mover estrofa al final del documento
++              const draggedIndex = song!.sections.findIndex(s => s.id === draggedSectionId);
++              if (draggedIndex !== -1 && draggedIndex !== song!.sections.length - 1) {
++                 const newSections = [...song!.sections];
++                 const [removed] = newSections.splice(draggedIndex, 1);
++                 newSections.push(removed);
++                 setSong({...song!, sections: newSections});
++              }
++              setDraggedSectionId(null);
++            }}
+             className={
+               isPreviewMode
+                 ? "flex-1 w-full flex flex-col items-center overflow-y-auto py-12 px-2 sm:px-4 shadow-inner hide-scrollbar bg-muted gap-8 relative"
+@@ -1360,20 +1272,20 @@ export default function SongEditor() {
+             }
+           >
+             {/* BANNER DE PREVIEW DE PAGO */}
+-            {(song as any).isPreviewRestriction && (
++            {song.isPreviewRestriction && (
+               <div className="sticky left-1/2 -ml-[1px] md:absolute md:bottom-24 md:left-1/2 md:-translate-x-1/2 z-50 bg-background/95 backdrop-blur-xl p-8 sm:p-12 rounded-3xl border border-primary/20 shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.4)] text-center max-w-lg w-[90%] mt-8 mb-24 md:mt-0 md:mb-0 flex flex-col items-center animate-in slide-in-from-bottom-12 duration-1000 shrink-0 self-center">
+                 <span className="text-4xl mb-4 opacity-80">🔒</span>
+                 <h3 className="text-2xl font-black tracking-tight mb-2">Obra Premium</h3>
+                 <p className="text-muted-foreground text-sm mb-8 leading-relaxed">El creador ha protegido esta pieza. Adquiere los derechos de transcripción para ver todos los acordes, imprimir PDF y habilitar el Teleprompter.</p>
+ 
+-                <PurchaseButton songId={song.id} price={(song as any).price || 1.00} />
++                <PurchaseButton songId={song.id} price={song.price || 1.00} />
+               </div>
+             )}
+ 
+             {song && paginateSong(song, baseLinesPerColumn, activeColumns).map((page, index) => (
+               <div
+                 key={page.id}
+-                className={`a4-page bg-background text-foreground ${activeMarginClass} overflow-hidden relative lg:shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.15)] transition-all duration-500 flex flex-col justify-start w-full lg:w-[210mm] lg:min-w-[210mm] h-[80vh] lg:h-[297mm] ring-0 lg:ring-1 lg:ring-border origin-top rounded-xl lg:rounded-none border border-border lg:border-none
++                className={`a4-page bg-background text-foreground ${activeMarginClass} overflow-hidden relative lg:shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.15)] transition-all duration-500 flex flex-col justify-start w-[794px] min-w-[794px] max-w-[794px] h-[1123px] min-h-[1123px] max-h-[1123px] ring-0 lg:ring-1 lg:ring-border origin-top rounded-xl lg:rounded-none border border-border lg:border-none
+                 ${isPreviewMode ? 'transform shrink-0 scale-[0.6] sm:scale-75 lg:scale-[0.85] -mt-[40mm] sm:-mt-[20mm] lg:-mt-[10mm]' : 'shrink-0 lg:snap-center'}
+               `}
+               >
+@@ -1418,7 +1330,7 @@ export default function SongEditor() {
+                               <input
+                                 type="number"
+                                 value={song.bpm || 120}
+-                                onChange={(e) => setSong({ ...(song as any), bpm: parseInt(e.target.value) || 0 })}
++                                onChange={(e) => setSong({ ...song, bpm: parseInt(e.target.value) || 0 })}
+                                 className="bg-transparent text-black dark:text-white font-bold outline-none w-10 text-center border-b border-transparent hover:border-gray-300 focus:border-primary transition-colors cursor-text"
+                               />
+                               <span className="text-black dark:text-white">BPM</span>
+@@ -1432,18 +1344,18 @@ export default function SongEditor() {
+                             <div className="flex items-center gap-2 text-yellow-500">
+                               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" /></svg>
+                               <span className="text-[10px] uppercase tracking-widest font-bold">
+-                                {Math.max((song as any).ratings?.length || 0, 0) > 0 ? (((song as any).ratings?.reduce((acc: number, r: any) => acc + r.value, 0) / (song as any).ratings?.length)).toFixed(1) : "0.0"} / 5.0
++                                {Math.max(song.ratings?.length || 0, 0) > 0 ? ((song.ratings?.reduce((acc: number, r) => acc + r.value, 0) || 0) / (song.ratings?.length || 1)).toFixed(1) : "0.0"} / 5.0
+                               </span>
+                             </div>
+                           ) : (
+                             <>
+                               <StarRatingInteractive
+                                 songId={song.id}
+-                                myInitialRating={user ? ((song as any).ratings?.find((r: any) => r.userId === user?.id)?.value || 0) : 0}
++                                myInitialRating={user ? (song.ratings?.find((r) => r.userId === user?.id)?.value || 0) : 0}
+                                 readOnly={!user}
+                               />
+                               <span className="text-[10px] uppercase tracking-widest font-bold opacity-30">
+-                                {Math.max((song as any).ratings?.length || 0, 0) > 0 ? (((song as any).ratings?.reduce((acc: number, r: any) => acc + r.value, 0) / (song as any).ratings?.length)).toFixed(1) : "0.0"} / 5.0
++                                {Math.max(song.ratings?.length || 0, 0) > 0 ? ((song.ratings?.reduce((acc: number, r) => acc + r.value, 0) || 0) / (song.ratings?.length || 1)).toFixed(1) : "0.0"} / 5.0
+                               </span>
+                             </>
+                           )}
+@@ -1459,9 +1371,11 @@ export default function SongEditor() {
+                 )}
+ 
+                 {/* CONTENIDO DE LA PÁGINA (COLUMNAS MASONRY DINÁMICAS) */}
+-                <div className={`grid grid-cols-1 ${({ 1: 'md:grid-cols-1', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-4' } as Record<number, string>)[page.columns.length] || 'md:grid-cols-1'} gap-8 sm:gap-12 w-full mt-2 flex-grow items-start mb-[15rem] lg:mb-[20rem]`}>
+-                  {page.columns.map((col, colIdx) => (
+-                    <div key={`col-${page.id}-${colIdx}`} className="col-span-1 flex flex-col gap-10">
++                <div className={`grid grid-cols-1 ${({ 1: 'grid-cols-1', 2: 'grid-cols-2', 3: 'grid-cols-3', 4: 'grid-cols-4' } as Record<number, string>)[activeColumns] || 'grid-cols-1'} gap-8 sm:gap-12 w-full mt-2 flex-grow items-start`}>
++                  {Array.from({ length: activeColumns }).map((_, colIdx) => {
++                    const col = page.columns[colIdx] || [];
++                    return (
++                      <div key={`col-${page.id}-${colIdx}`} className="col-span-1 flex flex-col gap-6 sm:gap-8">
+                       {col.map((section, sIdx) => (
+                         <div
+                           key={`${section.id}-${sIdx}`}
+@@ -1475,6 +1389,7 @@ export default function SongEditor() {
+                           onDragOver={(e) => {
+                             if (isReadOnly || !draggedSectionId || draggedSectionId === section.id) return;
+                             e.preventDefault();
++                            e.stopPropagation();
+                             e.dataTransfer.dropEffect = 'move';
+                             
+                             const rect = e.currentTarget.getBoundingClientRect();
+@@ -1494,6 +1409,7 @@ export default function SongEditor() {
+                           }}
+                           onDrop={(e) => {
+                             e.preventDefault();
++                            e.stopPropagation();
+                             setDragOverSectionId(null);
+                             setDragOverDirection(null);
+                             if (isReadOnly || !draggedSectionId || draggedSectionId === section.id) return;
+@@ -1535,12 +1451,12 @@ export default function SongEditor() {
+ 
+                           {/* Minimalist Section Label con Repetidor Numérico - Sólo si empieza aquí */}
+                           {!section.isContinuation && (
+-                            <div className="flex items-center gap-6 group/secHeader w-full">
+-                              <span className="text-[10px] font-bold tracking-[0.4em] text-gray-400 uppercase flex items-center gap-3 shrink-0">
++                            <div className="flex items-center gap-2 sm:gap-4 group/secHeader w-full flex-nowrap">
++                              <span className="text-[10px] font-bold tracking-[0.4em] text-gray-400 uppercase flex items-center gap-2 shrink-0">
+                                 <select
+                                   value={section.type}
+                                   onChange={(e) => handleSectionTypeChange(section.id, e.target.value)}
+-                                  className="bg-transparent border-none appearance-none outline-none font-bold tracking-[0.4em] uppercase text-gray-400 cursor-pointer hover:text-primary transition-colors focus:outline-none focus:ring-0 max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap"
++                                  className="bg-transparent border-none appearance-none outline-none font-bold tracking-[0.4em] uppercase text-gray-400 cursor-pointer hover:text-primary transition-colors focus:outline-none focus:ring-0 max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap"
+                                   title="Cambiar tipo de sección"
+                                 >
+                                   {![
+@@ -1562,29 +1478,30 @@ export default function SongEditor() {
+                                 </span>
+                               </span>
+ 
+-                              <div className="h-px bg-gray-100 dark:bg-gray-800 flex-1 opacity-20 group-hover/secHeader:opacity-100 transition-opacity"></div>
+-
+-                              {/* Auto-rellenar acordes lógico */}
+-                              {(() => {
+-                                const hasChords = section.lines.some(l => l.words.some(w => w.syllables.some(s => s.chord !== null)));
+-                                const globalSecIdx = song.sections.findIndex(s => s.id === section.id);
+-                                // Only show if this section has NO chords, and is NOT the first section ever
+-                                if (!hasChords && globalSecIdx > 0 && !isReadOnly) {
+-                                  return (
+-                                    <button
+-                                      onClick={() => handleAutoFillChords(section.id)}
+-                                      className="opacity-0 group-hover/secHeader:opacity-100 transition-opacity px-3 py-1 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground text-[8px] sm:text-[9px] font-bold tracking-widest uppercase rounded flex items-center gap-2 shrink-0 border border-primary/20 hover:border-primary active:scale-95"
+-                                      title="Copiar acordes de la estrofa anterior idéntica"
+-                                    >
+-                                      <span className="text-[12px] leading-none">✨</span> Auto-Completar Acordes
+-                                    </button>
+-                                  );
+-                                }
+-                                return null;
+-                              })()}
+-
+-                              {!isReadOnly && (
+-                                <div className="flex items-center gap-1 opacity-0 group-hover/secHeader:opacity-100 transition-opacity">
++                              <div className="h-px bg-gray-100 dark:bg-gray-800 flex-1 opacity-20 group-hover/secHeader:opacity-100 transition-opacity min-w-[10px]"></div>
++
++                              <div className="flex items-center gap-1 sm:gap-2 shrink-0 z-20 justify-end transition-all flex-nowrap">
++                                {/* Auto-rellenar acordes lógico */}
++                                {(() => {
++                                  const hasChords = section.lines.some(l => l.words.some(w => w.syllables.some(s => s.chord !== null)));
++                                  const globalSecIdx = song.sections.findIndex(s => s.id === section.id);
++                                  // Only show if this section has NO chords, and is NOT the first section ever
++                                  if (!hasChords && globalSecIdx > 0 && !isReadOnly) {
++                                    return (
++                                      <button
++                                        onClick={() => handleAutoFillChords(section.id)}
++                                        className="opacity-0 group-hover/secHeader:opacity-100 transition-opacity px-3 py-1 bg-primary text-primary-foreground text-[8px] sm:text-[9px] font-bold tracking-widest uppercase rounded flex items-center gap-2 shrink-0 border border-primary  active:scale-95 shadow-lg"
++                                        title="Copiar acordes de la estrofa anterior idéntica"
++                                      >
++                                        <span className="text-[12px] leading-none">✨</span> Auto-Rellenar
++                                      </button>
++                                    );
++                                  }
++                                  return null;
++                                })()}
++
++                                {!isReadOnly && (
++                                  <div className="flex items-center gap-1 opacity-0 group-hover/secHeader:opacity-100 transition-opacity bg-background/80 rounded px-1">
+                                   <button
+                                     onClick={() => handleMergeWithNext(section.id)}
+                                     className="text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 p-1.5 rounded active:scale-95 transition-all text-[8px] sm:text-[9px] font-bold tracking-widest uppercase mr-1"
+@@ -1613,9 +1530,10 @@ export default function SongEditor() {
+                                 </div>
+                               )}
+                             </div>
++                            </div>
+                           )}
+ 
+-                          <div className="flex flex-col gap-3 sm:gap-4 mt-1">
++                          <div className="flex flex-col mt-1" style={{ gap: `${Math.max(0.25, (layout.lineHeight || 1.5) - 1)}rem` }}>
+                             {section.lines.map((line) => {
+                               const playingStyle = activeLineId === line.id
+                                 ? 'opacity-100 scale-[1.02] transform origin-left ml-4 text-primary'
+@@ -1627,37 +1545,53 @@ export default function SongEditor() {
+                                 <div
+                                   key={line.id}
+                                   id={line.id}
+-                                  className={`flex flex-wrap items-end ${layout.alignment} transition-all duration-700 ease-in-out relative group/line ${playingStyle} font-${layout.fontFamily} shrink-0`}
++                                  className={`flex flex-wrap items-end content-start ${layout.alignment} transition-all duration-700 ease-in-out relative group/line ${playingStyle} font-${layout.fontFamily} shrink-0`}
+                                   style={{
+                                     '--base-font': `${layout.baseFontSize || 16}px`,
+                                     '--chord-font': `${layout.chordFontSize || 14}px`,
+-                                    lineHeight: layout.lineHeight || 2.2
++                                    lineHeight: 1.2,
++                                    rowGap: '1.5em'
+                                   } as React.CSSProperties}
+                                 >
+-
+                                   {line.words.map((word, wIdx) => (
+                                     <div key={word.id} className="flex flex-wrap mr-3 sm:mr-4 group/word">
+-                                      {word.syllables.map((syl, i) => (
+-                                        <SyllableComponent
+-                                          key={syl.id}
+-                                          syllable={syl}
+-                                          notation={layout.notation}
+-                                          songKey={songKey}
+-                                          nextHasChord={Boolean(
+-                                            // Look ahead for next syllable in same word, OR first syllable of next word
+-                                            word.syllables[i + 1]?.chord ||
+-                                            (!word.syllables[i + 1] && line.words[wIdx + 1]?.syllables[0]?.chord)
+-                                          )}
+-                                          onChordChange={handleChordChange}
+-                                          readOnly={isReadOnly}
+-                                          showChords={layout.showChords}
+-                                        />
+-                                      ))}
++                                      {word.syllables.map((syl, i) => {
++                                        return (
++                                          <SyllableComponent
++                                            key={syl.id}
++                                            syllable={syl}
++                                            capo={layout.capo || 0}
++                                            notation={layout.notation}
++                                            songKey={songKey}
++                                            instrument={layout.instrument}
++                                            colorTheme={colorTheme}
++                                            nextHasChord={Boolean(
++                                              // Look ahead for next syllable in same word, OR first syllable of next word
++                                              word.syllables[i + 1]?.chord ||
++                                              (!word.syllables[i + 1] && line.words[wIdx + 1]?.syllables[0]?.chord)
++                                            )}
++                                            onChordChange={(syllableId, newChord) => {
++                                              // If capo is active, the chord typed by user is also visually shifted. We must shift it UP back to store in DB!
++                                              const realStoredChord = (newChord && typeof newChord !== 'string') ? transposeChord(newChord, (layout.capo || 0)) : null;
++                                              handleChordChange(syllableId, realStoredChord);
++                                            }}
++                                            onGlobalChordChange={(newChord) => {
++                                              if (syl.chord) {
++                                                const originalStoredOldChord = transposeChord(syl.chord, (layout.capo || 0));
++                                                const realStoredNewChord = (newChord && typeof newChord !== 'string') ? transposeChord(newChord, (layout.capo || 0)) : null;
++                                                handleGlobalChordChange(originalStoredOldChord, realStoredNewChord);
++                                              }
++                                            }}
++                                            readOnly={isReadOnly}
++                                            showChords={layout.showChords}
++                                          />
++                                        )
++                                      })}
+                                     </div>
+                                   ))}
+ 
+                                   {!isReadOnly && (
+-                                    <div className="flex items-center gap-2 lg:gap-3 ml-2 opacity-0 group-hover/line:opacity-100 transition-opacity duration-300 shrink-0 self-center">
++                                    <div className="absolute right-0 bg-background/90 pl-3 pr-1 py-1 rounded-l-md items-center gap-2 lg:gap-3 ml-2 opacity-0 group-hover/line:opacity-100 transition-opacity duration-300 self-center flex z-20 shadow-[-10px_0_15px_rgba(var(--background-rgb),1)]">
+                                       {/* El botón de separar solo tiene sentido si la línea no es la primera, pero handleSplitSection ya lo bloquea. Lo mostramos siempre para ser intuitivos. */}
+                                       <button
+                                         onClick={() => handleSplitSection(section.id, line.id)}
+@@ -1690,7 +1624,8 @@ export default function SongEditor() {
+                         </div>
+                       ))}
+                     </div>
+-                  ))}
++                    );
++                  })}
+                 </div>
+ 
+                 {/* FOOTER POR PÁGINA (Anclaje Físico Estricto) */}
+@@ -1708,42 +1643,70 @@ export default function SongEditor() {
+               </div>
+             ))}
+ 
+-            {/* DICCIONARIO DE ACORDES (Página final exportable) */}
+-            {includeChordsDictionary && uniqueChords.length > 0 && (
+-              <div className={`a4-page relative w-[794px] h-[1123px] shrink-0 shadow-2xl overflow-hidden flex flex-col bg-background ${fontFamily}`} style={{ pageBreakAfter: 'always' }}>
+-                <div className="pt-24 px-16 pb-12 flex-1 flex flex-col items-center text-center">
+-                  <h2 className="text-3xl font-black tracking-[0.2em] text-primary mb-16 uppercase text-center w-full border-b border-border pb-6 drop-shadow-sm">Diccionario de Acordes</h2>
+-                  <div className="grid grid-cols-4 gap-y-16 gap-x-8 w-full place-items-center">
+-                     {uniqueChords.map((chord, idx) => {
+-                       const formatted = formatChordText(chord, notation, songKey);
+-                       return (
+-                         <div key={idx} className="flex flex-col items-center gap-5 w-full">
+-                             <div className="text-[26px] font-black font-sans text-foreground flex items-end tracking-tight">
+-                                 {formatted.root}
+-                                 {formatted.variation && <span className="text-[14px] font-bold relative -top-2 ml-0.5">{formatted.variation}</span>}
+-                                 {formatted.bass && <span className="text-[16px] ml-1 opacity-70">/{formatted.bass}</span>}
+-                             </div>
+-                             <MiniPiano2D chord={chord} themeColor={colorTheme} className="w-[124px] shadow-sm rounded-sm" />
+-                         </div>
+-                       );
+-                     })}
++            {/* DICCIONARIO DE ACORDES (Páginas dinámicas según cantidad de acordes) */}
++            {includeChordsDictionary && uniqueChords.length > 0 && (() => {
++               // 4 columnas x 4 filas = 16 acordes máximo por página A4 para que no toque el footer jamás
++               const CHORDS_PER_PAGE = 16;
++               const dictPages = [];
++               for (let i = 0; i < uniqueChords.length; i += CHORDS_PER_PAGE) {
++                 dictPages.push(uniqueChords.slice(i, i + CHORDS_PER_PAGE));
++               }
++               
++               const basePagesCount = song ? paginateSong(song, baseLinesPerColumn, activeColumns).length : 1;
++
++               return dictPages.map((chordChunk, chunkIdx) => (
++                <div key={`dict-page-${chunkIdx}`} className={`a4-page relative w-[794px] h-[1123px] shrink-0 shadow-2xl overflow-hidden flex flex-col bg-background ${fontFamily}`} style={{ pageBreakAfter: 'always' }}>
++                  <div className="pt-24 px-16 pb-32 lg:pb-[8rem] flex-1 flex flex-col items-center text-center">
++                    {/* El título solo va en la primera página del diccionario */}
++                    {chunkIdx === 0 && (
++                      <h2 className="text-3xl font-black tracking-[0.2em] text-primary mb-12 uppercase text-center w-full border-b border-border pb-6 drop-shadow-sm">Diccionario de Acordes</h2>
++                    )}
++                    {chunkIdx > 0 && (
++                       <div className="mb-12 w-full pt-10"></div>
++                    )}
++                    <div className="grid grid-cols-4 gap-y-12 gap-x-8 w-full place-items-center">
++                       {chordChunk.map((chord, idx) => {
++                         const formatted = formatChordText(chord, notation, songKey);
++                         const capoAmount = layout.capo || 0;
++                         const guitarChord = capoAmount > 0 ? transposeChord(chord, -capoAmount)! : chord;
++                         return (
++                           <div key={idx} className="flex flex-col items-center gap-5 w-full shrink-0">
++                               <div className="text-[26px] font-black font-sans text-foreground flex items-end tracking-tight flex-col items-center justify-center">
++                                   <div>
++                                     {formatted.root}
++                                     {formatted.variation && <span className="text-[14px] font-bold relative -top-2 ml-0.5">{formatted.variation}</span>}
++                                     {formatted.bass && <span className="text-[16px] ml-1 opacity-70">/{formatted.bass}</span>}
++                                   </div>
++                                   {capoAmount > 0 && layout.instrument === 'guitar' && (
++                                     <span className="text-[12px] font-normal text-gray-500 tracking-normal opacity-80 mt-[-5px]">
++                                       (forma de {formatChordText(guitarChord, notation, songKey).root})
++                                     </span>
++                                   )}
++                               </div>
++                               {layout.instrument === 'guitar' 
++                                 ? <MiniGuitar2D chord={guitarChord} themeColor={colorTheme} />
++                                 : <MiniPiano2D chord={chord} themeColor={colorTheme} className="w-[124px] shadow-sm rounded-sm" />}
++                           </div>
++                         );
++                       })}
++                    </div>
+                   </div>
+-                </div>
+-                
+-                {/* FOOTER POR PÁGINA (Anclaje Físico Estricto) */}
+-                <div className="absolute bottom-0 left-0 w-full h-[5rem] lg:h-[6rem] bg-background flex flex-col justify-end px-8 sm:px-12 lg:px-16 pb-6 sm:pb-8 lg:pb-12 text-muted-foreground/60 shrink-0 z-20 pointer-events-none">
+-                  <div className="w-auto absolute top-0 left-8 right-8 sm:left-12 sm:right-12 lg:left-16 lg:right-16 h-px bg-border/30"></div>
+-                  <div className="flex justify-between items-end w-full">
+-                    <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
+-                      Aura <span className="font-black inline-block px-1 text-primary pointer-events-auto">Chords</span>
+-                    </p>
+-                    <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
+-                      {new Date().getFullYear()} - PÁG {song ? paginateSong(song, baseLinesPerColumn, activeColumns).length + 1 : 2}
+-                    </p>
++                  
++                  {/* FOOTER POR PÁGINA (Anclaje Físico Estricto) */}
++                  <div className="absolute bottom-0 left-0 w-full h-[5rem] lg:h-[6rem] bg-background flex flex-col justify-end px-8 sm:px-12 lg:px-16 pb-6 sm:pb-8 lg:pb-12 text-muted-foreground/60 shrink-0 z-20 pointer-events-none">
++                    <div className="w-auto absolute top-0 left-8 right-8 sm:left-12 sm:right-12 lg:left-16 lg:right-16 h-px bg-border/30"></div>
++                    <div className="flex justify-between items-end w-full">
++                      <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
++                        Aura <span className="font-black inline-block px-1 text-primary pointer-events-auto">Chords</span>
++                      </p>
++                      <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
++                        {new Date().getFullYear()} - PÁG {basePagesCount + chunkIdx + 1}
++                      </p>
++                    </div>
+                   </div>
+                 </div>
+-              </div>
+-            )}
++               ));
++            })()}
+ 
+             {/* SPACER FANTASMA PARA TELEPROMPTER A NIVEL DE LOS OJOS */}
+             {isPlaying && !isReadOnly && (
+@@ -1780,11 +1743,18 @@ export default function SongEditor() {
+                 </button>
+               </div>
+ 
+-              <div className="flex-1 w-full h-full relative cursor-move">
+-                <Piano3D
+-                  activeKeys={active3DChord ? getChordKeys(active3DChord.rootNote, active3DChord.variation, active3DChord.bassNote) : []}
+-                  themeColor={colorTheme}
+-                />
++              <div className={`flex-1 w-full h-full relative cursor-move ${layout.instrument === 'guitar' ? 'px-4' : ''}`}>
++                {layout.instrument === 'guitar' ? (
++                  <LiveGuitarFretboard
++                    activeChord={active3DChord}
++                    themeColor={colorTheme}
++                  />
++                ) : (
++                  <Piano3D
++                    activeKeys={active3DChord ? getChordKeys(active3DChord.rootNote, active3DChord.variation, active3DChord.bassNote) : []}
++                    themeColor={colorTheme}
++                  />
++                )}
+               </div>
+             </div>
+           )}
+diff --git a/app/helpers/guitarChords.ts b/app/helpers/guitarChords.ts
+new file mode 100644
+index 0000000..654f9b9
+--- /dev/null
++++ b/app/helpers/guitarChords.ts
+@@ -0,0 +1,94 @@
++const E_STRING_NOTES = ['E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#'];
++const A_STRING_NOTES = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'];
++
++const SHAPES = {
++  E: {
++    "major": [0, 2, 2, 1, 0, 0],
++    "m": [0, 2, 2, 0, 0, 0],
++    "7": [0, 2, 0, 1, 0, 0],
++    "m7": [0, 2, 0, 0, 0, 0],
++    "maj7": [0, 2, 1, 1, 0, 0]
++  },
++  A: {
++    "major": [-1, 0, 2, 2, 2, 0],
++    "m": [-1, 0, 2, 2, 1, 0],
++    "7": [-1, 0, 2, 0, 2, 0],
++    "m7": [-1, 0, 2, 0, 1, 0],
++    "maj7": [-1, 0, 2, 1, 2, 0]
++  }
++};
++
++function toSharp(note: string) {
++  const map: Record<string, string> = { 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#' };
++  return map[note] || note;
++}
++
++export function getGuitarFingering(rootNote: string, variation: string): { frets: number[], baseFret: number } {
++  const openChords: Record<string, Record<string, number[]>> = {
++    "C": {
++      "major": [-1, 3, 2, 0, 1, 0], "m": [-1, 3, 5, 5, 4, 3], "7": [-1, 3, 2, 3, 1, 0], "maj7": [-1, 3, 2, 0, 0, 0], "m7": [-1, 3, 5, 3, 4, 3]
++    },
++    "D": {
++      "major": [-1, -1, 0, 2, 3, 2], "m": [-1, -1, 0, 2, 3, 1], "7": [-1, -1, 0, 2, 1, 2], "maj7": [-1, -1, 0, 2, 2, 2], "m7": [-1, -1, 0, 2, 1, 1]
++    },
++    "E": {
++      "major": [0, 2, 2, 1, 0, 0], "m": [0, 2, 2, 0, 0, 0], "7": [0, 2, 0, 1, 0, 0], "maj7": [0, 2, 1, 1, 0, 0], "m7": [0, 2, 0, 0, 0, 0]
++    },
++    "F": {
++      "major": [1, 3, 3, 2, 1, 1], "maj7": [-1, -1, 3, 2, 1, 0], "m": [1, 3, 3, 1, 1, 1]
++    },
++    "G": {
++      "major": [3, 2, 0, 0, 0, 3], "7": [3, 2, 0, 0, 0, 1], "maj7": [3, 2, 0, 0, 0, 2], "m": [3, 5, 5, 3, 3, 3]
++    },
++    "A": {
++      "major": [-1, 0, 2, 2, 2, 0], "m": [-1, 0, 2, 2, 1, 0], "7": [-1, 0, 2, 0, 2, 0], "maj7": [-1, 0, 2, 1, 2, 0], "m7": [-1, 0, 2, 0, 1, 0]
++    },
++    "B": {
++      "major": [-1, 2, 4, 4, 4, 2], "m": [-1, 2, 4, 4, 3, 2], "7": [-1, 2, 4, 2, 4, 2]
++    }
++  };
++
++  let normRoot = toSharp(rootNote);
++  let normVar = variation || "major";
++
++  if (normVar === "min" || normVar === "-") normVar = "m";
++  if (normVar === "-7" || normVar === "min7") normVar = "m7";
++  if (normVar === "M7" || normVar === "major7") normVar = "maj7";
++
++  if (openChords[normRoot] && openChords[normRoot][normVar]) {
++    return { frets: openChords[normRoot][normVar], baseFret: 1 };
++  }
++
++  const eFret = Math.max(0, E_STRING_NOTES.indexOf(normRoot));
++  const aFret = Math.max(0, A_STRING_NOTES.indexOf(normRoot));
++
++  let shape = "E";
++  let fretShift = eFret;
++
++  // Let's use the shape closest to the nut, unless it's an open string
++  if (aFret !== 0 && (eFret === 0 || aFret < eFret)) {
++    shape = "A";
++    fretShift = aFret;
++  }
++
++  const baseShape = (SHAPES as any)[shape][normVar] || (SHAPES as any)[shape]["major"];
++
++  const mappedFrets = baseShape.map((f: number) => {
++    if (f === -1) return -1;
++    // For barred shapes, "0" represents the nut. So if we shift by `n`, "0" becomes `n`.
++    return f + fretShift;
++  });
++
++  const activeFrets = mappedFrets.filter((f: number) => f > 0);
++  const maxFret = activeFrets.length ? Math.max(...activeFrets) : 0;
++  const minFret = activeFrets.length ? Math.min(...activeFrets) : 1;
++
++  let baseFret = 1;
++
++  // If the chord requires frets past 4, we must shift the view port
++  if (maxFret > 4) {
++    baseFret = minFret;
++  }
++
++  return { frets: mappedFrets, baseFret };
++}
+diff --git a/app/helpers/pagination.ts b/app/helpers/pagination.ts
+index c874995..705d661 100644
+--- a/app/helpers/pagination.ts
++++ b/app/helpers/pagination.ts
+@@ -13,41 +13,122 @@ export interface Page {
+   id: string;
+   index: number;
+   columns: PageSection[][];
++  maxUsedLines: number;
+ }
+ 
+ export function paginateSong(song: Song, linesPerColumn: number = 17, columnsPerPage: number = 3): Page[] {
+   const allColumns: PageSection[][] = [];
++  const columnLinesCount: number[] = [];
+   
+   let currentLinesCount = 0;
+   let currentColumnSections: PageSection[] = [];
+ 
+   song.sections.forEach(section => {
+     let unpaginatedLines = [...section.lines];
+-    let isContinuation = false;
++    // Extraemos la altura dinámica para convertir píxeles a su equivalente en "Líneas Puras de Texto"
++    // textLineHeight es típicamente unos 30px (16px * 1.25 + gap de 10px). 
++    const textLineHeight = (song.layout?.baseFontSize || 16) * 1.25 + Math.max(0.25, ((song.layout?.lineHeight || 1.5) - 1)) * 16;
++    
++    // Una sección aporta físicamente en el DOM: gap-6/gap-8 (32px) del parent column 
++    // Si tiene título, el H2 añade otros ~20px y activa el gap-6 interno de la sección (24px) = 44px
++    // Convertimos esos píxeles en el "Costo de Líneas"
++    const sectionOverheadPx = 32 + (section.title ? 44 : 0);
++    const sectionOverheadCost = sectionOverheadPx / textLineHeight;
+ 
+-    // A section header usually takes up space equivalent to ~2 lines
+-    const titleSpace = section.title ? 2 : 1; 
++    let isContinuation = false;
+ 
+-    // Eliminado: Salto de columna prematuro.
+-    // Ahora el algoritmo prioriza llenar la columna hasta el borde antes de saltar.
++    // Si es el inicio de una sección, restamos su overhead directamente del availableSpace
++    const titleSpace = sectionOverheadCost;
+ 
+     while (unpaginatedLines.length > 0) {
+-      // Current available space on the column, floored to avoid fractional slices infinite loops
+-      let availableSpace = Math.floor(linesPerColumn - currentLinesCount);
++      let availableSpace = linesPerColumn - currentLinesCount;
+       if (!isContinuation) {
+         availableSpace -= titleSpace;
+       }
+ 
+       if (availableSpace <= 0) {
+-        // Column is full, push and start new column
+         allColumns.push(currentColumnSections);
++        columnLinesCount.push(currentLinesCount);
+         currentColumnSections = [];
+         currentLinesCount = 0;
+-        availableSpace = linesPerColumn;
++        availableSpace = linesPerColumn - (!isContinuation ? titleSpace : 0);
++      }
++
++      let costAccumulator = 0;
++      let linesToTakeCount = 0;
++
++      for (let i = 0; i < unpaginatedLines.length; i++) {
++        const line = unpaginatedLines[i];
++        const hasChords = line.words.some(w => w.syllables.some(s => !!s.chord));
++        // Cálculo de ancho físico milimétrico de la línea para predecir si el DOM le hará Flex-Wrap
++        const baseFontSize = song.layout?.baseFontSize || 16;
++        const chordFontSize = song.layout?.chordFontSize || 14;
++        
++        // Un factor conservador superior (0.6) para evitar sorpresas con fuentes anchas
++        const charWidthRatio = 0.6; 
++        
++        let linePixelWidth = 0;
++        line.words.forEach((word) => {
++           let wordWidth = 0;
++           word.syllables.forEach((s) => {
++              const textW = s.text.length * baseFontSize * charWidthRatio;
++              let chordLen = 0;
++              if (s.chord) {
++                  const c = s.chord as any;
++                  chordLen = (c.rootNote?.length || 1) + (c.variation?.length || 0) + (c.bassNote ? 1 + c.bassNote.length : 0);
++              }
++              // Si el acorde es más largo horizontalmente que la sílaba (ej. C#m7 vs "La"), 
++              // el flex container de la sílaba tomará el ancho del acorde!
++              const chordW = chordLen * chordFontSize * charWidthRatio;
++              wordWidth += Math.max(textW, chordW);
++           });
++           linePixelWidth += wordWidth;
++        });
++
++        // Sumamos el espacio de "margin-right" entre las palabras (mr-3/mr-4 sm:mr-4 = 16px fijos)
++        linePixelWidth += Math.max(0, line.words.length - 1) * 16;
++
++        // Calculamos el ancho disponible para la columna en A4 horizontal
++        const totalA4ContentWidth = 794 - (64 * 2); // 794px menos padding lateral (~128px)
++        const gapPx = 32; // gap-8
++        const columnWidthPx = (totalA4ContentWidth - (gapPx * (columnsPerPage - 1))) / columnsPerPage;
++        
++        // Si la línea es más larga que la columna, contaremos múltiples líneas (wrap)
++        const wrapCycles = Math.max(1, Math.ceil(linePixelWidth / columnWidthPx));
++
++        // Calculamos el costo dinámico real basado en los estilos CSS exactos
++        const chordLineHeight = textLineHeight + ((song.layout?.chordFontSize || 14) * 1.5);
++        const chordRatio = chordLineHeight / textLineHeight;
++        
++        // En el DOM (SyllableComponent), si layout.showChords !== false, SIEMPRE se renderiza un `min-h-[1.5em]` 
++        // por encima de la sílaba (incluso si no hay acorde), para uniformidad y permitir añadir acordes con "+".
++        // Por lo tanto, el sistema SIEMPRE consume verticalmente el espacio de un acorde si están activados.
++        const UI_SHOWS_CHORD_SPACER = song.layout?.showChords !== false;
++        let lineCost = UI_SHOWS_CHORD_SPACER ? chordRatio : 1;
++
++        if (wrapCycles > 1) {
++            // Cada salto de línea (wrap) añade textLineHeight + rowGap ('1.5em')
++            const wrapAddedPx = (baseFontSize * 1.25) + (baseFontSize * 1.5);
++            const extraWrapCost = wrapAddedPx / textLineHeight;
++            lineCost += (wrapCycles - 1) * extraWrapCost; 
++        }
++
++        // Add extra line cost if the interlineado is customized (since baseLinesPerColumn is an average estimate)
++        if (song.layout?.lineHeight && song.layout.lineHeight > 2.0 && columnsPerPage > 1) {
++            // Un pequeño ajuste defensivo si el interlineado es enorme y la columna muy estrecha
++            lineCost += 0.2;
++        }
++
++        if (costAccumulator + lineCost <= availableSpace || linesToTakeCount === 0) {
++           costAccumulator += lineCost;
++           linesToTakeCount++;
++        } else {
++           break;
++        }
+       }
+ 
+-      const linesToTake = unpaginatedLines.slice(0, availableSpace);
+-      unpaginatedLines = unpaginatedLines.slice(availableSpace);
++      const linesToTake = unpaginatedLines.slice(0, linesToTakeCount);
++      unpaginatedLines = unpaginatedLines.slice(linesToTakeCount);
+ 
+       currentColumnSections.push({
+         ...section,
+@@ -55,7 +136,7 @@ export function paginateSong(song: Song, linesPerColumn: number = 17, columnsPer
+         isContinuation
+       });
+ 
+-      currentLinesCount += linesToTake.length + (isContinuation ? 0 : titleSpace);
++      currentLinesCount += costAccumulator + (isContinuation ? 0 : titleSpace);
+       isContinuation = true;
+     }
+     
+@@ -65,6 +146,7 @@ export function paginateSong(song: Song, linesPerColumn: number = 17, columnsPer
+ 
+   if (currentColumnSections.length > 0) {
+     allColumns.push(currentColumnSections);
++    columnLinesCount.push(currentLinesCount);
+   }
+ 
+   // Ahora empaquetamos las columnas dinámicamente según 'columnsPerPage' en Páginas A4
+@@ -72,16 +154,19 @@ export function paginateSong(song: Song, linesPerColumn: number = 17, columnsPer
+ 
+   for (let i = 0; i < allColumns.length; i += columnsPerPage) {
+     const pageColumns: PageSection[][] = [];
++    let maxUsedLines = 0;
+     for (let c = 0; c < columnsPerPage; c++) {
+       if (allColumns[i + c]) {
+          pageColumns.push(allColumns[i + c]);
++         maxUsedLines = Math.max(maxUsedLines, columnLinesCount[i + c]);
+       }
+     }
+     
+     pages.push({
+       id: `page-${i / columnsPerPage}`,
+       index: Math.floor(i / columnsPerPage),
+-      columns: pageColumns
++      columns: pageColumns,
++      maxUsedLines
+     });
+   }
+ 
+diff --git a/app/helpers/transpose.ts b/app/helpers/transpose.ts
+index b4a1c25..3b07993 100644
+--- a/app/helpers/transpose.ts
++++ b/app/helpers/transpose.ts
+@@ -1,4 +1,4 @@
+-import { Song } from "../config/config";
++import { Song, Chord } from "../config/config";
+ 
+ const standardScale = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
+ 
+@@ -16,6 +16,14 @@ export function transposeRoot(root: string, semitones: number): string {
+   return standardScale[newIdx];
+ }
+ 
++export function transposeChord(chord: Chord, semitones: number): Chord {
++  return {
++    ...chord,
++    rootNote: transposeRoot(chord.rootNote, semitones),
++    ...(chord.bassNote ? { bassNote: transposeRoot(chord.bassNote, semitones) } : {})
++  };
++}
++
+ export function transposeSong(song: Song, semitones: number): Song {
+   return {
+     ...song,
+diff --git a/app/hooks/useAutosaveSong.ts b/app/hooks/useAutosaveSong.ts
+index 2a7129b..e3fcf6b 100644
+--- a/app/hooks/useAutosaveSong.ts
++++ b/app/hooks/useAutosaveSong.ts
+@@ -12,7 +12,9 @@ export function useAutosaveSong(song: Song | null, isPlaying: boolean, onSaveSuc
+   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+ 
+   const save = useCallback(async () => {
+-    if (!song || !song.id) return;
++    // Si la gema aún no ha sido registrada formalmente en DB (id local empiexza por 'song-' o temp), 
++    // no hacemos autosave para no enviar un montón de PATCH 404 al servidor antes de hacer el primer POST.
++    if (!song || !song.id || String(song.id).startsWith('song-') || String(song.id).length < 15) return; 
+     
+     setStatus('saving');
+     try {
+@@ -21,13 +23,20 @@ export function useAutosaveSong(song: Song | null, isPlaying: boolean, onSaveSuc
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ 
+             id: song.id, 
+-            title: song.title, // Add title and bpm just in case
++            title: song.title,
+             bpm: song.bpm,
+             parsedData: song
+         }),
+       });
+ 
+-      if (!response.ok) throw new Error("Error en servidor");
++      if (!response.ok) {
++         if (response.status === 404) {
++             // Es una canción nueva local, detenemos el autosave silenciosamente.
++             setStatus('dirty'); 
++             return;
++         }
++         throw new Error("Error en servidor");
++      }
+ 
+       setStatus('saved');
+       setLastSaved(new Date());
+@@ -66,7 +75,7 @@ export function useAutosaveSong(song: Song | null, isPlaying: boolean, onSaveSuc
+ 
+     debounceTimerRef.current = setTimeout(() => {
+       save();
+-    }, 3000);
++    }, 5000);
+ 
+     return () => {
+       if (debounceTimerRef.current) {
+diff --git a/app/u/[id]/page.tsx b/app/u/[id]/page.tsx
+index f349c09..7fa972e 100644
+--- a/app/u/[id]/page.tsx
++++ b/app/u/[id]/page.tsx
+@@ -1,5 +1,5 @@
+ import { notFound } from "next/navigation";
+-import { PrismaClient } from "@prisma/client";
++import { db } from "@/lib/db";
+ import Navbar from "../../components/Navbar";
+ import Footer from "../../components/Footer";
+ import { Users, Music, Clock, Star } from "lucide-react";
+@@ -10,7 +10,7 @@ import FollowButton from "./FollowButton";
+ import GsapWrapper from "../../components/GsapWrapper";
+ import StarRatingInteractive from "../../components/StarRatingInteractive";
+ 
+-const prisma = new PrismaClient();
++const prisma = db;
+ 
+ export default async function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
+   const { id } = await params;
+@@ -39,7 +39,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
+   // Check follow status if logged in
+   let isFollowing = false;
+   if (currentUserId && currentUserId !== id) {
+-    const followRecord = await (prisma as any).follows.findUnique({
++    const followRecord = await db.follows.findUnique({
+       where: {
+         followerId_followingId: {
+           followerId: currentUserId,
+@@ -78,13 +78,13 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
+               <div className="w-24 h-24 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-6 mx-auto md:mx-0 shadow-inner">
+                  <Users size={40} />
+               </div>
+-              <h1 className="text-4xl sm:text-5xl font-black tracking-tight mb-2">{(profileUser as any).name || "Músico Anónimo"}</h1>
++              <h1 className="text-4xl sm:text-5xl font-black tracking-tight mb-2">{profileUser.name || "Músico Anónimo"}</h1>
+               <p className="text-muted-foreground tracking-widest uppercase text-xs font-bold flex flex-wrap gap-4 items-center justify-center md:justify-start">
+-                 <span><span className="text-foreground">{(profileUser as any)._count.followers}</span> Seguidores</span>
++                 <span><span className="text-foreground">{profileUser._count.followers}</span> Seguidores</span>
+                  <span>•</span>
+-                 <span><span className="text-foreground">{(profileUser as any)._count.following}</span> Siguiendo</span>
++                 <span><span className="text-foreground">{profileUser._count.following}</span> Siguiendo</span>
+                  <span>•</span>
+-                 <span><span className="text-foreground">{(profileUser as any)._count.songs}</span> Obras Públicas</span>
++                 <span><span className="text-foreground">{profileUser._count.songs}</span> Obras Públicas</span>
+               </p>
+            </div>
+            
+@@ -100,7 +100,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
+         </GsapWrapper>
+ 
+         <div className="mb-8 border-b border-border pb-4">
+-           <h2 className="text-2xl font-bold tracking-tight">Partituras de {(profileUser as any).name}</h2>
++           <h2 className="text-2xl font-bold tracking-tight">Partituras de {profileUser.name || "Músico Anónimo"}</h2>
+         </div>
+ 
+         {/* Lista de obras del usuario */}
+@@ -111,7 +111,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
+                <p className="text-lg font-bold">Este perfil aún no ha compartido obras abiertamente.</p>
+             </div>
+           ) : (
+-            (publicSongs as any[]).map((song) => (
++            publicSongs.map((song) => (
+                <Link href={`/editor?id=${song.id}`} key={song.id} className="group">
+                  <div className="bg-white dark:bg-zinc-900 border border-border rounded-2xl p-6 h-48 flex flex-col justify-between hover:border-primary hover:shadow-lg transition-all duration-300 relative overflow-hidden">
+                    
+diff --git a/build-log.txt b/build-log.txt
+index 8eca131..4dc47f5 100644
+--- a/build-log.txt
++++ b/build-log.txt
+@@ -1,25 +1,11 @@
+-ÔÜá Warning: Next.js inferred your workspace root, but it may not be correct.
+- We detected multiple lockfiles and selected the directory of C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\pnpm-lock.yaml as the root directory.
+- To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+-   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+- Detected additional lockfiles: 
+-   * C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\pnpm-lock.yaml
+ 
+-Ôû▓ Next.js 16.1.6 (Turbopack)
+-- Environments: .env
++> chord-editor-pro@0.1.0 build C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro
++> prisma generate && next build
+ 
+-ÔÜá The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+-  Creating an optimized production build ...
+-Ô£ô Compiled successfully in 4.6s
+-  Running TypeScript ...
+-Failed to compile.
++Environment variables loaded from .env
++Prisma schema loaded from prisma\schema.prisma
++Error: 
++EPERM: operation not permitted, rename 'C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\node_modules\.pnpm\@prisma+client@6.4.1_prisma_e697c467828edf08e3025d15c7caddbc\node_modules\.prisma\client\query_engine-windows.dll.node.tmp23768' -> 'C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\node_modules\.pnpm\@prisma+client@6.4.1_prisma_e697c467828edf08e3025d15c7caddbc\node_modules\.prisma\client\query_engine-windows.dll.node'
+ 
+-./app/config/getSyllableById.ts:1:37
+-Type error: Cannot find module '../config.js' or its corresponding type declarations.
+ 
+-> 1 | import type { Song, Syllable } from "../config.js";
+-    |                                     ^
+-  2 |
+-  3 | export function getSyllableById(song: Song, targetId: string): Syllable | null {
+-  4 |     for (const section of song.sections) {
+-Next.js build worker exited with code: 1 and signal: null
++ÔÇëELIFECYCLEÔÇë Command failed with exit code 1.
+diff --git a/dev-log.txt b/dev-log.txt
+new file mode 100644
+index 0000000..3920abf
+--- /dev/null
++++ b/dev-log.txt
+@@ -0,0 +1,15 @@
++
++> chord-editor-pro@0.1.0 dev C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro
++> next dev
++
++ÔÜá Port 3000 is in use by process 20820, using available port 3001 instead.
++Ôû▓ Next.js 16.1.6 (Turbopack)
++- Local:         http://localhost:3001
++- Network:       http://172.17.21.85:3001
++- Environments: .env
++
++Ô£ô Starting...
++Ô¿» Unable to acquire lock at C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\.next\dev\lock, is another instance of next dev running?
++  Suggestion: If you intended to restart next dev, terminate the other process, and then try again.
++[?25h
++ÔÇëELIFECYCLEÔÇë Command failed with exit code 1.
+diff --git a/fix-prisma-any.js b/fix-prisma-any.js
+new file mode 100644
+index 0000000..5165e13
+--- /dev/null
++++ b/fix-prisma-any.js
+@@ -0,0 +1,29 @@
++const fs = require('fs');
++const path = require('path');
++
++function walkDir(dir) {
++  let results = [];
++  const list = fs.readdirSync(dir);
++  list.forEach(file => {
++    file = path.join(dir, file);
++    const stat = fs.statSync(file);
++    if (stat && stat.isDirectory()) {
++      results = results.concat(walkDir(file));
++    } else if (file.endsWith('.ts') || file.endsWith('.tsx')) {
++      results.push(file);
++    }
++  });
++  return results;
++}
++
++const files = walkDir('app');
++
++files.forEach(f => {
++  let content = fs.readFileSync(f, 'utf8');
++
++  if (content.includes('(prisma as any)')) {
++    content = content.replace(/\(prisma as any\)/g, 'db');
++    fs.writeFileSync(f, content);
++    console.log('Fixed', f);
++  }
++});
+diff --git a/fix-prisma.js b/fix-prisma.js
+new file mode 100644
+index 0000000..733bd3c
+--- /dev/null
++++ b/fix-prisma.js
+@@ -0,0 +1,46 @@
++const fs = require('fs');
++const files = [
++  'app/u/[id]/page.tsx',
++  'app/dashboard/marketplace/page.tsx',
++  'app/dashboard/page.tsx',
++  'app/community/page.tsx',
++  'app/api/notifications/route.ts',
++  'app/api/users/[id]/follow/route.ts',
++  'app/api/songs/[id]/visibility/route.ts',
++  'app/api/songs/route.ts',
++  'app/api/songs/[id]/rate/route.ts',
++  'app/api/marketplace/connect/route.ts',
++  'app/api/marketplace/purchase/route.ts'
++];
++
++files.forEach(f => {
++  let content = fs.readFileSync(f, 'utf8');
++
++  // Replace usage
++  content = content.replace(/const prisma = new PrismaClient\(\);/g, 'const prisma = db;');
++
++  // Handle single and double quotes
++  let imported = false;
++  if (/import\s*\{\s*PrismaClient\s*\}\s*from\s*['"]@prisma\/client['"];?/.test(content)) {
++    content = content.replace(/import\s*\{\s*PrismaClient\s*\}\s*from\s*['"]@prisma\/client['"];?/, 'import { db } from "@/lib/db";');
++    imported = true;
++  }
++  else if (/import\s*\{[^}]*PrismaClient[^}]*\}\s*from\s*['"]@prisma\/client['"];?/.test(content)) {
++    content = content.replace(/import\s*\{([^}]*)PrismaClient([^}]*)\}\s*from\s*['"]@prisma\/client['"];?/, (match, p1, p2) => {
++      const rest = [p1.trim(), p2.trim()].filter(Boolean).join(', ').replace(/,\s*,/g, ',');
++      if (rest) {
++        return `import { db } from "@/lib/db";\nimport { ${rest} } from '@prisma/client';`;
++      }
++      return `import { db } from "@/lib/db";`;
++    });
++    imported = true;
++  }
++
++  // If we already replaced it to db, but db isn't imported
++  if (!content.includes('import { db }') && content.includes('const prisma = db;')) {
++    content = 'import { db } from "@/lib/db";\n' + content;
++  }
++
++  fs.writeFileSync(f, content);
++  console.log('Fixed', f);
++});
+diff --git a/fix-song-any.js b/fix-song-any.js
+new file mode 100644
+index 0000000..f56ba9f
+--- /dev/null
++++ b/fix-song-any.js
+@@ -0,0 +1,14 @@
++const fs = require('fs');
++const files = [
++  'app/editor/page.tsx'
++];
++
++files.forEach(f => {
++  let content = fs.readFileSync(f, 'utf8');
++
++  content = content.replace(/\(song as any\)/g, 'song');
++  content = content.replace(/\(s as any\)/g, 's');
++
++  fs.writeFileSync(f, content);
++  console.log('Fixed', f);
++});
+diff --git a/lib/db.ts b/lib/db.ts
+new file mode 100644
+index 0000000..cfbfe48
+--- /dev/null
++++ b/lib/db.ts
+@@ -0,0 +1,15 @@
++import { PrismaClient } from '@prisma/client';
++
++const prismaClientSingleton = () => {
++  return new PrismaClient();
++};
++
++type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>;
++
++const globalForPrisma = globalThis as unknown as {
++  prisma: PrismaClientSingleton | undefined;
++};
++
++export const db = globalForPrisma.prisma ?? prismaClientSingleton();
++
++if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db;
+diff --git a/middleware.ts b/middleware.ts
+index aab94df..0af8654 100644
+--- a/middleware.ts
++++ b/middleware.ts
+@@ -5,7 +5,9 @@ const isProtectedRoute = createRouteMatcher([
+ ]);
+ 
+ export default clerkMiddleware(async (auth, req) => {
+-  if (isProtectedRoute(req)) await auth.protect();
++  if (isProtectedRoute(req)) {
++    await auth.protect();
++  }
+ });
+ 
+ export const config = {
+diff --git a/package.json b/package.json
+index bebf0ee..94fe199 100644
+--- a/package.json
++++ b/package.json
+@@ -35,7 +35,7 @@
+     "three": "^0.183.2"
+   },
+   "devDependencies": {
+-    "@tailwindcss/postcss": "^4",
++    "@tailwindcss/postcss": "4",
+     "@types/file-saver": "^2.0.7",
+     "@types/node": "^20",
+     "@types/react": "^19",
+@@ -44,7 +44,7 @@
+     "eslint": "^9",
+     "eslint-config-next": "16.1.6",
+     "prisma": "^6.4.1",
+-    "tailwindcss": "^4",
++    "tailwindcss": "4",
+     "typescript": "^5"
+   },
+   "pnpm": {
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+index a50d8ca..39f2b06 100644
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -79,7 +79,7 @@ importers:
+         version: 0.183.2
+     devDependencies:
+       '@tailwindcss/postcss':
+-        specifier: ^4
++        specifier: '4'
+         version: 4.2.1
+       '@types/file-saver':
+         specifier: ^2.0.7
+@@ -106,7 +106,7 @@ importers:
+         specifier: ^6.4.1
+         version: 6.4.1(typescript@5.9.3)
+       tailwindcss:
+-        specifier: ^4
++        specifier: '4'
+         version: 4.2.1
+       typescript:
+         specifier: ^5
+diff --git a/ts-error.txt b/ts-error.txt
+index 3d24c1a..40c69e5 100644
+--- a/ts-error.txt
++++ b/ts-error.txt
+@@ -1,3 +1,11 @@
+-app/config/getSyllableById.ts(1,37): error TS2307: Cannot find module '../config.js' or its corresponding type declarations.
+-app/config/moveChord.ts(1,27): error TS2307: Cannot find module '../config.js' or its corresponding type declarations.
+-app/config/moveChord.ts(2,37): error TS2307: Cannot find module '../updateSyllableChord.js' or its corresponding type declarations.
++app/api/marketplace/connect/route.ts(6,16): error TS2304: Cannot find name 'db'.
++app/api/marketplace/purchase/route.ts(6,16): error TS2304: Cannot find name 'db'.
++app/api/notifications/route.ts(5,16): error TS2304: Cannot find name 'db'.
++app/api/songs/[id]/rate/route.ts(5,16): error TS2304: Cannot find name 'db'.
++app/api/songs/[id]/visibility/route.ts(5,16): error TS2304: Cannot find name 'db'.
++app/api/songs/route.ts(5,16): error TS2304: Cannot find name 'db'.
++app/api/users/[id]/follow/route.ts(5,16): error TS2304: Cannot find name 'db'.
++app/community/page.tsx(13,16): error TS2304: Cannot find name 'db'.
++app/dashboard/marketplace/page.tsx(11,16): error TS2304: Cannot find name 'db'.
++app/dashboard/page.tsx(12,16): error TS2304: Cannot find name 'db'.
++app/u/[id]/page.tsx(13,16): error TS2304: Cannot find name 'db'.
+diff --git a/ts-error2.txt b/ts-error2.txt
+new file mode 100644
+index 0000000..76d4a8b
+--- /dev/null
++++ b/ts-error2.txt
+@@ -0,0 +1 @@
++app/api/songs/route.ts(4,10): error TS1003: Identifier expected.
+diff --git a/ts-error3.txt b/ts-error3.txt
+new file mode 100644
+index 0000000..5a0a623
+--- /dev/null
++++ b/ts-error3.txt
+@@ -0,0 +1,4 @@
++app/editor/page.tsx(1344,81): error TS2532: Object is possibly 'undefined'.
++app/editor/page.tsx(1344,147): error TS18048: 'song.ratings.length' is possibly 'undefined'.
++app/editor/page.tsx(1355,81): error TS2532: Object is possibly 'undefined'.
++app/editor/page.tsx(1355,147): error TS18048: 'song.ratings.length' is possibly 'undefined'.

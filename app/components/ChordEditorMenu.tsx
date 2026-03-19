@@ -10,7 +10,7 @@ interface ChordEditorMenuProps {
 }
 
 const ROOT_NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-const VARIATIONS = ["", "m", "maj7", "m7", "sus4", "sus2", "dim", "aug", "m7b5", "dim7", "add9", "m9", "maj9", "9", "11", "13", "#5"];
+const VARIATIONS = ["", "m", "maj7", "m7", "7", "sus4", "sus2", "dim", "aug", "m7b5", "dim7", "add9", "m9", "maj9", "9", "11", "13", "#5"];
 
 export default function ChordEditorMenu({
   initialChord,

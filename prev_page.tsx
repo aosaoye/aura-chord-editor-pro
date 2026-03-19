@@ -6,12 +6,10 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { toPng } from "html-to-image";
 import SyllableComponent from "../components/SyllableComponent";
 import MiniPiano2D from '../components/MiniPiano2D';
-import MiniGuitar2D from '../components/MiniGuitar2D';
-import LiveGuitarFretboard from '../components/LiveGuitarFretboard';
 import { Song, Chord, Word } from "../config/config";
 import { parseTextToSong } from "../config/parseTextToSong";
 import { jsPDF } from "jspdf";
-import { transposeSong, transposeChord } from "../helpers/transpose";
+import { transposeSong } from "../helpers/transpose";
 import { NotationType, formatChordText } from "../helpers/chordFormatter";
 import { paginateSong } from "../helpers/pagination";
 import { useGlobalSettings } from "../context/SettingsContext";
@@ -22,16 +20,16 @@ import PurchaseButton from "../components/PurchaseButton";
 import StarRatingInteractive from "../components/StarRatingInteractive";
 import GsapWrapper from "../components/GsapWrapper";
 import dynamic from 'next/dynamic';
-import ExportModal from "../components/ExportModal";
-import EditorSettingsSidebar from "../components/EditorSettingsSidebar";
-import { useAutosaveSong } from "../hooks/useAutosaveSong";
-import { offlineStorage } from "../utils/offlineStorage";
 
+// En lugar de import Piano3D from '../components/Piano3D', haz esto:
 const Piano3D = dynamic(() => import('../components/Piano3D'), {
-  ssr: false, 
+  ssr: false, // Fundamental para librerías 3D (Three.js) que dependen de 'window'
   loading: () => <div className="h-64 w-full bg-gray-100 animate-pulse rounded-xl flex items-center justify-center text-gray-400">Cargando motor 3D...</div>
 });
 const GuitarTuner = dynamic(() => import('../components/GuitarTuner'), { ssr: false });
+import ExportModal from "../components/ExportModal";
+import { useAutosaveSong } from "../hooks/useAutosaveSong";
+import { offlineStorage } from "../utils/offlineStorage";
 
 export default function SongEditor() {
   const [song, setSong] = useState<Song | null>(null);
@@ -100,7 +98,7 @@ export default function SongEditor() {
   const hasMultipleSongs = Array.isArray(song?.sections) && song.sections.filter(s => s.title && /^\d+\.\s/.test(s.title)).length > 1;
   const activeColumns = editorColumns > 0 ? editorColumns : (song?.layout?.columns || (hasMultipleSongs ? 2 : 1));
   
-  const layout = {
+  const layout = song?.layout || {
     columns: activeColumns as 1|2|3|4,
     baseFontSize: fontSize.includes('2xl') ? 24 : fontSize.includes('xl') ? 20 : fontSize.includes('sm') ? 14 : 16,
     chordFontSize: 14,
@@ -108,10 +106,7 @@ export default function SongEditor() {
     fontFamily: (fontFamily.includes('serif') ? 'serif' : fontFamily.includes('mono') ? 'mono' : 'sans') as 'sans' | 'serif' | 'mono',
     alignment: alignment || 'justify-start',
     notation: notation || 'english',
-    showChords: true,
-    capo: 0,
-    instrument: 'piano' as 'piano' | 'guitar',
-    ...(song?.layout || {})
+    showChords: true
   };
 
   const updateLayout = useCallback((updates: Partial<typeof layout>) => {
@@ -119,41 +114,7 @@ export default function SongEditor() {
     setSong(prev => prev ? { ...prev, layout: { ...layout, ...updates } } as any : prev);
   }, [layout, song, setSong]);
 
-  const handleGlobalChordChange = useCallback((oldChord: Chord, newChord: Chord | null) => {
-    if (!song) return;
-    setSong(prev => {
-      if (!prev) return prev;
-      const updatedSections = prev.sections.map(sec => ({
-        ...sec,
-        lines: sec.lines.map(line => ({
-          ...line,
-          words: line.words.map(w => ({
-            ...w,
-            syllables: w.syllables.map(s => {
-               if (s.chord && s.chord.rootNote === oldChord.rootNote && (s.chord.variation || "") === (oldChord.variation || "") && (s.chord.bassNote || "") === (oldChord.bassNote || "")) {
-                  return { ...s, chord: newChord ? { ...newChord, id: `chord-${Date.now()}-${Math.random().toString(36).substring(2, 9)}` } : null };
-               }
-               return s;
-            })
-          }))
-        }))
-      }));
-      return { ...prev, sections: updatedSections };
-    });
-  }, [song, setSong]);
-
-  // Cada línea tiene su propia font-size, además de un interlineado adaptable en el gap.
-  // Calculamos la altura real para que pagination reparta equitativamente sin desbordar la página A4.
-  const actualTextHeight = (layout.baseFontSize || 16) * 1.25;
-  const actualGap = Math.max(0.25, (layout.lineHeight || 1.5) - 1) * 16;
-  const textLineHeight = actualTextHeight + actualGap;
-  
-  // Maximum usable height of an A4 container minus headers and footers is roughly 820px.
-  // baseLinesPerColumn asume líneas sin acordes (cost = 1). paginateSong le sumará costo a las líneas con acordes.
-  // Usamos 740 como límite en lugar de 820 para garantizar una zona segura (Safe Zone) de ~80px 
-  // por encima del footer. Así, si el usuario infla el tamaño de fuente y el CSS hace wrap antes que 
-  // las matemáticas, tenemos margen físico de absorción.
-  const baseLinesPerColumn = Math.floor(740 / textLineHeight);
+  const baseLinesPerColumn = Math.floor(800 / ((layout.baseFontSize || 16) * (layout.lineHeight || 2)));
 
   // Hook del Teleprompter
   const { isPlaying, activeLineId, activeChord, togglePlay } = useTeleprompter(song);
@@ -167,10 +128,13 @@ export default function SongEditor() {
   // Escuchar cuando se hace clic en un acorde (manual) para mostrarlo en el 3D
   useEffect(() => {
     const handlePickerOpened = (e: CustomEvent) => {
-      const detailChord = e.detail?.chord;
-      if (detailChord) {
-        setActive3DChord(detailChord);
-      }
+      const sylId = e.detail;
+      let foundChord: Chord | null = null;
+      // Search the entire song for this syllable's chord
+      song?.sections.forEach(s => s.lines.forEach(l => l.words.forEach(w => w.syllables.forEach(syl => {
+        if (syl.id === sylId && syl.chord) foundChord = syl.chord;
+      }))));
+      if (foundChord) setActive3DChord(foundChord);
     };
 
     const handlePianoPlay = (e: CustomEvent) => {
@@ -315,9 +279,13 @@ export default function SongEditor() {
       localStorage.removeItem("chordpro-draft-lyrics");
       localStorage.removeItem("chordpro-draft-title");
 
-      // NOTA SENIOR: Ya no procesamos la canción de forma automática.
-      // El usuario solicitó detenerse obligatoriamente en el "Editor de Letra" (Importador)
-      // para poder separar estrofas de la letra exportada desde Search antes de generar los acordes.
+      // Auto-procesamos la canción
+      setIsAnimating(true);
+      setTimeout(() => {
+        const parsedSong = parseTextToSong(draftLyrics, draftTitle, 120, "4/4");
+        setSong(parsedSong);
+        setIsAnimating(false);
+      }, 500);
     } else {
       // Mecanismo de Salto de Emergencia: Si la página se recargó, recuperar obra en proceso
       const savedDraft = localStorage.getItem("chordpro-draft-song");
@@ -451,17 +419,11 @@ export default function SongEditor() {
       if (index === -1 || index >= currentSong.sections.length - 1) return currentSong;
 
       const newSections = [...currentSong.sections];
-      const currentSection = currentSong.sections[index];
-      const nextSection = currentSong.sections[index + 1];
+      const currentSection = newSections[index];
+      const nextSection = newSections[index + 1];
 
-      // Create a brand new merged section to trigger React re-render properly
-      const mergedSection = {
-        ...currentSection,
-        lines: [...currentSection.lines, ...nextSection.lines],
-      };
-
-      // Replace the current section with the merged one
-      newSections[index] = mergedSection;
+      // Merge lines
+      currentSection.lines = [...currentSection.lines, ...nextSection.lines];
       
       // Remove next section
       newSections.splice(index + 1, 1);
@@ -650,7 +612,7 @@ export default function SongEditor() {
   const handleExportToImage = useCallback(async () => {
     if (!song || !pagesContainerRef.current) return;
 
-    if (song.isPreviewRestriction) {
+    if ((song as any).isPreviewRestriction) {
       showToast("🔒 Debes adquirir esta obra Premium para habilitar la descarga en imagen.");
       return;
     }
@@ -739,7 +701,7 @@ export default function SongEditor() {
   const handleExportToPDF = useCallback(async () => {
     if (!song || !pagesContainerRef.current) return;
 
-    if (song.isPreviewRestriction) {
+    if ((song as any).isPreviewRestriction) {
       showToast("🔒 Debes adquirir esta obra Premium para habilitar la descarga en PDF.");
       return;
     }
@@ -1225,46 +1187,172 @@ export default function SongEditor() {
             </div>
           )}
           {!isPreviewMode && (
-            <EditorSettingsSidebar
-              isReadOnly={isReadOnly}
-              songPrice={songPrice}
-              setSongPrice={setSongPrice}
-              handleTranspose={handleTranspose}
-              show3DPiano={show3DPiano}
-              setShow3DPiano={setShow3DPiano}
-              editorColumns={editorColumns}
-              setEditorColumns={setEditorColumns}
-              layout={layout}
-              updateLayout={updateLayout}
-              songKey={songKey}
-              setSongKey={setSongKey}
-              includeChordsDictionary={includeChordsDictionary}
-              setIncludeChordsDictionary={setIncludeChordsDictionary}
-            />
+            <aside className="w-full lg:w-64 bg-background rounded-xl shadow-lg lg:shadow-xl border border-border p-5 sm:p-6 flex flex-col gap-6 lg:gap-8 static lg:sticky top-36 z-30 shrink-0">
+              <div className="pb-4 border-b border-border">
+                <h3 className="text-xs font-bold tracking-[0.2em] uppercase text-foreground">Sesión Activa</h3>
+                <p className="text-[10px] text-muted-foreground mt-1">Herramientas globales de partitura.</p>
+              </div>
+
+              <div className="flex flex-col gap-6">
+                {!isReadOnly && (
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Precio en Marketplace</label>
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg font-bold">€</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={songPrice > 0 ? songPrice : ""}
+                        placeholder="0"
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9.]/g, '');
+                          if (!val) { setSongPrice(0); return; }
+                          // Limpiar leading zero solo si es numero entero, permitiendo escribir "0.5"
+                          const parsed = val.length > 1 && val.startsWith('0') && !val.startsWith('0.') ? val.substring(1) : val;
+                          setSongPrice(Number(parsed));
+                        }}
+                        className="flex-1 bg-transparent border-b border-gray-200 dark:border-gray-800 py-2 text-sm font-medium outline-none focus:border-primary text-foreground transition-colors"
+                      />
+                    </div>
+                    <p className={`text-[9px] font-bold mt-1 ${songPrice > 0 ? "text-primary" : "text-gray-500 font-light"}`}>
+                      {songPrice > 0 ? `Se publicará como Obra Premium por €${songPrice}.` : "Deja 0 para compartir libremente en la comunidad."}
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Transpositor Inteligente</label>
+                  <div className="flex bg-gray-50 dark:bg-[#1a1a1a] rounded border border-gray-200 dark:border-gray-800 overflow-hidden">
+                    <button onClick={() => handleTranspose(-1)} className="flex-1 py-3 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 border-r border-gray-200 dark:border-gray-800 transition-colors">-1</button>
+                    <button onClick={() => handleTranspose(1)} className="flex-1 py-3 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">+1</button>
+                  </div>
+                  <p className="text-[9px] font-light text-gray-500 mt-1">Sube o baja medio tono todos los acordes al instante.</p>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Visor Inmersivo</label>
+                  <button
+                    onClick={() => setShow3DPiano(!show3DPiano)}
+                    className={`py-3 px-4 rounded-lg flex items-center justify-between transition-colors shadow-sm text-xs font-bold uppercase tracking-widest border ${show3DPiano ? 'bg-primary text-primary-foreground border-transparent' : 'bg-transparent text-foreground border-gray-200 dark:border-gray-800 hover:border-primary/50'}`}
+                  >
+                    <span className="flex items-center gap-3">Mostrar Piano 3D</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${show3DPiano ? 'bg-primary-foreground/20' : 'bg-muted text-muted-foreground'}`}>{show3DPiano ? 'ACTIVO' : 'OFF'}</span>
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Diseño de Página (Columnas)</label>
+                  <div className="flex bg-gray-50 dark:bg-[#1a1a1a] rounded border border-gray-200 dark:border-gray-800 overflow-hidden">
+                    {[0, 1, 2, 3].map((colVal) => (
+                      <button
+                        key={colVal}
+                        onClick={() => {
+                          setEditorColumns(colVal);
+                          updateLayout({ columns: colVal as any });
+                        }}
+                        className={`flex-1 py-3 text-xs font-bold transition-colors border-r last:border-r-0 border-gray-200 dark:border-gray-800
+                        ${(editorColumns === colVal || layout.columns === colVal)
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800'
+                          }`}
+                      >
+                        {colVal === 0 ? 'AUTO' : colVal}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Tipografía y Separación</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-400 mb-1">Letra (px)</span>
+                      <input 
+                        type="number" 
+                        value={layout.baseFontSize || 16}
+                        onChange={(e) => updateLayout({ baseFontSize: Number(e.target.value) || 16 })}
+                        className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded py-2 px-3 text-sm focus:border-primary outline-none transition-colors"
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-400 mb-1">Interlineado</span>
+                      <input 
+                        type="number" 
+                        step="0.1"
+                        value={layout.lineHeight || 2}
+                        onChange={(e) => updateLayout({ lineHeight: Number(e.target.value) || 2 })}
+                        className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded py-2 px-3 text-sm focus:border-primary outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col mt-1">
+                      <span className="text-[10px] text-gray-400 mb-1">Acordes (px)</span>
+                      <input 
+                        type="number" 
+                        value={layout.chordFontSize || 14}
+                        onChange={(e) => updateLayout({ chordFontSize: Number(e.target.value) || 14 })}
+                        className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded py-2 px-3 text-sm focus:border-primary outline-none transition-colors"
+                      />
+                    </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Alineación</label>
+                  <div className="flex bg-gray-50 dark:bg-[#1a1a1a] rounded border border-gray-200 dark:border-gray-800 overflow-hidden">
+                    {[
+                      { id: 'justify-start', icon: 'M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12' },
+                      { id: 'justify-center', icon: 'M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5' },
+                      { id: 'justify-end', icon: 'M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25' }
+                    ].map((align) => (
+                      <button
+                        key={align.id}
+                        onClick={() => updateLayout({ alignment: align.id as any })}
+                        className={`flex-1 py-3 flex justify-center items-center transition-colors border-r last:border-r-0 border-gray-200 dark:border-gray-800
+                        ${layout.alignment === align.id
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800'
+                          }`}
+                      >
+                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d={align.icon} /></svg>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {layout.notation === 'roman' && (
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Tono Base (Romanos)</label>
+                    <select
+                      value={songKey} onChange={(e) => setSongKey(e.target.value)}
+                      className="w-full bg-transparent border-b border-gray-200 dark:border-gray-800 py-2 text-sm text-gray-800 dark:text-white outline-none cursor-pointer"
+                    >
+                      {['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'].map(k => (
+                        <option key={k} value={k}>{k}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-800 flex flex-col gap-4">
+                 <button
+                    onClick={() => updateLayout({ showChords: !layout.showChords })}
+                    className={`py-2 px-4 rounded flex items-center justify-between transition-colors shadow-sm text-[10px] font-bold uppercase tracking-widest border ${!layout.showChords ? 'bg-primary text-primary-foreground border-transparent' : 'bg-transparent text-foreground border-gray-200 dark:border-gray-800 hover:border-primary/50'}`}
+                  >
+                    <span>Ocultar Acordes</span>
+                    <div className={`w-3 h-3 rounded-full ${!layout.showChords ? 'bg-white' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+                  </button>
+                <Link href="/settings" className="text-[10px] font-bold tracking-[0.2em] uppercase text-primary hover:text-black dark:hover:text-white transition-colors flex items-center justify-between group">
+                  Abrir Ajustes Globales
+                  <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                </Link>
+              </div>
+            </aside>
           )}
 
           {/* MOTOR DE PAGINACIÓN A4 Y SLIDER HORIZONTAL */}
           <div
             ref={pagesContainerRef}
-            onDragOver={(e) => {
-              if(!isReadOnly) {
-                e.preventDefault(); // Permite soltar en área vacía
-              }
-            }}
-            onDrop={(e) => {
-              if (isReadOnly || !draggedSectionId) return;
-              e.preventDefault();
-              
-              // Mover estrofa al final del documento
-              const draggedIndex = song!.sections.findIndex(s => s.id === draggedSectionId);
-              if (draggedIndex !== -1 && draggedIndex !== song!.sections.length - 1) {
-                 const newSections = [...song!.sections];
-                 const [removed] = newSections.splice(draggedIndex, 1);
-                 newSections.push(removed);
-                 setSong({...song!, sections: newSections});
-              }
-              setDraggedSectionId(null);
-            }}
             className={
               isPreviewMode
                 ? "flex-1 w-full flex flex-col items-center overflow-y-auto py-12 px-2 sm:px-4 shadow-inner hide-scrollbar bg-muted gap-8 relative"
@@ -1272,31 +1360,20 @@ export default function SongEditor() {
             }
           >
             {/* BANNER DE PREVIEW DE PAGO */}
-            {song.isPreviewRestriction && (
+            {(song as any).isPreviewRestriction && (
               <div className="sticky left-1/2 -ml-[1px] md:absolute md:bottom-24 md:left-1/2 md:-translate-x-1/2 z-50 bg-background/95 backdrop-blur-xl p-8 sm:p-12 rounded-3xl border border-primary/20 shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.4)] text-center max-w-lg w-[90%] mt-8 mb-24 md:mt-0 md:mb-0 flex flex-col items-center animate-in slide-in-from-bottom-12 duration-1000 shrink-0 self-center">
                 <span className="text-4xl mb-4 opacity-80">🔒</span>
                 <h3 className="text-2xl font-black tracking-tight mb-2">Obra Premium</h3>
                 <p className="text-muted-foreground text-sm mb-8 leading-relaxed">El creador ha protegido esta pieza. Adquiere los derechos de transcripción para ver todos los acordes, imprimir PDF y habilitar el Teleprompter.</p>
 
-                <PurchaseButton songId={song.id} price={song.price || 1.00} />
+                <PurchaseButton songId={song.id} price={(song as any).price || 1.00} />
               </div>
             )}
-            
-            {/* 
-              Cálculo definitivo de capacidad. 
-              Altura A4 física: 1123px. 
-              Padding contenedor: 160px (abajó) + 64px (arriba).
-              Header: ~108px. 
-              Límite matemático JS expandido a 820px para asegurar que las columnas aprovechen el máximo real estate físico sin desbordar el footer.
-            */}
-            {song && (() => {
-               const textLineHeight = (layout.baseFontSize || 16) * 1.25 + Math.max(0.25, ((layout.lineHeight || 1.5) - 1)) * 16;
-               const baseLinesPerColumn = Math.floor(820 / textLineHeight);
-               
-               return paginateSong(song, baseLinesPerColumn, activeColumns).map((page, index) => (
-                 <div
-                   key={page.id}
-                className={`a4-page bg-background text-foreground ${activeMarginClass} overflow-hidden relative lg:shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.15)] transition-all duration-500 flex flex-col justify-start w-[794px] min-w-[794px] max-w-[794px] h-[1123px] min-h-[1123px] max-h-[1123px] ring-0 lg:ring-1 lg:ring-border origin-top rounded-xl lg:rounded-none border border-border lg:border-none
+
+            {song && paginateSong(song, baseLinesPerColumn, activeColumns).map((page, index) => (
+              <div
+                key={page.id}
+                className={`a4-page bg-background text-foreground ${activeMarginClass} overflow-hidden relative lg:shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.15)] transition-all duration-500 flex flex-col justify-start w-full lg:w-[210mm] lg:min-w-[210mm] h-[80vh] lg:h-[297mm] ring-0 lg:ring-1 lg:ring-border origin-top rounded-xl lg:rounded-none border border-border lg:border-none
                 ${isPreviewMode ? 'transform shrink-0 scale-[0.6] sm:scale-75 lg:scale-[0.85] -mt-[40mm] sm:-mt-[20mm] lg:-mt-[10mm]' : 'shrink-0 lg:snap-center'}
               `}
               >
@@ -1341,7 +1418,7 @@ export default function SongEditor() {
                               <input
                                 type="number"
                                 value={song.bpm || 120}
-                                onChange={(e) => setSong({ ...song, bpm: parseInt(e.target.value) || 0 })}
+                                onChange={(e) => setSong({ ...(song as any), bpm: parseInt(e.target.value) || 0 })}
                                 className="bg-transparent text-black dark:text-white font-bold outline-none w-10 text-center border-b border-transparent hover:border-gray-300 focus:border-primary transition-colors cursor-text"
                               />
                               <span className="text-black dark:text-white">BPM</span>
@@ -1355,18 +1432,18 @@ export default function SongEditor() {
                             <div className="flex items-center gap-2 text-yellow-500">
                               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" /></svg>
                               <span className="text-[10px] uppercase tracking-widest font-bold">
-                                {Math.max(song.ratings?.length || 0, 0) > 0 ? ((song.ratings?.reduce((acc: number, r) => acc + r.value, 0) || 0) / (song.ratings?.length || 1)).toFixed(1) : "0.0"} / 5.0
+                                {Math.max((song as any).ratings?.length || 0, 0) > 0 ? (((song as any).ratings?.reduce((acc: number, r: any) => acc + r.value, 0) / (song as any).ratings?.length)).toFixed(1) : "0.0"} / 5.0
                               </span>
                             </div>
                           ) : (
                             <>
                               <StarRatingInteractive
                                 songId={song.id}
-                                myInitialRating={user ? (song.ratings?.find((r) => r.userId === user?.id)?.value || 0) : 0}
+                                myInitialRating={user ? ((song as any).ratings?.find((r: any) => r.userId === user?.id)?.value || 0) : 0}
                                 readOnly={!user}
                               />
                               <span className="text-[10px] uppercase tracking-widest font-bold opacity-30">
-                                {Math.max(song.ratings?.length || 0, 0) > 0 ? ((song.ratings?.reduce((acc: number, r) => acc + r.value, 0) || 0) / (song.ratings?.length || 1)).toFixed(1) : "0.0"} / 5.0
+                                {Math.max((song as any).ratings?.length || 0, 0) > 0 ? (((song as any).ratings?.reduce((acc: number, r: any) => acc + r.value, 0) / (song as any).ratings?.length)).toFixed(1) : "0.0"} / 5.0
                               </span>
                             </>
                           )}
@@ -1382,11 +1459,9 @@ export default function SongEditor() {
                 )}
 
                 {/* CONTENIDO DE LA PÁGINA (COLUMNAS MASONRY DINÁMICAS) */}
-                <div className={`grid grid-cols-1 ${({ 1: 'grid-cols-1', 2: 'grid-cols-2', 3: 'grid-cols-3', 4: 'grid-cols-4' } as Record<number, string>)[activeColumns] || 'grid-cols-1'} gap-8 sm:gap-12 w-full mt-2 flex-grow items-start`}>
-                  {Array.from({ length: activeColumns }).map((_, colIdx) => {
-                    const col = page.columns[colIdx] || [];
-                    return (
-                      <div key={`col-${page.id}-${colIdx}`} className="col-span-1 flex flex-col gap-6 sm:gap-8">
+                <div className={`grid grid-cols-1 ${({ 1: 'md:grid-cols-1', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-4' } as Record<number, string>)[page.columns.length] || 'md:grid-cols-1'} gap-8 sm:gap-12 w-full mt-2 flex-grow items-start mb-[15rem] lg:mb-[20rem]`}>
+                  {page.columns.map((col, colIdx) => (
+                    <div key={`col-${page.id}-${colIdx}`} className="col-span-1 flex flex-col gap-10">
                       {col.map((section, sIdx) => (
                         <div
                           key={`${section.id}-${sIdx}`}
@@ -1400,7 +1475,6 @@ export default function SongEditor() {
                           onDragOver={(e) => {
                             if (isReadOnly || !draggedSectionId || draggedSectionId === section.id) return;
                             e.preventDefault();
-                            e.stopPropagation();
                             e.dataTransfer.dropEffect = 'move';
                             
                             const rect = e.currentTarget.getBoundingClientRect();
@@ -1420,7 +1494,6 @@ export default function SongEditor() {
                           }}
                           onDrop={(e) => {
                             e.preventDefault();
-                            e.stopPropagation();
                             setDragOverSectionId(null);
                             setDragOverDirection(null);
                             if (isReadOnly || !draggedSectionId || draggedSectionId === section.id) return;
@@ -1462,12 +1535,12 @@ export default function SongEditor() {
 
                           {/* Minimalist Section Label con Repetidor Numérico - Sólo si empieza aquí */}
                           {!section.isContinuation && (
-                            <div className="flex items-center gap-2 sm:gap-4 group/secHeader w-full flex-nowrap">
-                              <span className="text-[10px] font-bold tracking-[0.4em] text-gray-400 uppercase flex items-center gap-2 shrink-0">
+                            <div className="flex items-center gap-6 group/secHeader w-full">
+                              <span className="text-[10px] font-bold tracking-[0.4em] text-gray-400 uppercase flex items-center gap-3 shrink-0">
                                 <select
                                   value={section.type}
                                   onChange={(e) => handleSectionTypeChange(section.id, e.target.value)}
-                                  className="bg-transparent border-none appearance-none outline-none font-bold tracking-[0.4em] uppercase text-gray-400 cursor-pointer hover:text-primary transition-colors focus:outline-none focus:ring-0 max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap"
+                                  className="bg-transparent border-none appearance-none outline-none font-bold tracking-[0.4em] uppercase text-gray-400 cursor-pointer hover:text-primary transition-colors focus:outline-none focus:ring-0 max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap"
                                   title="Cambiar tipo de sección"
                                 >
                                   {![
@@ -1489,30 +1562,29 @@ export default function SongEditor() {
                                 </span>
                               </span>
 
-                              <div className="h-px bg-gray-100 dark:bg-gray-800 flex-1 opacity-20 group-hover/secHeader:opacity-100 transition-opacity min-w-[10px]"></div>
+                              <div className="h-px bg-gray-100 dark:bg-gray-800 flex-1 opacity-20 group-hover/secHeader:opacity-100 transition-opacity"></div>
 
-                              <div className="flex items-center gap-1 sm:gap-2 shrink-0 z-20 justify-end transition-all flex-nowrap">
-                                {/* Auto-rellenar acordes lógico */}
-                                {(() => {
-                                  const hasChords = section.lines.some(l => l.words.some(w => w.syllables.some(s => s.chord !== null)));
-                                  const globalSecIdx = song.sections.findIndex(s => s.id === section.id);
-                                  // Only show if this section has NO chords, and is NOT the first section ever
-                                  if (!hasChords && globalSecIdx > 0 && !isReadOnly) {
-                                    return (
-                                      <button
-                                        onClick={() => handleAutoFillChords(section.id)}
-                                        className="opacity-0 group-hover/secHeader:opacity-100 transition-opacity px-3 py-1 bg-primary text-primary-foreground text-[8px] sm:text-[9px] font-bold tracking-widest uppercase rounded flex items-center gap-2 shrink-0 border border-primary  active:scale-95 shadow-lg"
-                                        title="Copiar acordes de la estrofa anterior idéntica"
-                                      >
-                                        <span className="text-[12px] leading-none">✨</span> Auto-Rellenar
-                                      </button>
-                                    );
-                                  }
-                                  return null;
-                                })()}
+                              {/* Auto-rellenar acordes lógico */}
+                              {(() => {
+                                const hasChords = section.lines.some(l => l.words.some(w => w.syllables.some(s => s.chord !== null)));
+                                const globalSecIdx = song.sections.findIndex(s => s.id === section.id);
+                                // Only show if this section has NO chords, and is NOT the first section ever
+                                if (!hasChords && globalSecIdx > 0 && !isReadOnly) {
+                                  return (
+                                    <button
+                                      onClick={() => handleAutoFillChords(section.id)}
+                                      className="opacity-0 group-hover/secHeader:opacity-100 transition-opacity px-3 py-1 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground text-[8px] sm:text-[9px] font-bold tracking-widest uppercase rounded flex items-center gap-2 shrink-0 border border-primary/20 hover:border-primary active:scale-95"
+                                      title="Copiar acordes de la estrofa anterior idéntica"
+                                    >
+                                      <span className="text-[12px] leading-none">✨</span> Auto-Completar Acordes
+                                    </button>
+                                  );
+                                }
+                                return null;
+                              })()}
 
-                                {!isReadOnly && (
-                                  <div className="flex items-center gap-1 opacity-0 group-hover/secHeader:opacity-100 transition-opacity bg-background/80 rounded px-1">
+                              {!isReadOnly && (
+                                <div className="flex items-center gap-1 opacity-0 group-hover/secHeader:opacity-100 transition-opacity">
                                   <button
                                     onClick={() => handleMergeWithNext(section.id)}
                                     className="text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 p-1.5 rounded active:scale-95 transition-all text-[8px] sm:text-[9px] font-bold tracking-widest uppercase mr-1"
@@ -1541,10 +1613,9 @@ export default function SongEditor() {
                                 </div>
                               )}
                             </div>
-                            </div>
                           )}
 
-                          <div className="flex flex-col mt-1" style={{ gap: `${Math.max(0.25, (layout.lineHeight || 1.5) - 1)}rem` }}>
+                          <div className="flex flex-col gap-3 sm:gap-4 mt-1">
                             {section.lines.map((line) => {
                               const playingStyle = activeLineId === line.id
                                 ? 'opacity-100 scale-[1.02] transform origin-left ml-4 text-primary'
@@ -1556,53 +1627,37 @@ export default function SongEditor() {
                                 <div
                                   key={line.id}
                                   id={line.id}
-                                  className={`flex flex-wrap items-end content-start ${layout.alignment} transition-all duration-700 ease-in-out relative group/line ${playingStyle} font-${layout.fontFamily} shrink-0`}
+                                  className={`flex flex-wrap items-end ${layout.alignment} transition-all duration-700 ease-in-out relative group/line ${playingStyle} font-${layout.fontFamily} shrink-0`}
                                   style={{
                                     '--base-font': `${layout.baseFontSize || 16}px`,
                                     '--chord-font': `${layout.chordFontSize || 14}px`,
-                                    lineHeight: layout.lineHeight || 2.0,
-                                    rowGap: '1.5em'
+                                    lineHeight: layout.lineHeight || 2.2
                                   } as React.CSSProperties}
                                 >
+
                                   {line.words.map((word, wIdx) => (
                                     <div key={word.id} className="flex flex-wrap mr-3 sm:mr-4 group/word">
-                                      {word.syllables.map((syl, i) => {
-                                        return (
-                                          <SyllableComponent
-                                            key={syl.id}
-                                            syllable={syl}
-                                            capo={layout.capo || 0}
-                                            notation={layout.notation}
-                                            songKey={songKey}
-                                            instrument={layout.instrument}
-                                            colorTheme={colorTheme}
-                                            nextHasChord={Boolean(
-                                              // Look ahead for next syllable in same word, OR first syllable of next word
-                                              word.syllables[i + 1]?.chord ||
-                                              (!word.syllables[i + 1] && line.words[wIdx + 1]?.syllables[0]?.chord)
-                                            )}
-                                            onChordChange={(syllableId, newChord) => {
-                                              // If capo is active, the chord typed by user is also visually shifted. We must shift it UP back to store in DB!
-                                              const realStoredChord = (newChord && typeof newChord !== 'string') ? transposeChord(newChord, (layout.capo || 0)) : null;
-                                              handleChordChange(syllableId, realStoredChord);
-                                            }}
-                                            onGlobalChordChange={(newChord) => {
-                                              if (syl.chord) {
-                                                const originalStoredOldChord = transposeChord(syl.chord, (layout.capo || 0));
-                                                const realStoredNewChord = (newChord && typeof newChord !== 'string') ? transposeChord(newChord, (layout.capo || 0)) : null;
-                                                handleGlobalChordChange(originalStoredOldChord, realStoredNewChord);
-                                              }
-                                            }}
-                                            readOnly={isReadOnly}
-                                            showChords={layout.showChords}
-                                          />
-                                        )
-                                      })}
+                                      {word.syllables.map((syl, i) => (
+                                        <SyllableComponent
+                                          key={syl.id}
+                                          syllable={syl}
+                                          notation={layout.notation}
+                                          songKey={songKey}
+                                          nextHasChord={Boolean(
+                                            // Look ahead for next syllable in same word, OR first syllable of next word
+                                            word.syllables[i + 1]?.chord ||
+                                            (!word.syllables[i + 1] && line.words[wIdx + 1]?.syllables[0]?.chord)
+                                          )}
+                                          onChordChange={handleChordChange}
+                                          readOnly={isReadOnly}
+                                          showChords={layout.showChords}
+                                        />
+                                      ))}
                                     </div>
                                   ))}
 
                                   {!isReadOnly && (
-                                    <div className="absolute right-0 bg-background/90 pl-3 pr-1 py-1 rounded-l-md items-center gap-2 lg:gap-3 ml-2 opacity-0 group-hover/line:opacity-100 transition-opacity duration-300 self-center flex z-20 shadow-[-10px_0_15px_rgba(var(--background-rgb),1)]">
+                                    <div className="flex items-center gap-2 lg:gap-3 ml-2 opacity-0 group-hover/line:opacity-100 transition-opacity duration-300 shrink-0 self-center">
                                       {/* El botón de separar solo tiene sentido si la línea no es la primera, pero handleSplitSection ya lo bloquea. Lo mostramos siempre para ser intuitivos. */}
                                       <button
                                         onClick={() => handleSplitSection(section.id, line.id)}
@@ -1635,8 +1690,7 @@ export default function SongEditor() {
                         </div>
                       ))}
                     </div>
-                    );
-                  })}
+                  ))}
                 </div>
 
                 {/* FOOTER POR PÁGINA (Anclaje Físico Estricto) */}
@@ -1652,72 +1706,44 @@ export default function SongEditor() {
                   </div>
                 </div>
               </div>
-            ))})()}
+            ))}
 
-            {/* DICCIONARIO DE ACORDES (Páginas dinámicas según cantidad de acordes) */}
-            {includeChordsDictionary && uniqueChords.length > 0 && (() => {
-               // 4 columnas x 4 filas = 16 acordes máximo por página A4 para que no toque el footer jamás
-               const CHORDS_PER_PAGE = 16;
-               const dictPages = [];
-               for (let i = 0; i < uniqueChords.length; i += CHORDS_PER_PAGE) {
-                 dictPages.push(uniqueChords.slice(i, i + CHORDS_PER_PAGE));
-               }
-               
-               const basePagesCount = song ? paginateSong(song, baseLinesPerColumn, activeColumns).length : 1;
-
-               return dictPages.map((chordChunk, chunkIdx) => (
-                <div key={`dict-page-${chunkIdx}`} className={`a4-page relative w-[794px] h-[1123px] shrink-0 shadow-2xl overflow-hidden flex flex-col bg-background ${fontFamily}`} style={{ pageBreakAfter: 'always' }}>
-                  <div className="pt-24 px-16 pb-32 lg:pb-[8rem] flex-1 flex flex-col items-center text-center">
-                    {/* El título solo va en la primera página del diccionario */}
-                    {chunkIdx === 0 && (
-                      <h2 className="text-3xl font-black tracking-[0.2em] text-primary mb-12 uppercase text-center w-full border-b border-border pb-6 drop-shadow-sm">Diccionario de Acordes</h2>
-                    )}
-                    {chunkIdx > 0 && (
-                       <div className="mb-12 w-full pt-10"></div>
-                    )}
-                    <div className="grid grid-cols-4 gap-y-12 gap-x-8 w-full place-items-center">
-                       {chordChunk.map((chord, idx) => {
-                         const formatted = formatChordText(chord, notation, songKey);
-                         const capoAmount = layout.capo || 0;
-                         const guitarChord = capoAmount > 0 ? transposeChord(chord, -capoAmount)! : chord;
-                         return (
-                           <div key={idx} className="flex flex-col items-center gap-5 w-full shrink-0">
-                               <div className="text-[26px] font-black font-sans text-foreground flex items-end tracking-tight flex-col items-center justify-center">
-                                   <div>
-                                     {formatted.root}
-                                     {formatted.variation && <span className="text-[14px] font-bold relative -top-2 ml-0.5">{formatted.variation}</span>}
-                                     {formatted.bass && <span className="text-[16px] ml-1 opacity-70">/{formatted.bass}</span>}
-                                   </div>
-                                   {capoAmount > 0 && layout.instrument === 'guitar' && (
-                                     <span className="text-[12px] font-normal text-gray-500 tracking-normal opacity-80 mt-[-5px]">
-                                       (forma de {formatChordText(guitarChord, notation, songKey).root})
-                                     </span>
-                                   )}
-                               </div>
-                               {layout.instrument === 'guitar' 
-                                 ? <MiniGuitar2D chord={guitarChord} themeColor={colorTheme} />
-                                 : <MiniPiano2D chord={chord} themeColor={colorTheme} className="w-[124px] shadow-sm rounded-sm" />}
-                           </div>
-                         );
-                       })}
-                    </div>
-                  </div>
-                  
-                  {/* FOOTER POR PÁGINA (Anclaje Físico Estricto) */}
-                  <div className="absolute bottom-0 left-0 w-full h-[5rem] lg:h-[6rem] bg-background flex flex-col justify-end px-8 sm:px-12 lg:px-16 pb-6 sm:pb-8 lg:pb-12 text-muted-foreground/60 shrink-0 z-20 pointer-events-none">
-                    <div className="w-auto absolute top-0 left-8 right-8 sm:left-12 sm:right-12 lg:left-16 lg:right-16 h-px bg-border/30"></div>
-                    <div className="flex justify-between items-end w-full">
-                      <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
-                        Aura <span className="font-black inline-block px-1 text-primary pointer-events-auto">Chords</span>
-                      </p>
-                      <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
-                        {new Date().getFullYear()} - PÁG {basePagesCount + chunkIdx + 1}
-                      </p>
-                    </div>
+            {/* DICCIONARIO DE ACORDES (Página final exportable) */}
+            {includeChordsDictionary && uniqueChords.length > 0 && (
+              <div className={`a4-page relative w-[794px] h-[1123px] shrink-0 shadow-2xl overflow-hidden flex flex-col bg-background ${fontFamily}`} style={{ pageBreakAfter: 'always' }}>
+                <div className="pt-24 px-16 pb-12 flex-1 flex flex-col items-center text-center">
+                  <h2 className="text-3xl font-black tracking-[0.2em] text-primary mb-16 uppercase text-center w-full border-b border-border pb-6 drop-shadow-sm">Diccionario de Acordes</h2>
+                  <div className="grid grid-cols-4 gap-y-16 gap-x-8 w-full place-items-center">
+                     {uniqueChords.map((chord, idx) => {
+                       const formatted = formatChordText(chord, notation, songKey);
+                       return (
+                         <div key={idx} className="flex flex-col items-center gap-5 w-full">
+                             <div className="text-[26px] font-black font-sans text-foreground flex items-end tracking-tight">
+                                 {formatted.root}
+                                 {formatted.variation && <span className="text-[14px] font-bold relative -top-2 ml-0.5">{formatted.variation}</span>}
+                                 {formatted.bass && <span className="text-[16px] ml-1 opacity-70">/{formatted.bass}</span>}
+                             </div>
+                             <MiniPiano2D chord={chord} themeColor={colorTheme} className="w-[124px] shadow-sm rounded-sm" />
+                         </div>
+                       );
+                     })}
                   </div>
                 </div>
-               ));
-            })()}
+                
+                {/* FOOTER POR PÁGINA (Anclaje Físico Estricto) */}
+                <div className="absolute bottom-0 left-0 w-full h-[5rem] lg:h-[6rem] bg-background flex flex-col justify-end px-8 sm:px-12 lg:px-16 pb-6 sm:pb-8 lg:pb-12 text-muted-foreground/60 shrink-0 z-20 pointer-events-none">
+                  <div className="w-auto absolute top-0 left-8 right-8 sm:left-12 sm:right-12 lg:left-16 lg:right-16 h-px bg-border/30"></div>
+                  <div className="flex justify-between items-end w-full">
+                    <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
+                      Aura <span className="font-black inline-block px-1 text-primary pointer-events-auto">Chords</span>
+                    </p>
+                    <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
+                      {new Date().getFullYear()} - PÁG {song ? paginateSong(song, baseLinesPerColumn, activeColumns).length + 1 : 2}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* SPACER FANTASMA PARA TELEPROMPTER A NIVEL DE LOS OJOS */}
             {isPlaying && !isReadOnly && (
@@ -1754,18 +1780,11 @@ export default function SongEditor() {
                 </button>
               </div>
 
-              <div className={`flex-1 w-full h-full relative cursor-move ${layout.instrument === 'guitar' ? 'px-4' : ''}`}>
-                {layout.instrument === 'guitar' ? (
-                  <LiveGuitarFretboard
-                    activeChord={active3DChord}
-                    themeColor={colorTheme}
-                  />
-                ) : (
-                  <Piano3D
-                    activeKeys={active3DChord ? getChordKeys(active3DChord.rootNote, active3DChord.variation, active3DChord.bassNote) : []}
-                    themeColor={colorTheme}
-                  />
-                )}
+              <div className="flex-1 w-full h-full relative cursor-move">
+                <Piano3D
+                  activeKeys={active3DChord ? getChordKeys(active3DChord.rootNote, active3DChord.variation, active3DChord.bassNote) : []}
+                  themeColor={colorTheme}
+                />
               </div>
             </div>
           )}

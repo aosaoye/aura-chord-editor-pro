@@ -1,0 +1,11 @@
+
+> chord-editor-pro@0.1.0 build C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro
+> prisma generate && next build
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Error: 
+EPERM: operation not permitted, rename 'C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\node_modules\.pnpm\@prisma+client@6.4.1_prisma_e697c467828edf08e3025d15c7caddbc\node_modules\.prisma\client\query_engine-windows.dll.node.tmp11224' -> 'C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\node_modules\.pnpm\@prisma+client@6.4.1_prisma_e697c467828edf08e3025d15c7caddbc\node_modules\.prisma\client\query_engine-windows.dll.node'
+
+
+ÔÇëELIFECYCLEÔÇë Command failed with exit code 1.

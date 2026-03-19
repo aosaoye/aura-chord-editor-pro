@@ -22,7 +22,7 @@ export default function Navbar({ variant = "default", className = "", centerCont
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  let navClasses = "w-full px-4 sm:px-6 lg:px-16 flex items-center justify-between fixed top-0 z-50 ";
+  let navClasses = "w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between fixed top-0 z-50 ";
 
   switch (variant) {
     case "transparent":
@@ -77,15 +77,17 @@ export default function Navbar({ variant = "default", className = "", centerCont
       )}
 
       {/* Desktop Right Content */}
-      <div className="hidden lg:flex shrink-0 items-center justify-center gap-6">
+      <div className="hidden lg:flex shrink min-w-0 items-center justify-end gap-6 overflow-hidden">
         {rightContent || (
           <>
             <SignedOut>
-              <SignInButton mode="modal">
-                <button className="px-6 py-3 bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase rounded-full hover:scale-105 active:scale-95 transition-all text-center whitespace-nowrap">
-                  Entrar al Estudio
-                </button>
-              </SignInButton>
+              <div className="rounded-full overflow-hidden group">
+                <SignInButton mode="modal">
+                  <button className="px-6 py-3 w-full h-full bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase hover:scale-105 active:scale-95 transition-all text-center whitespace-nowrap outline-none border-none">
+                    Entrar al Estudio
+                  </button>
+                </SignInButton>
+              </div>
             </SignedOut>
             <SignedIn>
               <Link href="/dashboard" className="px-6 py-3 bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase rounded-full hover:bg-primary/80 transition-all text-center whitespace-nowrap">
@@ -131,11 +133,13 @@ export default function Navbar({ variant = "default", className = "", centerCont
           {rightContent ? rightContent : (
             <div className="flex flex-col gap-4 w-full">
               <SignedOut>
-                <SignInButton mode="modal">
-                  <button className="w-full py-4 bg-primary text-primary-foreground text-xs font-bold tracking-[0.2em] uppercase rounded-full hover:scale-105 active:scale-95 transition-all text-center">
-                    Entrar al Estudio
-                  </button>
-                </SignInButton>
+                <div className="rounded-full overflow-hidden w-full">
+                  <SignInButton mode="modal">
+                    <button className="w-full py-4 bg-primary text-primary-foreground text-xs font-bold tracking-[0.2em] uppercase hover:scale-105 active:scale-95 transition-all text-center outline-none border-none">
+                      Entrar al Estudio
+                    </button>
+                  </SignInButton>
+                </div>
               </SignedOut>
               <SignedIn>
                 <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="w-full block py-4 bg-primary text-primary-foreground text-xs font-bold tracking-[0.2em] uppercase rounded-full transition-all text-center hover:bg-primary/80">
