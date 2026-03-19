@@ -16,10 +16,11 @@ export interface SyllableProps {
   notation?: NotationType;
   songKey?: string;
   readOnly?: boolean;
+  showChords?: boolean;
 }
 
 export default function SyllableComponent({ 
-  syllable, onChordChange, nextHasChord = true, notation = 'english', songKey = 'C', readOnly = false 
+  syllable, onChordChange, nextHasChord = true, notation = 'english', songKey = 'C', readOnly = false, showChords = true
 }: SyllableProps) {
   const { id, text, chord } = syllable;
   const [isOpen, setIsOpen] = useState(false);
@@ -73,21 +74,23 @@ export default function SyllableComponent({
         }
         aria-label={`Sílaba: ${text}, Acorde: ${chord ? chord.rootNote + chord.variation : "ninguno"}`}
       >
-        <span className="min-h-[1.5rem] w-full flex items-end justify-start mb-0.5 text-sm font-semibold text-primary tracking-tight select-none opacity-90 group-hover:opacity-100 transition-opacity relative" aria-hidden="true">
-          {chord ? (() => {
-            const formatted = formatChordText(chord, notation, songKey);
-            return (
-              <span className={`group-active:scale-95 transition-transform duration-100 ${nextHasChord ? 'pr-2' : 'absolute left-0 bottom-0 whitespace-nowrap'}`}>
-                <span className="text-[1.05rem]">{formatted.root}</span>
-                {formatted.variation && <span className="text-[10px] ml-[1px] font-normal tracking-wider relative -top-[0.25rem]">{formatted.variation}</span>}
-                {formatted.bass && <span className="text-xs font-normal opacity-80 ml-[0.5px]">/{formatted.bass}</span>}
-              </span>
-            );
-          })() : (
-             <span className={`opacity-0 ${!readOnly ? 'group-hover:opacity-100' : ''} flex items-end justify-center pb-0.5 text-[10px] font-light text-gray-400 transition-opacity absolute left-1/2 -translate-x-1/2 w-full pointer-events-none`}>+</span>
-          )}
-        </span>
-        <span className="text-lg text-foreground font-normal tracking-normal leading-tight">{text}</span>
+        {showChords && (
+          <span className="min-h-[1.5em] w-full flex items-end justify-start mb-0.5 text-[length:var(--chord-font)] font-bold text-primary tracking-tight select-none opacity-90 group-hover:opacity-100 transition-opacity relative" aria-hidden="true">
+            {chord ? (() => {
+              const formatted = formatChordText(chord, notation, songKey);
+              return (
+                <span className={`group-active:scale-95 transition-transform duration-100 ${nextHasChord ? 'pr-2' : 'absolute left-0 bottom-0 whitespace-nowrap'}`}>
+                  <span className="text-[1.05em]">{formatted.root}</span>
+                  {formatted.variation && <span className="text-[0.65em] ml-[1px] font-normal tracking-wider relative -top-[0.25em]">{formatted.variation}</span>}
+                  {formatted.bass && <span className="text-[0.8em] font-normal opacity-80 ml-[0.5px]">/{formatted.bass}</span>}
+                </span>
+              );
+            })() : (
+               <span className={`opacity-0 ${!readOnly ? 'group-hover:opacity-100' : ''} flex items-end justify-center pb-0.5 text-[0.8em] font-light text-gray-400 transition-opacity absolute left-1/2 -translate-x-1/2 w-full pointer-events-none`}>+</span>
+            )}
+          </span>
+        )}
+        <span className="text-[length:var(--base-font)] text-foreground font-normal tracking-normal leading-tight">{text}</span>
       </span>
 
       {/* Floating Portal teletransporta el menú al final del body para evitar problemas de Z-Index */}

@@ -409,6 +409,41 @@ export default function SongEditor() {
     });
   }, []);
 
+  const handleSplitSection = useCallback((sectionId: string, lineId: string) => {
+    setSong((currentSong) => {
+      if (!currentSong) return currentSong;
+      const index = currentSong.sections.findIndex(s => s.id === sectionId);
+      if (index === -1) return currentSong;
+
+      const currentSection = currentSong.sections[index];
+      const lineIndex = currentSection.lines.findIndex(l => l.id === lineId);
+      
+      // If the line is the first one, splitting doesn't make sense 
+      if (lineIndex <= 0) return currentSong;
+
+      const newSections = [...currentSong.sections];
+      
+      // The current section will keep lines before the split
+      const updatedCurrentSection = { 
+        ...currentSection, 
+        lines: currentSection.lines.slice(0, lineIndex) 
+      };
+      
+      // The new section will get lines from the split onwards
+      const newSection = {
+        ...currentSection,
+        id: `sec-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+        title: '', // Typically the new separated part doesn't inherit the explicit title immediately
+        isContinuation: true, // Mark it as a continuation visually
+        lines: currentSection.lines.slice(lineIndex)
+      };
+
+      newSections.splice(index, 1, updatedCurrentSection, newSection);
+      
+      return { ...currentSong, sections: newSections };
+    });
+  }, []);
+
   const handleSectionTypeChange = useCallback((sectionId: string, newType: string) => {
     setSong((currentSong) => {
       if (!currentSong) return currentSong;
@@ -878,13 +913,31 @@ export default function SongEditor() {
   const isReadOnly = song?.userId ? song.userId !== user?.id : false;
 
   const hasMultipleSongs = Array.isArray(song?.sections) && song.sections.filter(s => s.title && /^\d+\.\s/.test(s.title)).length > 1;
-  const activeColumns = editorColumns > 0 ? editorColumns : (hasMultipleSongs ? 2 : 1);
-  const baseLinesPerColumn = fontSize.includes('2xl') ? 9 : fontSize.includes('xl') ? 12 : fontSize.includes('sm') ? 20 : 15;
+  const activeColumns = editorColumns > 0 ? editorColumns : (song?.layout?.columns || (hasMultipleSongs ? 2 : 1));
+  
+  const layout = song?.layout || {
+    columns: activeColumns as 1|2|3|4,
+    baseFontSize: fontSize.includes('2xl') ? 24 : fontSize.includes('xl') ? 20 : fontSize.includes('sm') ? 14 : 16,
+    chordFontSize: 14,
+    lineHeight: lineHeight.includes('loose') ? 2.5 : lineHeight.includes('tight') ? 1.5 : 2,
+    fontFamily: (fontFamily.includes('serif') ? 'serif' : fontFamily.includes('mono') ? 'mono' : 'sans') as 'sans' | 'serif' | 'mono',
+    alignment: alignment || 'justify-start',
+    notation: notation || 'english',
+    showChords: true
+  };
+
+  const updateLayout = useCallback((updates: Partial<typeof layout>) => {
+    if (!song) return;
+    setSong(prev => prev ? { ...prev, layout: { ...layout, ...updates } } as any : prev);
+  }, [layout, song, setSong]);
+
+  // Dynamic pagination calculation depending on precise layout spacing
+  const baseLinesPerColumn = Math.floor(800 / ((layout.baseFontSize || 16) * (layout.lineHeight || 2)));
 
   const marginMap = {
-    'estrecho': 'p-4 sm:p-6 lg:p-8',
-    'normal': 'p-6 sm:p-10 lg:p-16',
-    'amplio': 'p-10 sm:p-14 lg:p-24'
+    'estrecho': 'px-4 pt-4 pb-[8rem] sm:px-6 sm:pt-6 lg:px-8 lg:pt-8 lg:pb-[10rem]',
+    'normal': 'px-6 pt-6 pb-[8rem] sm:px-10 sm:pt-10 lg:px-16 lg:pt-16 lg:pb-[10rem]',
+    'amplio': 'px-10 pt-10 pb-[8rem] sm:px-14 sm:pt-14 lg:px-24 lg:pt-24 lg:pb-[12rem]'
   };
   const activeMarginClass = marginMap[editorMargin];
 
@@ -1180,9 +1233,12 @@ export default function SongEditor() {
                     {[0, 1, 2, 3].map((colVal) => (
                       <button
                         key={colVal}
-                        onClick={() => setEditorColumns(colVal)}
+                        onClick={() => {
+                          setEditorColumns(colVal);
+                          updateLayout({ columns: colVal as any });
+                        }}
                         className={`flex-1 py-3 text-xs font-bold transition-colors border-r last:border-r-0 border-gray-200 dark:border-gray-800
-                        ${editorColumns === colVal
+                        ${(editorColumns === colVal || layout.columns === colVal)
                             ? 'bg-primary text-primary-foreground'
                             : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800'
                           }`}
@@ -1191,34 +1247,66 @@ export default function SongEditor() {
                       </button>
                     ))}
                   </div>
-                  <p className="text-[9px] font-light text-gray-500 mt-1">Ajuste local solo para esta sesión.</p>
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Márgenes de Hoja</label>
+                  <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Tipografía y Separación</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-400 mb-1">Letra (px)</span>
+                      <input 
+                        type="number" 
+                        value={layout.baseFontSize || 16}
+                        onChange={(e) => updateLayout({ baseFontSize: Number(e.target.value) || 16 })}
+                        className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded py-2 px-3 text-sm focus:border-primary outline-none transition-colors"
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-400 mb-1">Interlineado</span>
+                      <input 
+                        type="number" 
+                        step="0.1"
+                        value={layout.lineHeight || 2}
+                        onChange={(e) => updateLayout({ lineHeight: Number(e.target.value) || 2 })}
+                        className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded py-2 px-3 text-sm focus:border-primary outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col mt-1">
+                      <span className="text-[10px] text-gray-400 mb-1">Acordes (px)</span>
+                      <input 
+                        type="number" 
+                        value={layout.chordFontSize || 14}
+                        onChange={(e) => updateLayout({ chordFontSize: Number(e.target.value) || 14 })}
+                        className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded py-2 px-3 text-sm focus:border-primary outline-none transition-colors"
+                      />
+                    </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Alineación</label>
                   <div className="flex bg-gray-50 dark:bg-[#1a1a1a] rounded border border-gray-200 dark:border-gray-800 overflow-hidden">
                     {[
-                      { id: 'estrecho', label: 'Estrecho' },
-                      { id: 'normal', label: 'Normal' },
-                      { id: 'amplio', label: 'Amplio' }
-                    ].map((marg) => (
+                      { id: 'justify-start', icon: 'M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12' },
+                      { id: 'justify-center', icon: 'M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5' },
+                      { id: 'justify-end', icon: 'M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25' }
+                    ].map((align) => (
                       <button
-                        key={marg.id}
-                        onClick={() => setEditorMargin(marg.id as any)}
-                        className={`flex-1 py-3 text-xs font-bold transition-colors border-r last:border-r-0 border-gray-200 dark:border-gray-800
-                        ${editorMargin === marg.id
+                        key={align.id}
+                        onClick={() => updateLayout({ alignment: align.id as any })}
+                        className={`flex-1 py-3 flex justify-center items-center transition-colors border-r last:border-r-0 border-gray-200 dark:border-gray-800
+                        ${layout.alignment === align.id
                             ? 'bg-primary text-primary-foreground'
                             : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800'
                           }`}
                       >
-                        {marg.label}
+                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d={align.icon} /></svg>
                       </button>
                     ))}
                   </div>
-                  <p className="text-[9px] font-light text-gray-500 mt-1">Control de respiración del papel impreso/PDF.</p>
                 </div>
 
-                {notation === 'roman' && (
+                {layout.notation === 'roman' && (
                   <div className="flex flex-col gap-2">
                     <label className="text-[9px] font-bold tracking-[0.2em] text-gray-400 uppercase">Tono Base (Romanos)</label>
                     <select
@@ -1233,9 +1321,16 @@ export default function SongEditor() {
                 )}
               </div>
 
-              <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-800">
+              <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-800 flex flex-col gap-4">
+                 <button
+                    onClick={() => updateLayout({ showChords: !layout.showChords })}
+                    className={`py-2 px-4 rounded flex items-center justify-between transition-colors shadow-sm text-[10px] font-bold uppercase tracking-widest border ${!layout.showChords ? 'bg-primary text-primary-foreground border-transparent' : 'bg-transparent text-foreground border-gray-200 dark:border-gray-800 hover:border-primary/50'}`}
+                  >
+                    <span>Ocultar Acordes</span>
+                    <div className={`w-3 h-3 rounded-full ${!layout.showChords ? 'bg-white' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+                  </button>
                 <Link href="/settings" className="text-[10px] font-bold tracking-[0.2em] uppercase text-primary hover:text-black dark:hover:text-white transition-colors flex items-center justify-between group">
-                  Abrir Preferencias
+                  Abrir Ajustes Globales
                   <span className="transform group-hover:translate-x-1 transition-transform">→</span>
                 </Link>
               </div>
@@ -1273,14 +1368,32 @@ export default function SongEditor() {
                 {index === 0 ? (
                   hasMultipleSongs ? (
                     <div className="mb-6 shrink-0 border-b border-gray-200 dark:border-gray-800 pb-4">
-                      <h1 className={`text-2xl sm:text-3xl font-serif font-black italic tracking-tight ${alignment === 'justify-center' ? 'text-center' : alignment === 'justify-end' ? 'text-right' : 'text-left'}`}>
-                        {song.title}
+                      <h1 className={`text-2xl sm:text-3xl font-serif font-black italic tracking-tight ${layout.alignment}`}>
+                        {!isReadOnly ? (
+                          <input 
+                            value={song.title} 
+                            onChange={(e) => setSong({...song, title: e.target.value} as any)}
+                            className="bg-transparent border-none outline-none w-full"
+                          />
+                        ) : song.title}
                       </h1>
                     </div>
                   ) : (
                     <div className="mb-6 shrink-0">
                       <h1 className="text-3xl sm:text-4xl lg:text-5xl font-light tracking-tight break-words leading-[1.1] mb-4">
-                        {song.title}
+                        {!isReadOnly ? (
+                          <textarea 
+                            value={song.title} 
+                            onChange={(e) => setSong({...song, title: e.target.value} as any)}
+                            className="bg-transparent border-b border-transparent hover:border-gray-200 focus:border-primary outline-none w-full transition-colors resize-none overflow-hidden"
+                            rows={1}
+                            onInput={(e) => {
+                              // Auto-resize
+                              e.currentTarget.style.height = 'auto';
+                              e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
+                            }}
+                          />
+                        ) : song.title}
                       </h1>
                       <div className="flex items-center gap-6 md:gap-8 flex-wrap">
                         <span className="text-[10px] font-bold tracking-[0.4em] text-gray-400 uppercase flex items-center gap-2">
@@ -1501,7 +1614,12 @@ export default function SongEditor() {
                                 <div
                                   key={line.id}
                                   id={line.id}
-                                  className={`flex flex-wrap items-end ${alignment} transition-all duration-700 ease-in-out relative group/line ${playingStyle} ${fontFamily} ${fontSize} ${lineHeight} shrink-0`}
+                                  className={`flex flex-wrap items-end ${layout.alignment} transition-all duration-700 ease-in-out relative group/line ${playingStyle} font-${layout.fontFamily} shrink-0`}
+                                  style={{
+                                    '--base-font': `${layout.baseFontSize || 16}px`,
+                                    '--chord-font': `${layout.chordFontSize || 14}px`,
+                                    lineHeight: layout.lineHeight || 2.2
+                                  } as React.CSSProperties}
                                 >
 
                                   {line.words.map((word, wIdx) => (
@@ -1510,7 +1628,7 @@ export default function SongEditor() {
                                         <SyllableComponent
                                           key={syl.id}
                                           syllable={syl}
-                                          notation={notation}
+                                          notation={layout.notation}
                                           songKey={songKey}
                                           nextHasChord={Boolean(
                                             // Look ahead for next syllable in same word, OR first syllable of next word
@@ -1519,13 +1637,23 @@ export default function SongEditor() {
                                           )}
                                           onChordChange={handleChordChange}
                                           readOnly={isReadOnly}
+                                          showChords={layout.showChords}
                                         />
                                       ))}
                                     </div>
                                   ))}
 
                                   {!isReadOnly && (
-                                    <div className="flex items-center gap-3 ml-2 opacity-0 group-hover/line:opacity-100 transition-opacity duration-300 shrink-0 self-center">
+                                    <div className="flex items-center gap-2 lg:gap-3 ml-2 opacity-0 group-hover/line:opacity-100 transition-opacity duration-300 shrink-0 self-center">
+                                      {/* El botón de separar solo tiene sentido si la línea no es la primera, pero handleSplitSection ya lo bloquea. Lo mostramos siempre para ser intuitivos. */}
+                                      <button
+                                        onClick={() => handleSplitSection(section.id, line.id)}
+                                        className="text-[9px] font-bold text-gray-400 hover:text-red-500 bg-gray-100/50 dark:bg-gray-800/50 hover:bg-red-50 dark:hover:bg-red-950/30 rounded px-2 py-1 tracking-widest active:scale-95 transition-all uppercase whitespace-nowrap"
+                                        title="Separar estrofa a partir de esta línea hacia abajo"
+                                      >
+                                        ↓ Separar
+                                      </button>
+                                      
                                       <button
                                         onClick={() => handleAddTrailingChord(section.id, line.id)}
                                         className="text-[9px] font-bold text-primary-foreground bg-primary border border-transparent rounded px-3 py-1.5 tracking-widest hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all shadow-md uppercase whitespace-nowrap"

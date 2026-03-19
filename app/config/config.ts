@@ -35,10 +35,13 @@ export interface Section {
 
 export interface LayoutSettings {
   columns: 1 | 2 | 3 | 4;
-  baseFontSize: number;
-  chordFontSize: number;
-  lineHeight: number;
+  baseFontSize: number;      // ej: 16 (px)
+  chordFontSize: number;     // ej: 14 (px)
+  lineHeight: number;        // ej: 2.5 (rem/em)
   fontFamily: 'sans' | 'serif' | 'mono';
+  alignment?: 'justify-start' | 'justify-center' | 'justify-end';
+  notation?: 'english' | 'spanish' | 'roman';
+  showChords?: boolean;
 }
 
 export interface Song {
