@@ -1313,7 +1313,7 @@ export default function SongEditor() {
                 )}
 
                 {/* CONTENIDO DE LA PÁGINA (COLUMNAS MASONRY DINÁMICAS) */}
-                <div className={`grid grid-cols-1 ${({ 1: 'md:grid-cols-1', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-4' } as Record<number, string>)[page.columns.length] || 'md:grid-cols-1'} gap-8 sm:gap-12 w-full mt-2 flex-1 items-start mb-20`}>
+                <div className={`grid grid-cols-1 ${({ 1: 'md:grid-cols-1', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-4' } as Record<number, string>)[page.columns.length] || 'md:grid-cols-1'} gap-8 sm:gap-12 w-full mt-2 flex-1 items-start mb-40 lg:mb-48`}>
                   {page.columns.map((col, colIdx) => (
                     <div key={`col-${page.id}-${colIdx}`} className="col-span-1 flex flex-col gap-10">
                       {col.map((section, sIdx) => (
@@ -1525,18 +1525,17 @@ export default function SongEditor() {
                   ))}
                 </div>
 
-                {/* FOOTER POR PÁGINA (Solid Z-20 Blocker with Fade Mask) */}
-                <div className="absolute bottom-0 left-0 w-full h-[5rem] lg:h-[6rem] bg-background z-20 flex justify-between items-end px-8 sm:px-12 lg:px-16 pb-6 sm:pb-8 lg:pb-12 text-muted-foreground/60 shrink-0">
-                  {/* Fade gradient to mask overflowing grid text gracefully */}
-                  <div className="absolute bottom-full left-0 w-full h-[4rem] bg-gradient-to-t from-background to-transparent pointer-events-none"></div>
-
-                  <div className="w-full absolute top-0 left-8 right-8 sm:left-12 sm:right-12 lg:left-16 lg:right-16 h-px bg-border/30"></div>
-                  <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
-                    Aura <span className="font-black inline-block px-1 text-primary">Chords</span>
-                  </p>
-                  <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
-                    {new Date().getFullYear()} - PÁG {index + 1}
-                  </p>
+                {/* FOOTER POR PÁGINA (Flujo seguro en la parte inferior) */}
+                <div className="mt-auto w-full relative h-[5rem] lg:h-[6rem] bg-background flex flex-col justify-end px-8 sm:px-12 lg:px-16 pb-6 sm:pb-8 lg:pb-12 text-muted-foreground/60 shrink-0 break-inside-avoid">
+                  <div className="w-auto absolute top-0 left-8 right-8 sm:left-12 sm:right-12 lg:left-16 lg:right-16 h-px bg-border/30"></div>
+                  <div className="flex justify-between items-end w-full">
+                    <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
+                      Aura <span className="font-black inline-block px-1 text-primary">Chords</span>
+                    </p>
+                    <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
+                      {new Date().getFullYear()} - PÁG {index + 1}
+                    </p>
+                  </div>
                 </div>
               </div>
             ))}
@@ -1563,19 +1562,32 @@ export default function SongEditor() {
                   </div>
                 </div>
                 
-                {/* FOOTER POR PÁGINA (Solid Z-20 Blocker with Fade Mask) */}
-                <div className="absolute bottom-0 left-0 w-full h-[5rem] lg:h-[6rem] bg-background z-20 flex justify-between items-end px-8 sm:px-12 lg:px-16 pb-6 sm:pb-8 lg:pb-12 text-muted-foreground/60 shrink-0">
-                  <div className="absolute bottom-full left-0 w-full h-[4rem] bg-gradient-to-t from-background to-transparent pointer-events-none"></div>
-                  <div className="w-full absolute top-0 left-8 right-8 sm:left-12 sm:right-12 lg:left-16 lg:right-16 h-px bg-border/30"></div>
-                  <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
-                    Aura <span className="font-black inline-block px-1 text-primary">Chords</span>
-                  </p>
-                  <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
-                    {new Date().getFullYear()} - PÁG {song ? paginateSong(song, baseLinesPerColumn, activeColumns).length + 1 : 2}
-                  </p>
+                {/* FOOTER POR PÁGINA (Flujo seguro en la parte inferior) */}
+                <div className="mt-auto w-full relative h-[5rem] lg:h-[6rem] bg-background flex flex-col justify-end px-8 sm:px-12 lg:px-16 pb-6 sm:pb-8 lg:pb-12 text-muted-foreground/60 shrink-0 break-inside-avoid">
+                  <div className="w-auto absolute top-0 left-8 right-8 sm:left-12 sm:right-12 lg:left-16 lg:right-16 h-px bg-border/30"></div>
+                  <div className="flex justify-between items-end w-full">
+                    <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
+                      Aura <span className="font-black inline-block px-1 text-primary">Chords</span>
+                    </p>
+                    <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
+                      {new Date().getFullYear()} - PÁG {song ? paginateSong(song, baseLinesPerColumn, activeColumns).length + 1 : 2}
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
+
+            {/* SPACER FANTASMA PARA TELEPROMPTER A NIVEL DE LOS OJOS */}
+            {isPlaying && !isReadOnly && (
+              <div className="h-[50vh] w-full shrink-0 flex items-center justify-center opacity-30 mt-10 animate-in fade-in duration-1000">
+                <div className="w-full max-w-sm border-t border-dashed border-border relative">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-background px-4 text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
+                    Fin de la Pista
+                  </span>
+                </div>
+              </div>
+            )}
+            
           </div>
         </div>
         {/* HUD PIANO 3D FLOTANTE */}
