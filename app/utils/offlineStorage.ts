@@ -43,8 +43,8 @@ export const offlineStorage = {
       const allKeys = await keys();
       const songKeys = allKeys.filter(key => typeof key === 'string' && key.startsWith(DB_PREFIX));
       const songs = await Promise.all(songKeys.map(key => get(key)));
-      return (songs.filter(Boolean) as Song[]).sort((a,b) => 
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      return (songs.filter(Boolean) as Song[]).sort((a: any, b: any) => 
+        new Date(b.updatedAt || b.metadata?.offlineSavedAt || 0).getTime() - new Date(a.updatedAt || a.metadata?.offlineSavedAt || 0).getTime()
       );
   }
 };

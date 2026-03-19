@@ -1313,7 +1313,7 @@ export default function SongEditor() {
                 )}
 
                 {/* CONTENIDO DE LA PÁGINA (COLUMNAS MASONRY DINÁMICAS) */}
-                <div className={`grid grid-cols-1 ${({ 1: 'md:grid-cols-1', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-4' } as Record<number, string>)[page.columns.length] || 'md:grid-cols-1'} gap-8 sm:gap-12 w-full mt-2 flex-1 items-start mb-40 lg:mb-48`}>
+                <div className={`grid grid-cols-1 ${({ 1: 'md:grid-cols-1', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-4' } as Record<number, string>)[page.columns.length] || 'md:grid-cols-1'} gap-8 sm:gap-12 w-full mt-2 flex-grow items-start mb-[15rem] lg:mb-[20rem]`}>
                   {page.columns.map((col, colIdx) => (
                     <div key={`col-${page.id}-${colIdx}`} className="col-span-1 flex flex-col gap-10">
                       {col.map((section, sIdx) => (
@@ -1525,12 +1525,12 @@ export default function SongEditor() {
                   ))}
                 </div>
 
-                {/* FOOTER POR PÁGINA (Flujo seguro en la parte inferior) */}
-                <div className="mt-auto w-full relative h-[5rem] lg:h-[6rem] bg-background flex flex-col justify-end px-8 sm:px-12 lg:px-16 pb-6 sm:pb-8 lg:pb-12 text-muted-foreground/60 shrink-0 break-inside-avoid">
+                {/* FOOTER POR PÁGINA (Anclaje Físico Estricto) */}
+                <div className="absolute bottom-0 left-0 w-full h-[5rem] lg:h-[6rem] bg-background flex flex-col justify-end px-8 sm:px-12 lg:px-16 pb-6 sm:pb-8 lg:pb-12 text-muted-foreground/60 shrink-0 z-20 pointer-events-none">
                   <div className="w-auto absolute top-0 left-8 right-8 sm:left-12 sm:right-12 lg:left-16 lg:right-16 h-px bg-border/30"></div>
                   <div className="flex justify-between items-end w-full">
                     <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
-                      Aura <span className="font-black inline-block px-1 text-primary">Chords</span>
+                      Aura <span className="font-black inline-block px-1 text-primary pointer-events-auto">Chords</span>
                     </p>
                     <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
                       {new Date().getFullYear()} - PÁG {index + 1}
@@ -1562,12 +1562,12 @@ export default function SongEditor() {
                   </div>
                 </div>
                 
-                {/* FOOTER POR PÁGINA (Flujo seguro en la parte inferior) */}
-                <div className="mt-auto w-full relative h-[5rem] lg:h-[6rem] bg-background flex flex-col justify-end px-8 sm:px-12 lg:px-16 pb-6 sm:pb-8 lg:pb-12 text-muted-foreground/60 shrink-0 break-inside-avoid">
+                {/* FOOTER POR PÁGINA (Anclaje Físico Estricto) */}
+                <div className="absolute bottom-0 left-0 w-full h-[5rem] lg:h-[6rem] bg-background flex flex-col justify-end px-8 sm:px-12 lg:px-16 pb-6 sm:pb-8 lg:pb-12 text-muted-foreground/60 shrink-0 z-20 pointer-events-none">
                   <div className="w-auto absolute top-0 left-8 right-8 sm:left-12 sm:right-12 lg:left-16 lg:right-16 h-px bg-border/30"></div>
                   <div className="flex justify-between items-end w-full">
                     <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
-                      Aura <span className="font-black inline-block px-1 text-primary">Chords</span>
+                      Aura <span className="font-black inline-block px-1 text-primary pointer-events-auto">Chords</span>
                     </p>
                     <p className="text-[8px] font-bold tracking-[0.2em] uppercase">
                       {new Date().getFullYear()} - PÁG {song ? paginateSong(song, baseLinesPerColumn, activeColumns).length + 1 : 2}
