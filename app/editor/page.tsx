@@ -840,7 +840,7 @@ export default function SongEditor() {
   }, [song, songPrice]);
 
   const mobileBlocker = (
-    <div className="flex lg:hidden min-h-screen bg-background text-foreground flex-col items-center justify-center p-8 text-center pb-32 anim-in fade-in duration-500">
+    <div className="flex md:hidden min-h-screen bg-background text-foreground flex-col items-center justify-center p-8 text-center pb-32 anim-in fade-in duration-500">
       <span className="text-7xl mb-10 drop-shadow-2xl">📱</span>
       <h1 className="text-3xl font-black tracking-tight mb-6 mt-4">Estudio no disponible</h1>
       <p className="text-muted-foreground text-base max-w-xl mx-auto leading-relaxed border-t border-border pt-6">
@@ -983,7 +983,7 @@ export default function SongEditor() {
   return (
     <>
       {!isReadOnly && mobileBlocker}
-      <div className={`${!isReadOnly ? 'hidden lg:flex' : 'flex'} w-full min-h-screen flex-col bg-background text-foreground transition-colors duration-500 overflow-hidden font-sans selection:bg-primary selection:text-white ${colorTheme} ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
+      <div className={`${!isReadOnly ? 'hidden md:flex' : 'flex'} w-full min-h-screen flex-col bg-background text-foreground transition-colors duration-500 overflow-hidden font-sans selection:bg-primary selection:text-white ${colorTheme} ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
 
         {/* Top Fixed Navbar */}
         <Navbar
