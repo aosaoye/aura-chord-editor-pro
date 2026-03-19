@@ -13,8 +13,8 @@ const THEME_COLORS: Record<string, string> = {
 };
 
 export default function MiniPiano2D({ chord, themeColor = "theme-purple", className = "" }: { chord: Chord, themeColor?: string, className?: string }) {
-  // 14 teclas blancas = 2 octavas.
-  const numOctaves = 2;
+  // 21 teclas blancas = 3 octavas.
+  const numOctaves = 3;
   const keys = [];
   
   const OCTAVE_PATTERN = [
@@ -46,14 +46,9 @@ export default function MiniPiano2D({ chord, themeColor = "theme-purple", classN
   // Active keys start from C2 according to getChordKeys base calculation
   const activeKeysRaw = getChordKeys(chord.rootNote, chord.variation, chord.bassNote);
   
-  // Normalize exactly to our 2 octaves so it matches the 0-23 index.
-  const normalizedActiveKeys = activeKeysRaw.map(k => {
-     let shifted = k;
-     // Wrap cleanly inside the 2 octaves drawing block
-     while(shifted < 0) shifted += 12;
-     while(shifted >= 24) shifted -= 12; 
-     return shifted;
-  });
+  // No longer squish individual notes (wrapping distorts the voicing/inversion). 
+  // It fits within 3 octaves natively.
+  const normalizedActiveKeys = activeKeysRaw;
 
   const totalWhiteKeys = numOctaves * 7;
   const hexColor = THEME_COLORS[themeColor] || "#7c3aed";

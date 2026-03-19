@@ -12,7 +12,9 @@ export function useAutosaveSong(song: Song | null, isPlaying: boolean, onSaveSuc
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const save = useCallback(async () => {
-    if (!song || !song.id) return;
+    // Si la gema aún no ha sido registrada formalmente en DB (id local empiexza por 'song-' o temp), 
+    // no hacemos autosave para no enviar un montón de PATCH 404 al servidor antes de hacer el primer POST.
+    if (!song || !song.id || String(song.id).startsWith('song-') || String(song.id).length < 15) return; 
     
     setStatus('saving');
     try {
@@ -21,13 +23,20 @@ export function useAutosaveSong(song: Song | null, isPlaying: boolean, onSaveSuc
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
             id: song.id, 
-            title: song.title, // Add title and bpm just in case
+            title: song.title,
             bpm: song.bpm,
             parsedData: song
         }),
       });
 
-      if (!response.ok) throw new Error("Error en servidor");
+      if (!response.ok) {
+         if (response.status === 404) {
+             // Es una canción nueva local, detenemos el autosave silenciosamente.
+             setStatus('dirty'); 
+             return;
+         }
+         throw new Error("Error en servidor");
+      }
 
       setStatus('saved');
       setLastSaved(new Date());
@@ -66,7 +75,7 @@ export function useAutosaveSong(song: Song | null, isPlaying: boolean, onSaveSuc
 
     debounceTimerRef.current = setTimeout(() => {
       save();
-    }, 3000);
+    }, 5000);
 
     return () => {
       if (debounceTimerRef.current) {

@@ -1,25 +1,11 @@
-ÔÜá Warning: Next.js inferred your workspace root, but it may not be correct.
- We detected multiple lockfiles and selected the directory of C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\pnpm-lock.yaml as the root directory.
- To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
-   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
- Detected additional lockfiles: 
-   * C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\pnpm-lock.yaml
 
-Ôû▓ Next.js 16.1.6 (Turbopack)
-- Environments: .env
+> chord-editor-pro@0.1.0 build C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro
+> prisma generate && next build
 
-ÔÜá The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-  Creating an optimized production build ...
-Ô£ô Compiled successfully in 4.6s
-  Running TypeScript ...
-Failed to compile.
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Error: 
+EPERM: operation not permitted, rename 'C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\node_modules\.pnpm\@prisma+client@6.4.1_prisma_e697c467828edf08e3025d15c7caddbc\node_modules\.prisma\client\query_engine-windows.dll.node.tmp23768' -> 'C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\node_modules\.pnpm\@prisma+client@6.4.1_prisma_e697c467828edf08e3025d15c7caddbc\node_modules\.prisma\client\query_engine-windows.dll.node'
 
-./app/config/getSyllableById.ts:1:37
-Type error: Cannot find module '../config.js' or its corresponding type declarations.
 
-> 1 | import type { Song, Syllable } from "../config.js";
-    |                                     ^
-  2 |
-  3 | export function getSyllableById(song: Song, targetId: string): Syllable | null {
-  4 |     for (const section of song.sections) {
-Next.js build worker exited with code: 1 and signal: null
+ÔÇëELIFECYCLEÔÇë Command failed with exit code 1.

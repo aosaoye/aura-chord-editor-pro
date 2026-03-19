@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getAuth } from "@clerk/nextjs/server";
-import { PrismaClient } from "@prisma/client";
+import { db } from "@/lib/db";
 
-const prisma = new PrismaClient();
+const prisma = db;
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -18,13 +18,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { isPublic } = body;
 
     // Verify ownership
-    const song = await (prisma as any).song.findUnique({ where: { id } });
+    const song = await db.song.findUnique({ where: { id } });
     
     if (!song || song.userId !== userId) {
       return NextResponse.json({ error: "Obra no encontrada o no tienes permiso" }, { status: 404 });
     }
 
-    const updatedSong = await (prisma as any).song.update({
+    const updatedSong = await db.song.update({
       where: { id },
       data: { isPublic },
       include: {
@@ -41,7 +41,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (isPublic && !song.isPublic) {
         const followers = updatedSong.user?.followers || [];
         if (followers.length > 0) {
-           await (prisma as any).notification.createMany({
+           await db.notification.createMany({
              data: followers.map((f: any) => ({
                userId: f.followerId,
                message: `${updatedSong.user?.name || 'Un músico'} ha publicado una nueva partitura: "${updatedSong.title}"`,

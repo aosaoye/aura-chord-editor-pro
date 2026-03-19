@@ -3,45 +3,68 @@
 import { useState, useCallback } from "react";
 import { 
   useFloating, autoUpdate, offset, flip, shift, 
-  useClick, useDismiss, useInteractions, FloatingPortal 
+  useClick, useDismiss, useInteractions, FloatingPortal, useHover, safePolygon 
 } from '@floating-ui/react';
 import type { Syllable, Chord } from "../config/config";
 import ChordEditorMenu from "./ChordEditorMenu";
 import { formatChordText, NotationType } from "../helpers/chordFormatter";
+import MiniGuitar2D from "./MiniGuitar2D";
+import { transposeChord } from "../helpers/transpose";
 
 export interface SyllableProps {
   syllable: Syllable;
+  capo?: number;
   onChordChange: (syllableId: string, newChord: Chord | null) => void;
+  onGlobalChordChange?: (newChord: Chord | null) => void;
   nextHasChord?: boolean;
   notation?: NotationType;
   songKey?: string;
   readOnly?: boolean;
   showChords?: boolean;
+  instrument?: 'piano' | 'guitar';
+  colorTheme?: string;
 }
 
 export default function SyllableComponent({ 
-  syllable, onChordChange, nextHasChord = true, notation = 'english', songKey = 'C', readOnly = false, showChords = true
+  syllable, capo = 0, onChordChange, onGlobalChordChange, nextHasChord = true, notation = 'english', songKey = 'C', readOnly = false, showChords = true, instrument = 'piano', colorTheme
 }: SyllableProps) {
   const { id, text, chord } = syllable;
-  const [isOpen, setIsOpen] = useState(false);
+  
+  // click menu state
+  const [isClickOpen, setIsClickOpen] = useState(false);
+  // hover panel state
+  const [isHoverOpen, setIsHoverOpen] = useState(false);
+  
+  const [replaceGlobal, setReplaceGlobal] = useState(false);
 
-  // 🚀 SENIOR FIX: Floating UI gestiona el popover. Previene el layout thrashing y asegura 
-  // que el menú nunca se salga de la pantalla del móvil.
-  const { refs, floatingStyles, context } = useFloating({
-    open: isOpen,
-    onOpenChange: setIsOpen,
+  const { refs: clickRefs, floatingStyles: clickStyles, context: clickContext } = useFloating({
+    open: isClickOpen,
+    onOpenChange: setIsClickOpen,
     placement: 'bottom-start',
     whileElementsMounted: autoUpdate,
-    middleware: [
-      offset(8), // Separación de 8px entre sílaba y menú
-      flip({ fallbackAxisSideDirection: 'end' }), // Si no cabe abajo, se voltea arriba
-      shift({ padding: 10 }) // Evita que se salga por los bordes laterales de la pantalla
-    ],
+    middleware: [ offset(8), flip({ fallbackAxisSideDirection: 'end' }), shift({ padding: 10 }) ],
   });
 
-  const click = useClick(context, { enabled: !readOnly });
-  const dismiss = useDismiss(context);
-  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
+  const { refs: hoverRefs, floatingStyles: hoverStyles, context: hoverContext } = useFloating({
+    open: isHoverOpen,
+    onOpenChange: setIsHoverOpen,
+    placement: 'top',
+    whileElementsMounted: autoUpdate,
+    middleware: [ offset(12), flip(), shift({ padding: 10 }) ],
+  });
+
+  const click = useClick(clickContext, { enabled: !readOnly });
+  const dismissClick = useDismiss(clickContext);
+
+  const hover = useHover(hoverContext, { 
+    enabled: !readOnly && instrument === 'guitar' && !!chord && !isClickOpen,
+    handleClose: safePolygon({ blockPointerEvents: true }),
+    delay: { open: 200, close: 100 }
+  });
+  const dismissHover = useDismiss(hoverContext);
+
+  const { getReferenceProps: getClickRefProps } = useInteractions([click, dismissClick]);
+  const { getReferenceProps: getHoverRefProps, getFloatingProps: getHoverFloatingProps } = useInteractions([hover, dismissHover]);
 
   const handleActionClick = useCallback(() => {
      if (chord) {
@@ -49,23 +72,37 @@ export default function SyllableComponent({
      }
   }, [chord]);
 
-  const handleSave = useCallback((newChord: Chord | null) => {
-    setIsOpen(false);
-    onChordChange(id, newChord);
-  }, [id, onChordChange]);
+  const handleSaveClickMenu = useCallback((newChord: Chord | null) => {
+    setIsClickOpen(false);
+    if (replaceGlobal && onGlobalChordChange) {
+       onGlobalChordChange(newChord);
+    } else {
+       onChordChange(id, newChord);
+    }
+  }, [id, onChordChange, onGlobalChordChange, replaceGlobal]);
+
+  const handleSaveHoverMenu = useCallback(() => {
+    setIsHoverOpen(false);
+    // actually, in the hover menu, they select a new chord or apply it replacing all.
+    // Since we don't have variants right now, if "Cambiar todos" is active conceptually we would change them.
+    // wait, where do they pick the new chord if it's just the hover menu? They would click "Cambiar acorde", which opens the normal click menu!
+  }, []);
 
   return (
     <>
       <span 
-        ref={refs.setReference}
-        {...getReferenceProps({
+        ref={(node) => {
+          clickRefs.setReference(node);
+          hoverRefs.setReference(node);
+        }}
+        {...getClickRefProps(getHoverRefProps({
           onClick: handleActionClick,
           onKeyDown: (e) => {
             if ((e.key === "Enter" || e.key === " ") && chord) {
               window.dispatchEvent(new CustomEvent('chord-picker-opened', { detail: { chord } }));
             }
           }
-        })}
+        }))}
         role="button"
         tabIndex={0}
         className={
@@ -93,21 +130,71 @@ export default function SyllableComponent({
         <span className="text-[length:var(--base-font)] text-foreground font-normal tracking-normal leading-tight">{text}</span>
       </span>
 
-      {/* Floating Portal teletransporta el menú al final del body para evitar problemas de Z-Index */}
-      {isOpen && (
+      {/* Menú de Click Tradicional */}
+      {isClickOpen && (
         <FloatingPortal>
           <div className="fixed inset-0 z-[990] sm:hidden bg-black/20 backdrop-blur-sm animate-in fade-in" />
           <div 
-            ref={refs.setFloating} 
-            style={floatingStyles} 
-            {...getFloatingProps()}
+            ref={clickRefs.setFloating} 
+            style={clickStyles} 
             className="z-[999] text-black shadow-2xl rounded-xl"
           >
             <ChordEditorMenu
               initialChord={chord}
-              onSave={handleSave}
-              onCancel={() => setIsOpen(false)}
+              onSave={handleSaveClickMenu}
+              onCancel={() => setIsClickOpen(false)}
             />
+          </div>
+        </FloatingPortal>
+      )}
+
+      {/* Hover Panel para Guitarra */}
+      {isHoverOpen && chord && instrument === 'guitar' && (
+        <FloatingPortal>
+          <div 
+            ref={hoverRefs.setFloating} 
+            style={hoverStyles} 
+            {...getHoverFloatingProps()}
+            className="z-[999] bg-white dark:bg-[#1a1a1a] p-4 shadow-2xl border border-gray-100 dark:border-gray-800 rounded-xl flex flex-col items-center gap-4 animate-in fade-in zoom-in-95 duration-200"
+          >
+            <div className="flex flex-col items-center gap-1 w-full">
+              {capo > 0 ? (
+                <span className="text-sm font-bold opacity-50 mb-1 flex items-center gap-1">
+                  <span>{formatChordText(chord, notation, songKey).root}{formatChordText(chord, notation, songKey).variation}</span>
+                  <span className="text-[10px] font-normal opacity-80">(forma de {formatChordText(transposeChord(chord, -capo)!, notation, songKey).root})</span>
+                </span>
+              ) : (
+                <span className="text-sm font-bold opacity-50 mb-1">{formatChordText(chord, notation, songKey).root}{formatChordText(chord, notation, songKey).variation}</span>
+              )}
+              <MiniGuitar2D chord={transposeChord(chord, -capo)!} themeColor={colorTheme} className="w-[100px] shadow-sm rounded-sm" />
+            </div>
+            
+            <button 
+               onClick={() => { setIsHoverOpen(false); setIsClickOpen(true); }}
+               className="text-[10px] w-full py-1.5 uppercase font-bold tracking-widest bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white rounded border border-transparent transition-colors"
+            >
+               Cambiar Acorde
+            </button>
+
+            <div className="border-t border-gray-100 dark:border-gray-800 w-full pt-3 flex flex-col gap-3">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input 
+                  type="checkbox" 
+                  checked={replaceGlobal} 
+                  onChange={e => setReplaceGlobal(e.target.checked)}
+                  className="w-4 h-4 rounded text-primary focus:ring-primary focus:ring-opacity-25 border-gray-300 dark:border-gray-700 cursor-pointer" 
+                />
+                <span className="text-[10px] sm:text-xs text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
+                  Cambiar todos los <span className="font-bold">{formatChordText(chord, notation, songKey).root}</span>
+                </span>
+              </label>
+
+              <div className="flex items-center justify-between gap-3 w-full mt-2">
+                <button onClick={() => setIsHoverOpen(false)} className="text-[10px] w-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 font-bold text-gray-500 hover:text-gray-900 border border-transparent dark:text-gray-400 dark:hover:text-white uppercase tracking-widest transition-colors flex-1 text-center py-2 rounded">
+                  Cerrar
+                </button>
+              </div>
+            </div>
           </div>
         </FloatingPortal>
       )}

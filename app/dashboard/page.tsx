@@ -2,16 +2,19 @@ import Link from "next/link";
 import { Plus, Folder, Clock, Music, Settings, LayoutDashboard, Globe } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { getAuth } from "@clerk/nextjs/server";
-import { PrismaClient } from "@prisma/client";
+import { db } from "@/lib/db";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import PublicToggle from "./PublicToggle";
 import DeleteSongButton from "./DeleteSongButton";
 import GsapWrapper from "../components/GsapWrapper";
+import { Prisma } from "@prisma/client";
 
-const prisma = new PrismaClient();
+const prisma = db;
 
-export default async function DashboardPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+type DashboardSong = Prisma.SongGetPayload<{}>;
+
+export default async function DashboardPage() {
   // En Next.js App Router (Server Component) we need to use a different way to get user id if we want to run SSR
   // But since we don't have the req object directly unless we pass it, it's easier to use currentUser()
   const { currentUser } = await import("@clerk/nextjs/server");

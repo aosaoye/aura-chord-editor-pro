@@ -1,4 +1,4 @@
-import type { Chord, Song } from "./config.js";
+import type { Chord, Song } from "./config";
 
 export function updateSyllableChord(song: Song, id: string, chord: Chord | null): Song {
     const songCopy = structuredClone(song);

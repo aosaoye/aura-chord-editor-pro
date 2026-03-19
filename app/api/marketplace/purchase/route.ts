@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { getAuth } from "@clerk/nextjs/server";
-import { PrismaClient } from "@prisma/client";
+import { db } from "@/lib/db";
 import { NextRequest } from "next/server";
 
-const prisma = new PrismaClient();
+const prisma = db;
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verificar si ya la ha comprado
-    const existingPurchase = await (prisma as any).purchase.findUnique({
+    const existingPurchase = await db.purchase.findUnique({
       where: {
         userId_songId: { userId, songId }
       }

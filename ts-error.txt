@@ -1,3 +1,11 @@
-app/config/getSyllableById.ts(1,37): error TS2307: Cannot find module '../config.js' or its corresponding type declarations.
-app/config/moveChord.ts(1,27): error TS2307: Cannot find module '../config.js' or its corresponding type declarations.
-app/config/moveChord.ts(2,37): error TS2307: Cannot find module '../updateSyllableChord.js' or its corresponding type declarations.
+app/api/marketplace/connect/route.ts(6,16): error TS2304: Cannot find name 'db'.
+app/api/marketplace/purchase/route.ts(6,16): error TS2304: Cannot find name 'db'.
+app/api/notifications/route.ts(5,16): error TS2304: Cannot find name 'db'.
+app/api/songs/[id]/rate/route.ts(5,16): error TS2304: Cannot find name 'db'.
+app/api/songs/[id]/visibility/route.ts(5,16): error TS2304: Cannot find name 'db'.
+app/api/songs/route.ts(5,16): error TS2304: Cannot find name 'db'.
+app/api/users/[id]/follow/route.ts(5,16): error TS2304: Cannot find name 'db'.
+app/community/page.tsx(13,16): error TS2304: Cannot find name 'db'.
+app/dashboard/marketplace/page.tsx(11,16): error TS2304: Cannot find name 'db'.
+app/dashboard/page.tsx(12,16): error TS2304: Cannot find name 'db'.
+app/u/[id]/page.tsx(13,16): error TS2304: Cannot find name 'db'.

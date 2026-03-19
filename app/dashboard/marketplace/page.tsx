@@ -2,21 +2,32 @@ import Link from "next/link";
 import { LayoutDashboard, Settings, Info, CreditCard, Wallet, AlertTriangle, TrendingUp, Music } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import { getAuth } from "@clerk/nextjs/server";
-import { PrismaClient } from "@prisma/client";
+import { db } from "@/lib/db";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import GsapWrapper from "../../components/GsapWrapper";
 import ConnectStripeButton from "../../components/ConnectStripeButton";
 
-const prisma = new PrismaClient();
+import { Prisma } from "@prisma/client";
+
+const prisma = db;
+
+type SaleWithDetails = Prisma.PurchaseGetPayload<{
+  include: { 
+    song: { select: { title: true } };
+    user: { select: { name: true; email: true } };
+  };
+}>;
+
+type DbUser = Prisma.UserGetPayload<{}>;
 
 export default async function MarketplaceDashboardPage() {
   const { currentUser } = await import("@clerk/nextjs/server");
   const user = await currentUser();
   const userId = user?.id;
 
-  let dbUser: any = null;
-  let sales: any[] = [];
+  let dbUser: DbUser | null = null;
+  let sales: SaleWithDetails[] = [];
   let totalRevenue = 0;
 
   if (userId) {
@@ -26,7 +37,7 @@ export default async function MarketplaceDashboardPage() {
     
     // Buscar ventas: Compras hechas por otros sobre mis canciones
     if (dbUser) {
-      sales = await (prisma as any).purchase.findMany({
+      sales = await db.purchase.findMany({
         where: { song: { userId } },
         include: { 
           song: { select: { title: true } }, 
@@ -35,14 +46,14 @@ export default async function MarketplaceDashboardPage() {
         orderBy: { createdAt: "desc" },
       });
 
-      totalRevenue = sales.reduce((acc: number, curr: any) => acc + curr.amount, 0);
+      totalRevenue = sales.reduce((acc: number, curr) => acc + curr.amount, 0);
     }
   }
 
   // Verificar si es un Creador Pro (Simulamos: si tiene stripeSubscriptionId o stripePriceId y quiere vender)
   // En la vida real, requiere un Plan Creador específico. Aquí pedimos cualquier suscripción de pago o conectarse explícitamente.
   const isCreatorPro = dbUser?.stripeSubscriptionId != null;
-  const hasStripeConnect = (dbUser as any)?.stripeConnectAccountId != null;
+  const hasStripeConnect = dbUser?.stripeConnectAccountId != null;
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans relative overflow-hidden transition-colors duration-500 flex flex-col pt-[72px]">

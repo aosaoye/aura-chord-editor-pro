@@ -1,0 +1,15 @@
+
+> chord-editor-pro@0.1.0 dev C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro
+> next dev
+
+ÔÜá Port 3000 is in use by process 20820, using available port 3001 instead.
+Ôû▓ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://172.17.21.85:3001
+- Environments: .env
+
+Ô£ô Starting...
+Ô¿» Unable to acquire lock at C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\.next\dev\lock, is another instance of next dev running?
+  Suggestion: If you intended to restart next dev, terminate the other process, and then try again.
+[?25h
+ÔÇëELIFECYCLEÔÇë Command failed with exit code 1.

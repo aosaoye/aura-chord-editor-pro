@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { PrismaClient } from "@prisma/client";
+import { db } from "@/lib/db";
 
-const prisma = new PrismaClient();
+const prisma = db;
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -29,7 +29,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 
     // Upsert rating (Create if not exists, update if exists)
-    const newRating = await (prisma as any).songRating.upsert({
+    const newRating = await db.songRating.upsert({
       where: {
          userId_songId: {
             userId: userId,

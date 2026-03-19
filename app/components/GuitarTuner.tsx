@@ -34,7 +34,7 @@ export default function GuitarTuner({ onClose }: { onClose: () => void }) {
 
           {/* LA AGUJA */}
           <div 
-            className="absolute bottom-0 w-1 h-32 origin-bottom transition-transform duration-100 ease-out"
+            className="absolute bottom-0 w-1 h-32 origin-bottom transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
             style={{ 
               transform: `rotate(${hasSignal ? needleRotation : 0}deg)`,
               backgroundColor: hasSignal ? (isInTune ? '#22c55e' : '#ef4444') : '#374151',
@@ -59,14 +59,14 @@ export default function GuitarTuner({ onClose }: { onClose: () => void }) {
               <p className="text-gray-500 font-mono mt-4 text-sm">{pitch.toFixed(1)} Hz</p>
               
               <div className="mt-6 flex items-center gap-4">
-                 <span className={`text-xs font-bold uppercase tracking-widest ${cents < -3 ? 'text-red-500' : 'text-gray-700'}`}>Bajo</span>
-                 <span className={`w-3 h-3 rounded-full ${isInTune ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-gray-800'}`} />
-                 <span className={`text-xs font-bold uppercase tracking-widest ${cents > 3 ? 'text-red-500' : 'text-gray-700'}`}>Alto</span>
+                 <span className={`text-xs font-bold uppercase tracking-widest transition-colors duration-300 ${cents < -3 ? 'text-red-500' : 'text-gray-700'}`}>Bajo</span>
+                 <span className={`w-3 h-3 rounded-full transition-all duration-300 ${isInTune ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-gray-800'}`} />
+                 <span className={`text-xs font-bold uppercase tracking-widest transition-colors duration-300 ${cents > 3 ? 'text-red-500' : 'text-gray-700'}`}>Alto</span>
               </div>
             </>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-gray-600">
-              <span className="text-6xl font-black tracking-tighter mb-4">-</span>
+              <span className="text-6xl font-black tracking-tighter mb-4 transition-colors">-</span>
               <p className="text-sm font-bold tracking-widest uppercase">Esperando señal...</p>
             </div>
           )}
@@ -79,7 +79,7 @@ export default function GuitarTuner({ onClose }: { onClose: () => void }) {
                onClick={startTuning}
                className="px-12 py-4 bg-white text-black text-xs font-bold uppercase tracking-[0.2em] rounded-full hover:scale-105 active:scale-95 transition-all"
              >
-               Activar Micrófono
+               Comenzar
              </button>
           ) : (
              <button 

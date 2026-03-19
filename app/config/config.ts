@@ -42,6 +42,8 @@ export interface LayoutSettings {
   alignment?: 'justify-start' | 'justify-center' | 'justify-end';
   notation?: 'english' | 'spanish' | 'roman';
   showChords?: boolean;
+  capo?: number;
+  instrument?: 'piano' | 'guitar';
 }
 
 export interface Song {
@@ -53,6 +55,9 @@ export interface Song {
     timeSignature?: string, // e.g. "4/4", "3/4"
     sections: Section[],
     layout?: LayoutSettings, // Configuraciones visuales propias de la canción
+    isPreviewRestriction?: boolean,
+    price?: number,
+    ratings?: { userId: string; value: number }[],
     metadata?: {
         originalCreatorId?: string,
         authorName?: string,

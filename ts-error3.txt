@@ -1,0 +1,4 @@
+app/editor/page.tsx(1344,81): error TS2532: Object is possibly 'undefined'.
+app/editor/page.tsx(1344,147): error TS18048: 'song.ratings.length' is possibly 'undefined'.
+app/editor/page.tsx(1355,81): error TS2532: Object is possibly 'undefined'.
+app/editor/page.tsx(1355,147): error TS18048: 'song.ratings.length' is possibly 'undefined'.

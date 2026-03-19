@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { PrismaClient } from "@prisma/client";
+import { db } from "@/lib/db";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import { Users, Music, Clock, Star } from "lucide-react";
@@ -10,7 +10,7 @@ import FollowButton from "./FollowButton";
 import GsapWrapper from "../../components/GsapWrapper";
 import StarRatingInteractive from "../../components/StarRatingInteractive";
 
-const prisma = new PrismaClient();
+const prisma = db;
 
 export default async function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -39,7 +39,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
   // Check follow status if logged in
   let isFollowing = false;
   if (currentUserId && currentUserId !== id) {
-    const followRecord = await (prisma as any).follows.findUnique({
+    const followRecord = await db.follows.findUnique({
       where: {
         followerId_followingId: {
           followerId: currentUserId,
@@ -78,13 +78,13 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
               <div className="w-24 h-24 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-6 mx-auto md:mx-0 shadow-inner">
                  <Users size={40} />
               </div>
-              <h1 className="text-4xl sm:text-5xl font-black tracking-tight mb-2">{(profileUser as any).name || "Músico Anónimo"}</h1>
+              <h1 className="text-4xl sm:text-5xl font-black tracking-tight mb-2">{profileUser.name || "Músico Anónimo"}</h1>
               <p className="text-muted-foreground tracking-widest uppercase text-xs font-bold flex flex-wrap gap-4 items-center justify-center md:justify-start">
-                 <span><span className="text-foreground">{(profileUser as any)._count.followers}</span> Seguidores</span>
+                 <span><span className="text-foreground">{profileUser._count.followers}</span> Seguidores</span>
                  <span>•</span>
-                 <span><span className="text-foreground">{(profileUser as any)._count.following}</span> Siguiendo</span>
+                 <span><span className="text-foreground">{profileUser._count.following}</span> Siguiendo</span>
                  <span>•</span>
-                 <span><span className="text-foreground">{(profileUser as any)._count.songs}</span> Obras Públicas</span>
+                 <span><span className="text-foreground">{profileUser._count.songs}</span> Obras Públicas</span>
               </p>
            </div>
            
@@ -100,7 +100,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
         </GsapWrapper>
 
         <div className="mb-8 border-b border-border pb-4">
-           <h2 className="text-2xl font-bold tracking-tight">Partituras de {(profileUser as any).name}</h2>
+           <h2 className="text-2xl font-bold tracking-tight">Partituras de {profileUser.name || "Músico Anónimo"}</h2>
         </div>
 
         {/* Lista de obras del usuario */}
@@ -111,7 +111,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
                <p className="text-lg font-bold">Este perfil aún no ha compartido obras abiertamente.</p>
             </div>
           ) : (
-            (publicSongs as any[]).map((song) => (
+            publicSongs.map((song) => (
                <Link href={`/editor?id=${song.id}`} key={song.id} className="group">
                  <div className="bg-white dark:bg-zinc-900 border border-border rounded-2xl p-6 h-48 flex flex-col justify-between hover:border-primary hover:shadow-lg transition-all duration-300 relative overflow-hidden">
                    

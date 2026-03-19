@@ -1,4 +1,4 @@
-import type { Song, Section, Syllable, Word, Line } from "./config.js";
+import type { Song, Section, Syllable, Word, Line } from "./config";
 
 export const song: Song = {
   id: 'song-1',

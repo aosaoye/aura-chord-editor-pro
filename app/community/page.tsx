@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Search, Music, Users, Clock, Globe, Star } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { PrismaClient } from "@prisma/client";
+import { db } from "@/lib/db";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { auth } from "@clerk/nextjs/server";
@@ -10,7 +10,7 @@ import GsapWrapper from "../components/GsapWrapper";
 import CommunityClient from "./CommunityClient";
 
 
-const prisma = new PrismaClient();
+const prisma = db;
 
 export default async function CommunityPage() {
   const { userId } = await auth();

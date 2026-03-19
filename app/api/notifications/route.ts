@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getAuth } from "@clerk/nextjs/server";
-import { PrismaClient } from "@prisma/client";
+import { db } from "@/lib/db";
 
-const prisma = new PrismaClient();
+const prisma = db;
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const notifications = await (prisma as any).notification.findMany({
+    const notifications = await db.notification.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
       take: 20
@@ -36,7 +36,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Mark all as read
-    await (prisma as any).notification.updateMany({
+    await db.notification.updateMany({
       where: { userId, read: false },
       data: { read: true }
     });

@@ -1,0 +1,1 @@
+app/api/songs/route.ts(4,10): error TS1003: Identifier expected.

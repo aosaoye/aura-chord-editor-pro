@@ -1,4 +1,4 @@
-import { Song } from "../config/config";
+import { Song, Chord } from "../config/config";
 
 const standardScale = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
 
@@ -14,6 +14,14 @@ export function transposeRoot(root: string, semitones: number): string {
   let newIdx = (index + semitones) % 12;
   if (newIdx < 0) newIdx += 12;
   return standardScale[newIdx];
+}
+
+export function transposeChord(chord: Chord, semitones: number): Chord {
+  return {
+    ...chord,
+    rootNote: transposeRoot(chord.rootNote, semitones),
+    ...(chord.bassNote ? { bassNote: transposeRoot(chord.bassNote, semitones) } : {})
+  };
 }
 
 export function transposeSong(song: Song, semitones: number): Song {
