@@ -197,21 +197,25 @@ export default function SongEditor() {
     if (isPlaying && activeLineId) {
       const presentElement = document.getElementById(`present-${activeLineId}`);
       if (presentElement) {
-        const container = presentElement.closest('.overflow-y-auto') as HTMLElement;
-        if (container) {
-          const containerHalf = container.offsetHeight / 2;
-          const elementHalf = presentElement.offsetHeight / 2;
-
-          // Calculo matemático de alineación perfecta al centro excluyendo los parches de CSS
-          const targetScroll = (presentElement.offsetTop - containerHalf) + elementHalf;
-
-          container.scrollTo({
-            top: targetScroll,
-            behavior: 'smooth'
-          });
-        } else {
-          presentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        // En Modo Presentación, cuando una línea es MUY LARGA y hace wrap en múltiples líneas,
+        // su centro geométrico baja. Si usamos block: 'center', el bloque entero se centra, empujando
+        // la primera línea (y sus acordes) hacia el techo de la pantalla.
+        // Solución: Anclar siempre la PARTE SUPERIOR del elemento a un porcentaje fijo (ej. 40%) de la pantalla.
+        setTimeout(() => {
+          const container = presentElement.closest('.overflow-y-auto') as HTMLElement;
+          if (container) {
+            // Alinea el 'top' del elemento activo exactamente al 40% de la pantalla
+            const offsetFromTop = container.clientHeight * 0.4;
+            const targetScroll = presentElement.offsetTop - offsetFromTop;
+            
+            container.scrollTo({
+              top: targetScroll,
+              behavior: 'smooth'
+            });
+          } else {
+            presentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 150);
       } else {
         const activeElement = document.getElementById(activeLineId);
         if (activeElement) {
@@ -1123,7 +1127,7 @@ export default function SongEditor() {
               </div>
 
               {/* Letras Gigantes Estilo Spotify */}
-              <GsapWrapper animationType="fade-up" duration={1} className="flex-1 w-full overflow-y-auto hide-scrollbar scroll-smooth flex flex-col items-center pt-[45vh] pb-[60vh] px-6 sm:px-10 relative z-20">
+              <GsapWrapper animationType="fade-up" duration={1} id="teleprompter-container" className="flex-1 w-full overflow-y-auto hide-scrollbar scroll-smooth flex flex-col items-center pt-[45vh] pb-[60vh] px-6 sm:px-10 relative z-20">
                 {song.sections.map((sec, sIdx) => (
                   <div key={sec.id} className="w-full max-w-6xl flex flex-col gap-12 sm:gap-16 mb-24 sm:mb-32 text-center items-center">
                     {/* Header de Sección */}
@@ -1565,7 +1569,7 @@ export default function SongEditor() {
                                   } as React.CSSProperties}
                                 >
                                   {line.words.map((word, wIdx) => (
-                                    <div key={word.id} className="flex flex-wrap mr-3 sm:mr-4 group/word">
+                                    <div key={word.id} className="flex flex-wrap items-end mr-3 sm:mr-4 group/word">
                                       {word.syllables.map((syl, i) => {
                                         return (
                                           <SyllableComponent

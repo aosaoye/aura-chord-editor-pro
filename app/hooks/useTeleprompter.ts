@@ -115,9 +115,9 @@ export function useTeleprompter(song: Song | null) {
         // Bucle inverso (Motor Sub-Cronológico)
         if (cue.chords.length > 0) {
           currentActiveChord = cue.chords[0].chord; 
-          for (let i = cue.chords.length - 1; i >= 0; i--) {
-             if (elapsedSeconds >= cue.chords[i].startTime) {
-               currentActiveChord = cue.chords[i].chord;
+          for (let j = cue.chords.length - 1; j >= 0; j--) {
+             if (elapsedSeconds >= cue.chords[j].startTime) {
+               currentActiveChord = cue.chords[j].chord;
                break;
              }
           }

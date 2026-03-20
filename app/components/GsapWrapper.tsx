@@ -14,6 +14,7 @@ interface GsapWrapperProps {
   delay?: number;
   duration?: number;
   className?: string;
+  id?: string;
 }
 
 export default function GsapWrapper({ 
@@ -21,7 +22,8 @@ export default function GsapWrapper({
   animationType = 'fade-up', 
   delay = 0,
   duration = 1,
-  className = ""
+  className = "",
+  id
 }: GsapWrapperProps) {
   const container = useRef<HTMLDivElement>(null);
 
@@ -101,5 +103,5 @@ export default function GsapWrapper({
     return () => ctx.revert();
   }, [animationType, delay, duration]);
 
-  return <div ref={container} className={className}>{children}</div>;
+  return <div ref={container} id={id} className={className}>{children}</div>;
 }

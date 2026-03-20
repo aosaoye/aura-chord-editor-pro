@@ -27,18 +27,44 @@ export default function ExportModal({
     if (!socialRef.current) return;
     try {
       setIsExporting(true);
-      // Wait for React to paint the UI before synchronous toPng locks main thread
       await new Promise((r) => setTimeout(r, 150));
-      const dataUrl = await toPng(socialRef.current, {
-        quality: 1.0,
-        pixelRatio: 2,
-        cacheBust: true,
-      });
+      
+      const pageNodes = Array.from(socialRef.current.querySelectorAll('.poster-page')) as HTMLElement[];
+      
+      // Si no usó clases .poster-page (ej. Story/Youtube Thumbnail), capturamos el root
+      const elementsToExport = pageNodes.length > 0 ? pageNodes : [socialRef.current];
 
-      const link = document.createElement("a");
-      link.download = `${song.title.toLowerCase().replace(/\s+/g, "-")}-${socialFormat}.png`;
-      link.href = dataUrl;
-      link.click();
+      if (elementsToExport.length === 1) {
+        const dataUrl = await toPng(elementsToExport[0], {
+          quality: 1.0,
+          pixelRatio: 2,
+          cacheBust: true,
+        });
+        const link = document.createElement("a");
+        link.download = `${song.title.toLowerCase().replace(/\s+/g, "-")}-${socialFormat}.png`;
+        link.href = dataUrl;
+        link.click();
+      } else {
+        const JSZip = (await import('jszip')).default;
+        const zip = new JSZip();
+
+        for (let i = 0; i < elementsToExport.length; i++) {
+          const el = elementsToExport[i];
+          const dataUrl = await toPng(el, {
+            quality: 1.0,
+            pixelRatio: 2,
+            cacheBust: true,
+          });
+          const base64Data = dataUrl.replace(/^data:image\/(png|jpg);base64,/, "");
+          zip.file(`${song.title.toLowerCase().replace(/\s+/g, "-")}-${socialFormat}-pag-${i + 1}.png`, base64Data, { base64: true });
+        }
+
+        const content = await zip.generateAsync({ type: "blob" });
+        const link = document.createElement("a");
+        link.download = `${song.title.toLowerCase().replace(/\s+/g, "-")}-${socialFormat}.zip`;
+        link.href = URL.createObjectURL(content);
+        link.click();
+      }
     } catch (err) {
       console.error(err);
       alert("Error generando imagen para redes sociales.");
@@ -53,6 +79,28 @@ export default function ExportModal({
     ? song?.sections || []
     : song?.sections?.slice(0, 2) || [];
   const isShortLyrics = isPosterMode && formattedSections.length <= 2;
+
+  // PAGINACIÓN PARA POSTER MULTICOLUMNA
+  const posterPages: any[][] = [];
+  if (isPosterMode) {
+    let currentPage: any[] = [];
+    let currentLinesCount = 0;
+    const MAX_LINES_PER_PAGE = 27; // ~9 líneas por columna x 3 columnas en layout de 1080px (con padding y headers)
+    
+    formattedSections.forEach((sec: any) => {
+      const secLines = sec.lines.length + 2; // +2 por el título
+      if (currentLinesCount + secLines > MAX_LINES_PER_PAGE && currentPage.length > 0) {
+        posterPages.push(currentPage);
+        currentPage = [];
+        currentLinesCount = 0;
+      }
+      currentPage.push(sec);
+      currentLinesCount += secLines;
+    });
+    if (currentPage.length > 0) {
+      posterPages.push(currentPage);
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
@@ -222,86 +270,97 @@ export default function ExportModal({
                 }`}
               >
                 {socialFormat === "poster-cinematico" ? (
-                  <div
-                    ref={socialRef}
-                    className="shrink-0 flex justify-center p-16 sm:p-24 relative overflow-hidden bg-[#0a0a09] w-[1920px] min-h-[1080px] h-auto font-sans"
-                  >
-                    {/* Background Gradient/Noise subtle effect */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#111] to-[#050505] opacity-80 pointer-events-none"></div>
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4/5 h-[800px] bg-orange-900/10 blur-[150px] rounded-full pointer-events-none"></div>
+                  <div ref={socialRef} className="shrink-0 flex flex-col gap-12 items-center">
+                    {posterPages.map((pageSections: any[], pIdx: number) => {
+                      const totalPageLines = pageSections.reduce((acc: number, sec: any) => acc + sec.lines.length + 2, 0);
+                      const columnsNeeded = Math.min(3, Math.max(1, Math.ceil(totalPageLines / 9)));
+                      
+                      return (
+                        <div
+                          key={`poster-page-${pIdx}`}
+                          className="poster-page shrink-0 flex justify-center p-16 sm:p-24 relative overflow-hidden bg-[#0a0a09] w-[1920px] h-[1080px] font-sans"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-b from-[#111] to-[#050505] opacity-80 pointer-events-none"></div>
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4/5 h-[800px] bg-orange-900/10 blur-[150px] rounded-full pointer-events-none"></div>
 
-                    <div className="relative z-10 w-full max-w-[1600px] flex flex-col items-center">
-                      {/* Elegant Title */}
-                      <h1 className="text-white font-[200] text-[4rem] tracking-[0.2em] uppercase text-center w-full leading-tight mb-4 drop-shadow-lg px-8 max-w-[1500px] break-words">
-                        {formattedTitle || "VASIJA QUEBRANTADA"}
-                      </h1>
+                          <div className="relative z-10 w-full max-w-[1600px] flex flex-col items-center">
+                            {pIdx === 0 ? (
+                              <>
+                                <h1 className="text-white font-[200] text-[4rem] tracking-[0.2em] uppercase text-center w-full leading-tight mb-4 drop-shadow-lg px-8 max-w-[1500px] break-words">
+                                  {formattedTitle || "VASIJA QUEBRANTADA"}
+                                </h1>
+                                <h2 className="text-[#ea580c] font-black text-xl tracking-[0.5em] uppercase text-center w-full mb-16 drop-shadow-md">
+                                  {song?.artist || "AURA CHORDS PRO STUDIO"}
+                                </h2>
+                                <hr className="w-full border-t border-white/10 mb-16" />
+                              </>
+                            ) : (
+                              <>
+                                <h2 className="text-white/40 font-[200] text-3xl tracking-[0.5em] uppercase text-center w-full mb-16 drop-shadow-lg break-words">
+                                  {formattedTitle} — Pág {pIdx + 1}
+                                </h2>
+                                <hr className="w-full border-t border-white/10 mb-16 opacity-50" />
+                              </>
+                            )}
 
-                      {/* Elegant Orange Subtitle */}
-                      <h2 className="text-[#ea580c] font-black text-xl tracking-[0.5em] uppercase text-center w-full mb-16 drop-shadow-md">
-                        {song?.artist || "AURA CHORDS PRO STUDIO"}
-                      </h2>
-
-                      <hr className="w-full border-t border-white/10 mb-16" />
-
-                      {/* Multi-Column Lyrics Container */}
-                      <div
-                        className="w-full text-left"
-                        style={{ columns: "3 400px", columnGap: "6rem" }}
-                      >
-                        {formattedSections.map((sec: any, idx: number) => (
-                          <div
-                            key={idx}
-                            className="mb-14 break-inside-avoid shadow-sm group"
-                          >
-                            {sec.lines.map((line: any, lIdx: number) => (
-                              <div
-                                key={lIdx}
-                                className="mb-7 flex flex-wrap items-end content-start relative font-sans leading-none min-h-[50px] pt-8"
-                              >
-                                {line.words.map((word: any, wIdx: number) => (
+                            <div
+                              className={`w-full ${columnsNeeded === 1 ? 'flex flex-col items-center justify-start' : 'text-left'}`}
+                              style={columnsNeeded > 1 ? { columns: `${columnsNeeded} 400px`, columnGap: "6rem" } : undefined}
+                            >
+                              <div className={columnsNeeded === 1 ? "w-max text-left" : "w-full"}>
+                                {pageSections.map((sec: any, idx: number) => (
                                   <div
-                                    key={word.id || wIdx}
-                                    className="flex mr-2"
+                                    key={idx}
+                                    className="mb-14 break-inside-avoid shadow-sm group"
                                   >
-                                    {word.syllables.map(
-                                      (syl: any, i: number) => {
-                                        let chordHtml = "";
-                                        if (syl.chord) {
-                                          const { root, variation, bass } =
-                                            formatChordText(
-                                              syl.chord,
-                                              "english",
-                                            );
-                                          chordHtml = `${root}<sup class="ml-[1px] font-normal opacity-80">${variation}</sup>${bass ? `<span class="ml-1 opacity-60">/</span>${bass}` : ""}`;
-                                        }
-                                        return (
+                                    <h3 className="text-white/50 font-bold uppercase tracking-widest text-lg mb-6">{sec.title || sec.type}</h3>
+                                    {sec.lines.map((line: any, lIdx: number) => (
+                                      <div
+                                        key={lIdx}
+                                        className="mb-7 flex flex-wrap items-end content-start relative font-sans leading-none min-h-[50px] pt-8"
+                                      >
+                                        {line.words.map((word: any, wIdx: number) => (
                                           <div
-                                            key={syl.id || i}
-                                            className="relative flex flex-col justify-end text-center group cursor-text transition-all duration-200"
+                                            key={word.id || wIdx}
+                                            className="flex mr-2"
                                           >
-                                            {chordHtml && (
-                                              <span
-                                                className="absolute bottom-full mb-2 text-[#eb5f15] text-[18px] font-bold font-sans tracking-tight min-w-max left-1/3 -translate-x-1/3 z-10"
-                                                dangerouslySetInnerHTML={{
-                                                  __html: chordHtml,
-                                                }}
-                                              />
+                                            {word.syllables.map(
+                                              (syl: any, i: number) => {
+                                                let chordHtml = "";
+                                                if (syl.chord) {
+                                                  const { root, variation, bass } = formatChordText(syl.chord, "english");
+                                                  chordHtml = `${root}<sup class="ml-[1px] font-normal opacity-80">${variation}</sup>${bass ? `<span class="ml-1 opacity-60">/</span>${bass}` : ""}`;
+                                                }
+                                                return (
+                                                  <div
+                                                    key={syl.id || i}
+                                                    className="relative flex flex-col justify-end text-center group cursor-text transition-all duration-200"
+                                                  >
+                                                    {chordHtml && (
+                                                      <span
+                                                        className="absolute bottom-full mb-2 text-[#eb5f15] text-[18px] font-bold font-sans tracking-tight min-w-max left-1/3 -translate-x-1/3 z-10"
+                                                        dangerouslySetInnerHTML={{ __html: chordHtml }}
+                                                      />
+                                                    )}
+                                                    <span className="text-white/85 text-[24px] font-[300] leading-none whitespace-pre relative z-0">
+                                                      {syl.text}
+                                                    </span>
+                                                  </div>
+                                                );
+                                              },
                                             )}
-                                            <span className="text-white/85 text-[24px] font-[300] leading-none whitespace-pre relative z-0">
-                                              {syl.text}
-                                            </span>
                                           </div>
-                                        );
-                                      },
-                                    )}
+                                        ))}
+                                      </div>
+                                    ))}
                                   </div>
                                 ))}
                               </div>
-                            ))}
+                            </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div
@@ -332,7 +391,7 @@ export default function ExportModal({
                           .map((line: any, lIdx: number) => (
                             <div
                               key={lIdx}
-                              className="flex flex-wrap items-end justify-center content-start relative font-sans leading-none min-h-[80px] w-full max-w-[900px]"
+                              className="flex flex-wrap items-end justify-center content-start relative font-sans leading-none min-h-[80px] w-full max-w-[900px] gap-y-16 pt-12"
                             >
                               {line.words.map((word: any, wIdx: number) => (
                                 <div
@@ -349,11 +408,11 @@ export default function ExportModal({
                                     return (
                                       <div
                                         key={syl.id || i}
-                                        className="relative flex flex-col justify-end text-left"
+                                        className="relative flex flex-col justify-end text-center"
                                       >
                                         {chordHtml && (
                                           <span
-                                            className="absolute bottom-full mb-2 text-[#eb5f15] text-[26px] sm:text-[32px] font-black font-sans tracking-tight min-w-max left-0 z-10 drop-shadow-md"
+                                            className="absolute bottom-full mb-4 text-[#eb5f15] text-[26px] sm:text-[32px] font-black font-sans tracking-tight min-w-max left-1/3 -translate-x-1/3 z-10 drop-shadow-md"
                                             dangerouslySetInnerHTML={{
                                               __html: chordHtml,
                                             }}
