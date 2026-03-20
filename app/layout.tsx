@@ -25,6 +25,7 @@ export const metadata: Metadata = {
 
 import { ThemeProvider } from "./components/ThemeProvider";
 import { SettingsProvider } from "./context/SettingsContext";
+import NotificationToast from "./components/NotificationToast";
 
 export default function RootLayout({
   children,
@@ -43,6 +44,7 @@ export default function RootLayout({
           >
             <SettingsProvider>
               {children}
+              <NotificationToast />
             </SettingsProvider>
           </ThemeProvider>
         </body>

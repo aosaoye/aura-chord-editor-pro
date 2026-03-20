@@ -1,49 +1,19 @@
-import { NextResponse, NextRequest } from "next/server";
-import { getAuth } from "@clerk/nextjs/server";
+import { ok, fail } from "@/lib/http";
+import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-const prisma = db;
-
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-    const session = getAuth(req);
-    const userId = session?.userId;
-    
-    if (!userId) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
+    const userId = await requireUser();
 
     const notifications = await db.notification.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
-      take: 20
+      take: 50,
     });
 
-    return NextResponse.json({ notifications }, { status: 200 });
-  } catch (error) {
-    console.error("Error fetching notifications:", error);
-    return NextResponse.json({ error: "Error interno" }, { status: 500 });
-  }
-}
-
-export async function PATCH(req: NextRequest) {
-  try {
-    const session = getAuth(req);
-    const userId = session?.userId;
-    
-    if (!userId) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
-
-    // Mark all as read
-    await db.notification.updateMany({
-      where: { userId, read: false },
-      data: { read: true }
-    });
-
-    return NextResponse.json({ success: true }, { status: 200 });
-  } catch (error) {
-    console.error("Error marking notifications read:", error);
-    return NextResponse.json({ error: "Error interno" }, { status: 500 });
+    return ok(notifications);
+  } catch (e) {
+    return fail(e);
   }
 }

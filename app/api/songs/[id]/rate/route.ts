@@ -1,54 +1,19 @@
-import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { db } from "@/lib/db";
+import { ok, fail } from "@/lib/http";
+import { requireUser } from "@/lib/auth";
+import { songService } from "@/modules/songs/songs.service";
+import { ratingSchema } from "@/modules/songs/songs.schema";
 
-const prisma = db;
-
-export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(req: Request, { params }: any) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const userId = await requireUser();
+    const body = await req.json();
 
-    const { rating } = await req.json();
+    const { rating } = ratingSchema.parse(body);
 
-    if (!rating || typeof rating !== 'number' || rating < 1 || rating > 5) {
-      return NextResponse.json({ error: "Invalid rating value" }, { status: 400 });
-    }
+    const result = await songService.rate(userId, params.id, rating);
 
-    const { id: songId } = await params;
-
-    // Check if song exists
-    const song = await prisma.song.findUnique({
-      where: { id: songId }
-    });
-
-    if (!song) {
-       return NextResponse.json({ error: "Song not found" }, { status: 404 });
-    }
-
-    // Upsert rating (Create if not exists, update if exists)
-    const newRating = await db.songRating.upsert({
-      where: {
-         userId_songId: {
-            userId: userId,
-            songId: songId
-         }
-      },
-      update: {
-         value: rating
-      },
-      create: {
-         userId: userId,
-         songId: songId,
-         value: rating
-      }
-    });
-
-    return NextResponse.json(newRating, { status: 200 });
-  } catch (error) {
-    console.error("Error rating song:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return ok(result);
+  } catch (e) {
+    return fail(e);
   }
 }

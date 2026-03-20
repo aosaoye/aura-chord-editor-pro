@@ -17,7 +17,13 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 const nextConfig: NextConfig = {
   serverExternalPackages: ['three'],
   // @ts-ignore
-  turbopack: {},
+  turbopack: {
+    resolveAlias: {
+      // Fix para multiple lockfiles bug en Turbopack Next15+
+    },
+    // @ts-ignore
+    root: process.cwd(),
+  },
 };
 
 export default withPWA(nextConfig);
