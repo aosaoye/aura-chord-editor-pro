@@ -99,7 +99,7 @@ export default function Navbar({ variant = "default", className = "", centerCont
             <SignedOut>
               <div className="rounded-full overflow-hidden group">
                 <SignInButton mode="modal">
-                  <button className="px-6 py-3 w-full h-full bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase hover:scale-105 active:scale-95 transition-all text-center whitespace-nowrap outline-none border-none">
+                  <button className="px-6 py-3 w-full h-full rounded-full bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase hover:scale-105 active:scale-95 transition-all text-center whitespace-nowrap outline-none border-none">
                     Entrar al Estudio
                   </button>
                 </SignInButton>
@@ -151,7 +151,7 @@ export default function Navbar({ variant = "default", className = "", centerCont
               <SignedOut>
                 <div className="rounded-full overflow-hidden w-full">
                   <SignInButton mode="modal">
-                    <button className="w-full py-4 bg-primary text-primary-foreground text-xs font-bold tracking-[0.2em] uppercase hover:scale-105 active:scale-95 transition-all text-center outline-none border-none">
+                    <button className="w-full py-4 rounded-full bg-primary text-primary-foreground text-xs font-bold tracking-[0.2em] uppercase hover:scale-105 active:scale-95 transition-all text-center outline-none border-none">
                       Entrar al Estudio
                     </button>
                   </SignInButton>
