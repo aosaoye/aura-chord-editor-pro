@@ -1,13 +1,16 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
-    // Evitar iniciar multiples workers en caso de HMR (Fast Refresh)
+    // Evitamos inicializar multiples veces en dev
     // @ts-ignore
     if (!globalThis.__worker_booted) {
-      console.log("🚀 Iniciando Worker de BullMQ localmente (Node Runtime)...");
-      const { createNotificationWorker } = await import("./workers/notification.worker");
-      createNotificationWorker();
       // @ts-ignore
       globalThis.__worker_booted = true;
+      console.log("🚀 Iniciando Worker de BullMQ localmente (Node Runtime)...");
+      const { createNotificationWorker } = await import("./workers/notification.worker");
+      
+      // DESACTIVADO TEMPORALMENTE PARA EVITAR CONGELAMIENTOS:
+      // Cuando Redis falla por firewall, bloquea el Event Loop de tu Next.js
+      // createNotificationWorker(); 
     }
   }
 }

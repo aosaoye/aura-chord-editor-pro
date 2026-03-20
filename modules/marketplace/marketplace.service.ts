@@ -60,18 +60,43 @@ export const marketplaceService = {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
 
-      const userId = session.metadata?.userId;
-      const songId = session.metadata?.songId;
-      const amount = session.amount_total ? session.amount_total / 100 : 0;
+      // Flujo de compra de canciones individuales
+      if (session.mode === "payment" && session.metadata?.songId) {
+        const userId = session.metadata?.userId;
+        const songId = session.metadata?.songId;
+        const amount = session.amount_total ? session.amount_total / 100 : 0;
 
-      if (!userId || !songId) return;
+        if (!userId || !songId) return;
 
-      await marketplaceRepository.createPurchase({
-        userId,
-        songId,
-        amount,
-        stripeSessionId: session.id,
-      });
+        await marketplaceRepository.createPurchase({
+          userId,
+          songId,
+          amount,
+          stripeSessionId: session.id,
+        });
+      }
+
+      // Flujo de Subscripción Maestro PRO
+      if (session.mode === "subscription" && session.metadata?.type === "pro_subscription") {
+         const userId = session.metadata.userId;
+         if (!userId) return;
+         
+         const subscriptionId = session.subscription as string;
+         const customerId = session.customer as string;
+
+         // Obtener vigencia llamando a Stripe (la suscripción empieza hoy)
+         const subDetails: any = await stripe.subscriptions.retrieve(subscriptionId);
+
+         await db.user.update({
+            where: { clerkId: userId },
+            data: {
+               stripeCustomerId: customerId,
+               stripeSubscriptionId: subscriptionId,
+               stripePriceId: subDetails.items?.data?.[0]?.price?.id || null,
+               stripeCurrentPeriodEnd: new Date(subDetails.current_period_end * 1000)
+            }
+         });
+      }
     }
   },
 };

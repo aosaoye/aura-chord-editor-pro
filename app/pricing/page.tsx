@@ -1,5 +1,8 @@
+"use client";
+
 import { Check } from "lucide-react";
 import Navbar from "../components/Navbar";
+import { useState } from "react";
 
 export default function PricingPage() {
   return (
@@ -54,6 +57,8 @@ export default function PricingPage() {
                   <span className="text-zinc-400 dark:text-zinc-500 text-sm font-semibold uppercase tracking-widest">/ mes</span>
                 </div>
                 
+             {/* INFO PLAN PRO */}
+             <div className="flex-1">
                 <ul className="flex flex-col gap-4 text-sm font-medium">
                   <li className="flex items-start gap-3"><Check className="text-primary mt-0.5" size={18} /> Obras en la nube ILIMITADAS</li>
                   <li className="flex items-start gap-3"><Check className="text-primary mt-0.5" size={18} /> Exportación profesional PDF y Multi-página ZIP</li>
@@ -62,13 +67,46 @@ export default function PricingPage() {
                   <li className="flex items-start gap-3"><Check className="text-primary mt-0.5" size={18} /> Auto-fill Inteligente de Armonía</li>
                 </ul>
               </div>
+              </div>
               
-              <button className="relative z-10 w-full mt-10 py-4 bg-primary text-primary-foreground text-xs font-bold tracking-[0.2em] uppercase rounded-xl hover:scale-105 active:scale-95 transition-all text-center shadow-[0_10px_20px_rgba(var(--primary-raw),0.3)]">
-                 Mejorar Ahora
-              </button>
+              <SubscribeButton />
            </div>
         </div>
       </main>
     </div>
+  );
+}
+
+function SubscribeButton() {
+  const [loading, setLoading] = useState(false);
+
+  return (
+    <button 
+      type="button"
+      disabled={loading}
+      onClick={async () => {
+        setLoading(true);
+        try {
+          const res = await fetch("/api/subscriptions/checkout", { method: "POST" });
+          const json = await res.json();
+          
+          if (!json.ok) {
+             alert(`Error en Stripe: ${JSON.stringify(json.error)}`);
+             setLoading(false);
+             return;
+          }
+
+          if (json.data?.url) {
+            window.location.href = json.data.url;
+          }
+        } catch (e: any) {
+          alert("Error de red: " + e.message);
+          setLoading(false);
+        }
+      }}
+      className={`relative z-10 w-full mt-10 py-4 bg-primary text-primary-foreground text-xs font-bold tracking-[0.2em] uppercase rounded-xl hover:scale-105 active:scale-95 transition-all text-center shadow-[0_10px_20px_rgba(var(--primary-raw),0.3)] ${loading ? 'opacity-50 pointer-events-none' : ''}`}
+    >
+       {loading ? "Conectando con Stripe..." : "Mejorar Ahora"}
+    </button>
   );
 }
