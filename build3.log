@@ -1,0 +1,38 @@
+
+> chord-editor-pro@0.1.0 build C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro
+> prisma generate && next build
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+
+Ô£ö Generated Prisma Client (v6.4.1) to .\node_modules\.pnpm\@prisma+client@6.4.1_prisma_e697c467828edf08e3025d15c7caddbc\node_modules\@prisma\client in 69ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Easily identify and fix slow SQL queries in your app. Optimize helps you enhance your visibility: https://pris.ly/--optimize
+
+Ôû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...
+Ô£ô Compiled successfully in 5.3s
+  Running TypeScript ...
+  Collecting page data using 11 workers ...
+Error: Neither apiKey nor config.authenticator provided
+    at s._setAuthenticator (C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\.next\server\chunks\modules_marketplace_marketplace_service_ts_87cdf6da._.js:1:87716)
+    at new s (C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\.next\server\chunks\modules_marketplace_marketplace_service_ts_87cdf6da._.js:1:82317)
+    at module evaluation (C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\.next\server\chunks\modules_marketplace_marketplace_service_ts_87cdf6da._.js:1:81072)
+    at instantiateModule (C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\.next\server\chunks\[turbopack]_runtime.js:740:9)
+    at getOrInstantiateModuleFromParent (C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\.next\server\chunks\[turbopack]_runtime.js:763:12)
+    at Context.esmImport [as i] (C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\.next\server\chunks\[turbopack]_runtime.js:228:20)
+    at module evaluation (C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\.next\server\chunks\[root-of-the-server]__399d2826._.js:1:17247)
+    at instantiateModule (C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\.next\server\chunks\[turbopack]_runtime.js:740:9)
+    at instantiateRuntimeModule (C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\.next\server\chunks\[turbopack]_runtime.js:768:12)
+    at getOrInstantiateRuntimeModule (C:\Users\osaoye\Desktop\Proyectos\musica-3\chord-pro-ts\chord-editor-pro\.next\server\chunks\[turbopack]_runtime.js:781:12)
+
+> Build error occurred
+Error: Failed to collect page data for /api/marketplace/checkout
+    at ignore-listed frames {
+  type: 'Error'
+}
+ÔÇëELIFECYCLEÔÇë Command failed with exit code 1.

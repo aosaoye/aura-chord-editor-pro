@@ -41,8 +41,8 @@ export const songRepository = {
       where: {
         userId_songId: { userId, songId },
       },
-      update: { rating },
-      create: { userId, songId, rating },
+      update: { value: rating },
+      create: { userId, songId, value: rating },
     });
   },
 };
