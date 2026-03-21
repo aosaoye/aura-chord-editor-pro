@@ -44,10 +44,17 @@ export function paginateSong(song: Song, linesPerColumn: number = 17, columnsPer
       // Section header label (text-[10px] + padding) + mt-1 (4px)
       const titlePhysicalPx = !isContinuation ? 19 : 0; 
       // Available content box (899px) minus Top Header (~108px) = ~790px.
-      // Use 680px as a ultra-safe baseline to prevent text clipping from varying OS font-metrics
-      // or large Song Titles that push the first columns deeply downwards.
-      // Expand MAX_PIXELS_PER_COLUMN from 680 to 830 to prevent breaking too early and leaving huge empty spaces
-      const MAX_PIXELS_PER_COLUMN = 830; 
+      // Determine dynamic max pixels based on layout settings instead of hardcoding 830
+      // Page heights match the frontend PDF rendering dimensions
+      const isLetter = song.layout?.pageSize === 'CARTA';
+      const isLand = song.layout?.orientation === 'landscape';
+      const rawPageHeight = isLand ? (isLetter ? 816 : 794) : (isLetter ? 1056 : 1123);
+      
+      const marginOffsets = { estrecho: 160, normal: 240, amplio: 300 }; // Slight adjustment to prevent PDF bottom-clipping
+      const offset = marginOffsets[(song.layout?.margin as keyof typeof marginOffsets) || 'normal'];
+      
+      // Calculate max pixels based on page height minus margins, minus a 20px safety buffer
+      const MAX_PIXELS_PER_COLUMN = rawPageHeight - offset - 20; 
       let availablePixels = MAX_PIXELS_PER_COLUMN - currentLinesCount - titlePhysicalPx;
       
       if (availablePixels <= (singleLinePhysicalPx + lineGap) && currentColumnSections.length > 0) {

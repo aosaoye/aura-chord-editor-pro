@@ -1564,23 +1564,30 @@ export default function SongEditor() {
                           }}
                         >
 
-                          {/* Título de la sección si existe y NO es continuación */}
-                          {section.title && !section.isContinuation && (
-                            /^(?:[IVX]+\.|\d+\.)/i.test(section.title) ? (
-                              // DEVOTIONAL SONG HEADER (e.g. "I.", "1. Te Adoramos")
-                              <div className="w-full mt-2 mb-2 flex">
-                                <h2 className={`text-lg sm:text-xl font-serif font-black italic tracking-wide opacity-90 w-full ${alignment === 'justify-center' ? 'text-center' : alignment === 'justify-end' ? 'text-right' : alignment === 'justify-between' ? 'text-justify' : 'text-left'}`}>
-                                  {section.title}
-                                </h2>
-                              </div>
-                            ) : (
-                              // NORMAL SECTION TITLE
-                              <div className="flex w-full">
-                                <h2 className={`text-xl sm:text-2xl font-sans font-black italic tracking-tight mb-0 opacity-90 w-full ${alignment === 'justify-center' ? 'text-center' : alignment === 'justify-end' ? 'text-right' : alignment === 'justify-between' ? 'text-justify' : 'text-left'}`}>
-                                  {section.title}
-                                </h2>
-                              </div>
-                            )
+                          {/* Título de la sección o canción (Editable) */}
+                          {!section.isContinuation && (section.title || !isReadOnly) && (
+                            <div className={`w-full flex ${section.title ? 'mt-2 mb-2' : 'mb-0 overflow-visible'}`}>
+                               <input
+                                  readOnly={isReadOnly}
+                                  type="text"
+                                  placeholder="Añadir Título (Canción o Sección)..."
+                                  value={section.title || ''}
+                                  onChange={(e) => {
+                                    setSong(current => {
+                                      if (!current) return current;
+                                      return {
+                                        ...current,
+                                        sections: current.sections.map(s => s.id === section.id ? { ...s, title: e.target.value } : s)
+                                      };
+                                    });
+                                  }}
+                                  className={`bg-transparent border-none outline-none italic tracking-tight w-full placeholder:text-foreground
+                                    ${layout.alignment === 'justify-center' ? 'text-center' : layout.alignment === 'justify-end' ? 'text-right' : layout.alignment === 'justify-between' ? 'text-justify' : 'text-left'} 
+                                    ${/^(?:[IVX]+\.|\d+\.)/i.test(section.title || '') ? 'font-serif font-black text-lg sm:text-xl opacity-90' : 'font-sans font-black text-xl sm:text-2xl opacity-90'} 
+                                    ${!section.title ? 'text-sm h-0 opacity-0 group-hover:h-auto group-hover:py-1 group-hover:opacity-40 focus:h-auto focus:py-1 focus:opacity-100 transition-all font-normal not-italic' : ''}
+                                  `}
+                                />
+                            </div>
                           )}
 
                           {/* Minimalist Section Label con Repetidor Numérico - Sólo si empieza aquí */}

@@ -125,7 +125,19 @@ export default function SyllableComponent({
         aria-label={`Sílaba: ${text}, Acorde: ${chord ? chord.rootNote + chord.variation : "ninguno"}`}
       >
         {showChords && (
-          <span className="block min-h-[1.5em] w-full mb-0.5 text-[length:var(--chord-font)] font-bold text-primary tracking-tight select-none opacity-90 group-hover:opacity-100 transition-opacity relative" aria-hidden="true">
+          <span 
+            className={`block min-h-[1.5em] w-full mb-0.5 text-[length:var(--chord-font)] font-bold tracking-tight select-none opacity-90 group-hover:opacity-100 transition-opacity relative ${!inheritedHighlightColor ? 'text-primary' : ''}`}
+            aria-hidden="true"
+            style={inheritedHighlightColor ? { 
+              backgroundColor: inheritedHighlightColor, 
+              color: '#000', 
+              paddingTop: '2px',
+              paddingBottom: '2px',
+              paddingRight: isLastInWord ? '1rem' : '0px',
+              marginLeft: '-0.1rem',
+              paddingLeft: '0.1rem'
+            } : {}}
+          >
             {chord ? (() => {
               const formatted = formatChordText(chord, notation, songKey);
               return (
@@ -142,17 +154,7 @@ export default function SyllableComponent({
         )}
         <span 
           className={`block text-[length:var(--base-font)] font-normal tracking-normal leading-tight ${casing === 'uppercase' ? 'uppercase' : casing === 'lowercase' ? 'lowercase' : ''}`}
-          style={inheritedHighlightColor ? { 
-            backgroundColor: inheritedHighlightColor, 
-            color: '#000', 
-            // Para conectar colores sin saltos: le damos padding extra a los lados y margen negativo.
-            // Si tiene mr-4 (ej. fin de palabra), lo compensamos. Pero para mantenerlo simple:
-            paddingTop: '2px',
-            paddingBottom: '2px',
-            paddingRight: isLastInWord ? '1rem' : '0px',
-            marginLeft: '-0.1rem',
-            paddingLeft: '0.1rem'
-          } : { color: 'var(--foreground)' }}
+          style={{ color: 'var(--foreground)' }}
         >
           {text}
         </span>

@@ -46,6 +46,10 @@ export interface LayoutSettings {
   showChords?: boolean;
   capo?: number;
   instrument?: 'piano' | 'guitar';
+  pageSize?: 'A4' | 'CARTA';
+  orientation?: 'portrait' | 'landscape';
+  margin?: 'estrecho' | 'normal' | 'amplio';
+  footerStyle?: 'none' | 'simple' | 'bandas';
 }
 
 export interface Song {
