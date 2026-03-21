@@ -41,7 +41,6 @@ export default function SongEditor() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [isTunerOpen, setIsTunerOpen] = useState(false);
   const { user } = useUser();
 
   const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
@@ -1161,14 +1160,15 @@ export default function SongEditor() {
                 {isAuraVoiceActive ? <Mic size={14} /> : <MicOff size={14} className="opacity-50" />} Aura Voice {isAuraVoiceActive ? 'ON' : 'OFF'}
               </button>
 
-              <button
-                onClick={() => setIsTunerOpen(true)}
+              <Link
+                href="/herramientas/afinador"
+                target="_blank"
                 className="text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-3 rounded-full text-foreground border border-transparent hover:border-border hover:bg-accent transition-colors shrink-0 flex items-center gap-2"
-                title="Afinador Inteligente"
+                title="Afinador Inteligente en nueva pantalla"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M8 6h8"/><path d="M8 14h8"/><path d="M8 18h8"/></svg>
                 Afinador
-              </button>
+              </Link>
 
               <button
                 onClick={() => {
@@ -2005,10 +2005,6 @@ export default function SongEditor() {
           includeDictionary={includeChordsDictionary}
           setIncludeDictionary={setIncludeChordsDictionary}
         />
-      )}
-
-      {isTunerOpen && (
-        <GuitarTuner onClose={() => setIsTunerOpen(false)} />
       )}
 
       {/* MODAL OFFLINE PROFESIONAL */}

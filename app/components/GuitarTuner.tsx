@@ -11,12 +11,14 @@ const INSTRUMENTS: { id: TunerInstrument, label: string }[] = [
   { id: 'chromatic', label: 'Cromático' }
 ];
 
-export default function GuitarTuner({ onClose }: { onClose: () => void }) {
+export default function GuitarTuner({ onClose, isStandalone = false }: { onClose?: () => void, isStandalone?: boolean }) {
   const [instrument, setInstrument] = useState<TunerInstrument>('guitar');
   const { isListening, startTuning, stopTuning, pitch, closestString, cents, error, isCalibrating } = useTuner(instrument);
 
-  // Lock body and HTML scroll when Tuner is open to prevent double scrollbars
+  // Lock body and HTML scroll when Tuner is open to prevent double scrollbars, ONLY if not standalone
   useEffect(() => {
+    if (isStandalone) return;
+    
     const originalBodyStyle = window.getComputedStyle(document.body).overflow;  
     const originalHtmlStyle = window.getComputedStyle(document.documentElement).overflow;  
     document.body.style.overflow = "hidden";
@@ -25,7 +27,7 @@ export default function GuitarTuner({ onClose }: { onClose: () => void }) {
       document.body.style.overflow = originalBodyStyle;
       document.documentElement.style.overflow = originalHtmlStyle;
     };
-  }, []);
+  }, [isStandalone]);
 
   // Consider in tune if within +/- 3 cents
   const isInTune = Math.abs(cents) <= 3;
@@ -54,7 +56,7 @@ export default function GuitarTuner({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-[#0A0C10] text-white overflow-y-auto overflow-x-hidden font-sans animate-in fade-in duration-300">
+    <div className={isStandalone ? "w-full min-h-[100svh] bg-[#0A0C10] text-white flex flex-col relative font-sans animate-in fade-in duration-300" : "fixed inset-0 z-[9999] bg-[#0A0C10] text-white overflow-y-auto overflow-x-hidden font-sans animate-in fade-in duration-300"}>
       
       {/* Background Decor (Fixed so it stays centered while scrolling) */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -66,9 +68,11 @@ export default function GuitarTuner({ onClose }: { onClose: () => void }) {
 
         {/* Top Banner & Back Button */}
         <div className="absolute top-0 left-0 w-full p-6 md:p-8 flex items-center justify-between z-10">
-          <button onClick={() => { stopTuning(); onClose(); }} className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors tracking-[0.2em] text-xs uppercase font-bold">
-            <span className="text-lg leading-none mb-1">&larr;</span> Volver
-          </button>
+          {onClose && (
+            <button onClick={() => { stopTuning(); onClose(); }} className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors tracking-[0.2em] text-xs uppercase font-bold">
+              <span className="text-lg leading-none mb-1">&larr;</span> Volver
+            </button>
+          )}
         </div>
 
         <div className="flex flex-col items-center w-full max-w-2xl px-2 sm:px-6 relative z-10 mt-10">
@@ -174,12 +178,18 @@ export default function GuitarTuner({ onClose }: { onClose: () => void }) {
         {/* BOTTOM CONTROLS */}
         <div className="mt-16 md:mt-24 mb-10 w-full flex justify-center">
           {error ? (
-             <button 
-               onClick={onClose}
-               className="px-14 py-5 bg-white/5 border border-white/10 text-white text-[10px] font-bold uppercase tracking-[0.3em] rounded-full hover:bg-white/10 active:scale-95 transition-all w-64 shadow-xl"
-             >
-               Salir
-             </button>
+             onClose ? (
+               <button 
+                 onClick={onClose}
+                 className="px-14 py-5 bg-white/5 border border-white/10 text-white text-[10px] font-bold uppercase tracking-[0.3em] rounded-full hover:bg-white/10 active:scale-95 transition-all w-64 shadow-xl"
+               >
+                 Salir
+               </button>
+             ) : (
+                <div className="px-14 py-5 bg-white/5 border border-white/10 text-zinc-500 text-[10px] font-bold uppercase tracking-[0.3em] rounded-full text-center w-64 shadow-xl select-none">
+                  Fallo de Micrófono
+                </div>
+             )
           ) : !isListening ? (
              <button 
                onClick={startTuning}
