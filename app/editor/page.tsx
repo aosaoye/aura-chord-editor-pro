@@ -1107,9 +1107,9 @@ export default function SongEditor() {
   const isReadOnly = song?.userId ? song.userId !== user?.id : false;
 
   const marginMap = {
-    'estrecho': 'px-4 pt-4 pb-[8rem] sm:px-6 sm:pt-6 lg:px-8 lg:pt-8 lg:pb-[10rem]',
-    'normal': 'px-6 pt-6 pb-[8rem] sm:px-10 sm:pt-10 lg:px-16 lg:pt-16 lg:pb-[10rem]',
-    'amplio': 'px-10 pt-10 pb-[8rem] sm:px-14 sm:pt-14 lg:px-24 lg:pt-24 lg:pb-[12rem]'
+    'estrecho': 'px-4 pt-4 pb-[5rem] sm:px-6 sm:pt-6 lg:px-8 lg:pt-8 lg:pb-[6rem]',
+    'normal': 'px-6 pt-6 pb-[6rem] sm:px-10 sm:pt-10 lg:px-16 lg:pt-16 lg:pb-[8rem]',
+    'amplio': 'px-10 pt-10 pb-[8rem] sm:px-14 sm:pt-14 lg:px-24 lg:pt-24 lg:pb-[10rem]'
   };
   const activeMarginClass = marginMap[(layout?.margin as keyof typeof marginMap) || 'normal'];
 
@@ -1854,7 +1854,7 @@ export default function SongEditor() {
                 </div>
 
                 {/* FOOTER POR PÁGINA (Anclaje Físico Estricto) */}
-                <div className="absolute bottom-0 left-0 w-full h-[5rem] lg:h-[6rem] bg-background flex flex-col justify-end px-8 sm:px-12 lg:px-16 pb-6 sm:pb-8 lg:pb-12 text-muted-foreground/60 shrink-0 z-20 pointer-events-none">
+                <div className="absolute bottom-0 left-0 w-full h-[4rem] lg:h-[4.5rem] bg-background flex flex-col justify-end px-8 sm:px-12 lg:px-16 pb-3 sm:pb-4 lg:pb-6 text-muted-foreground/60 shrink-0 z-20 pointer-events-none">
                   <div className="w-auto absolute top-0 left-8 right-8 sm:left-12 sm:right-12 lg:left-16 lg:right-16 h-px bg-border/30"></div>
                   <div className="flex justify-between items-end w-full">
                     <p className="text-[8px] font-bold tracking-[0.2em] uppercase">

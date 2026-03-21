@@ -50,7 +50,7 @@ export function paginateSong(song: Song, linesPerColumn: number = 17, columnsPer
       const isLand = song.layout?.orientation === 'landscape';
       const rawPageHeight = isLand ? (isLetter ? 816 : 794) : (isLetter ? 1056 : 1123);
       
-      const marginOffsets = { estrecho: 180, normal: 260, amplio: 320 }; // Adjusted to prevent mass blank spaces
+      const marginOffsets = { estrecho: 120, normal: 160, amplio: 220 }; // Adjusted to prevent mass blank spaces
       const offset = marginOffsets[(song.layout?.margin as keyof typeof marginOffsets) || 'normal'];
       
       // Calculate max pixels based on page height minus margins, minus a 20px safety buffer
