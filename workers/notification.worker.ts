@@ -11,17 +11,19 @@ const retryPolicy = {
   }
 };
 
-// Usamos Redis con URL si el string tiene formato redis://
-const connection = process.env.REDIS_HOST?.startsWith("redis")
-  ? new Redis(process.env.REDIS_HOST, retryPolicy)
-  : {
-      host: process.env.REDIS_HOST || "127.0.0.1",
-      port: parseInt(process.env.REDIS_PORT || "6379"),
-      password: process.env.REDIS_PASSWORD || undefined,
-      ...retryPolicy,
-    };
-
 export const createNotificationWorker = () => {
+  console.log("🛠️ Iniciando Worker de BullMQ para notificaciones...");
+
+  // Usamos Redis con URL si el string tiene formato redis://
+  const connection = process.env.REDIS_HOST?.startsWith("redis")
+    ? new Redis(process.env.REDIS_HOST, retryPolicy)
+    : {
+        host: process.env.REDIS_HOST || "127.0.0.1",
+        port: parseInt(process.env.REDIS_PORT || "6379"),
+        password: process.env.REDIS_PASSWORD || undefined,
+        ...retryPolicy,
+      };
+
   return new Worker(
     "notifications",
     async (job) => {

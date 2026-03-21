@@ -6,16 +6,24 @@ interface ChordCue {
   startTime: number;
 }
 
+interface SyllableCue {
+  syllableId: string;
+  startTime: number;
+  endTime: number;
+}
+
 interface TimelineCue {
   lineId: string;
   startTime: number;
   endTime: number;
   chords: ChordCue[];
+  syllables: SyllableCue[];
 }
 
 export function useTeleprompter(song: Song | null) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeLineId, setActiveLineId] = useState<string | null>(null);
+  const [activeSyllableId, setActiveSyllableId] = useState<string | null>(null);
   const [activeChord, setActiveChord] = useState<Chord | null>(null);
 
   const startTimeRef = useRef<number | null>(null);
@@ -38,17 +46,33 @@ export function useTeleprompter(song: Song | null) {
           const lineRepeats = line.repeat || 1;
           
           for (let l = 0; l < lineRepeats; l++) {
-            // Recopilar todos los acordes de la línea
+            // Recopilar sílabas para calcular la duración por sílaba (Aura Voice sync)
+            const lineSyllables: import('../config/config').Syllable[] = [];
             const lineChords: Chord[] = [];
             line.words.forEach(w => w.syllables.forEach(syl => {
+              lineSyllables.push(syl);
               if (syl.chord) lineChords.push(syl.chord);
             }));
 
             const numChords = lineChords.length;
+            const numSyllables = lineSyllables.length;
             // Si la línea no tiene "beats" configurado, le damos 4 tiempos a CADA acorde que tenga, o 8 tiempos por defecto.
             const totalLineBeats = (line.beats && line.beats > 0) ? line.beats : (numChords > 0 ? numChords * 4 : 8);
             const lineDurationSecs = totalLineBeats * beatDurationSecs;
             const chords: ChordCue[] = [];
+            const syllables: SyllableCue[] = [];
+
+            // Distribuir Sílabas Simétricamente
+            if (numSyllables > 0) {
+              const sylDuration = lineDurationSecs / numSyllables;
+              for (let i = 0; i < numSyllables; i++) {
+                syllables.push({
+                   syllableId: lineSyllables[i].id,
+                   startTime: currentTime + (i * sylDuration),
+                   endTime: currentTime + ((i + 1) * sylDuration)
+                });
+              }
+            }
 
             // Algoritmo de Compás (Distribución Inteligente)
             if (numChords > 0) {
@@ -80,7 +104,8 @@ export function useTeleprompter(song: Song | null) {
               lineId: line.id,
               startTime: currentTime,
               endTime: currentTime + lineDurationSecs,
-              chords
+              chords,
+              syllables
             });
             currentTime += lineDurationSecs;
           }
@@ -105,6 +130,7 @@ export function useTeleprompter(song: Song | null) {
 
     let currentActiveLine: string | null = null;
     let currentActiveChord: Chord | null = null;
+    let currentActiveSyllable: string | null = null;
     const currentTimeline = timelineRef.current;
     
     // Búsqueda en el Timeline Dinámico
@@ -112,7 +138,15 @@ export function useTeleprompter(song: Song | null) {
       if (elapsedSeconds >= cue.startTime && elapsedSeconds < cue.endTime) {
         currentActiveLine = cue.lineId;
         
-        // Bucle inverso (Motor Sub-Cronológico)
+        // Determinar Sílaba Activa actual
+        for (const syl of cue.syllables) {
+          if (elapsedSeconds >= syl.startTime && elapsedSeconds < syl.endTime) {
+             currentActiveSyllable = syl.syllableId;
+             break;
+          }
+        }
+
+        // Bucle inverso (Motor Sub-Cronológico) para Acordes
         if (cue.chords.length > 0) {
           currentActiveChord = cue.chords[0].chord; 
           for (let j = cue.chords.length - 1; j >= 0; j--) {
@@ -131,6 +165,7 @@ export function useTeleprompter(song: Song | null) {
        setIsPlaying(false);
        isPlayingRef.current = false;
        setActiveLineId(null);
+       setActiveSyllableId(null);
        setActiveChord(null);
        startTimeRef.current = null;
        return; 
@@ -138,6 +173,11 @@ export function useTeleprompter(song: Song | null) {
 
     setActiveLineId((prev) => {
       if (prev !== currentActiveLine) return currentActiveLine;
+      return prev;
+    });
+    
+    setActiveSyllableId((prev) => {
+      if (prev !== currentActiveSyllable) return currentActiveSyllable;
       return prev;
     });
 
@@ -161,12 +201,24 @@ export function useTeleprompter(song: Song | null) {
         // Al darle al Play
         startTimeRef.current = performance.now();
         animationFrameRef.current = requestAnimationFrame(loop);
+        
+        // Pantalla Completa Nativa
+        if (typeof document !== 'undefined' && document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(err => {
+            console.warn("Fullscreen API error:", err);
+          });
+        }
       } else {
         // Al darle al Pause
         if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
         setActiveLineId(null);
+        setActiveSyllableId(null);
         setActiveChord(null);
         startTimeRef.current = null; // Reiniciar startTime para evitar saltos al reanudar
+        
+        if (typeof document !== 'undefined' && document.fullscreenElement) {
+          document.exitFullscreen().catch(err => console.warn(err));
+        }
       }
       
       return nextIsPlaying;
@@ -174,10 +226,30 @@ export function useTeleprompter(song: Song | null) {
   }, [loop]);
 
   useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (typeof document !== 'undefined' && !document.fullscreenElement && isPlayingRef.current) {
+        // Si el usuario sale del fullscreen (ej. presionando ESC), pausamos la presentación
+        setIsPlaying(false);
+        isPlayingRef.current = false;
+        if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+        setActiveLineId(null);
+        setActiveSyllableId(null);
+        setActiveChord(null);
+        startTimeRef.current = null;
+      }
+    };
+    
+    if (typeof document !== 'undefined') {
+      document.addEventListener("fullscreenchange", handleFullscreenChange);
+    }
+    
     return () => {
+      if (typeof document !== 'undefined') {
+        document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      }
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
   }, []);
 
-  return { isPlaying, activeLineId, activeChord, togglePlay };
+  return { isPlaying, activeLineId, activeSyllableId, activeChord, togglePlay };
 }

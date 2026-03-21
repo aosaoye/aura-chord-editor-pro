@@ -9,6 +9,7 @@ import { jsPDF } from "jspdf";
 import { toPng } from "html-to-image";
 import { Document, Packer, Paragraph, TextRun } from "docx";
 import { saveAs } from "file-saver";
+import GlobalAnimatedBackground from "../components/GlobalAnimatedBackground";
 
 interface Suggestion {
   id: number;
@@ -263,12 +264,22 @@ export default function LyricsSearchPage() {
       const margin = 60;
       
       const themeColors: Record<string, string> = {
-        "theme-amber": "#F59E0B", "theme-violet": "#8B5CF6", "theme-emerald": "#10B981", 
-        "theme-rose": "#F43F5E", "theme-sky": "#0EA5E9"
+        "theme-amber": "#d97706", "theme-forest": "#047857", "theme-blue": "#2563EB", 
+        "theme-red": "#DC2626", "theme-orange": "#EA580C", "theme-cyan": "#0891B2", 
+        "theme-purple": "#9333EA", "theme-lime": "#65A30D", "theme-teal": "#0D9488", 
+        "theme-indigo": "#4F46E5", "theme-violet": "#7C3AED", "theme-fuchsia": "#C026D3", 
+        "theme-rose": "#E11D48", "theme-slate": "#475569", "theme-gray": "#4B5563", "theme-zinc": "#52525B"
       };
-      const pColorHex = themeColors[settings.colorTheme] || "#F59E0B";
-      const bgColor = "#0f0f0f";
-      const textColor = "#dcdcdc";
+      const pColorHex = themeColors[settings.colorTheme as keyof typeof themeColors] || "#d97706";
+      
+      const isLight = !document.documentElement.classList.contains('dark');
+      const textColorMain = isLight ? "#111827" : "#d1d1d1";
+      const titleColor = isLight ? "#111827" : "white";
+      const footerColor = isLight ? "#6b7280" : "white";
+      const borderColor = isLight ? "#e5e7eb" : "#333333";
+      const backgroundStyle = isLight 
+        ? `radial-gradient(circle at top right, ${pColorHex}15 0%, #ffffff 600px), #ffffff`
+        : `radial-gradient(circle at top right, ${pColorHex}25 0%, #0a0a0a 600px), #0a0a0a`;
 
       // Contenedor temporal (fuera de la vista)
       const hiddenContainer = document.createElement("div");
@@ -302,21 +313,21 @@ export default function LyricsSearchPage() {
       };
       
       const getHeader = () => `
-         <div style="margin-bottom: 32px; text-align: center; display: flex; flex-direction: column; align-items: center; border-bottom: 1px solid #333; padding-bottom: 24px;">
-            <h2 style="color: white; font-size: 48px; font-weight: 300; font-family: ui-sans-serif, system-ui, sans-serif; margin: 0 0 8px 0; letter-spacing: -2px;">${song.toUpperCase()}</h2>
+         <div style="margin-bottom: 32px; text-align: center; display: flex; flex-direction: column; align-items: center; border-bottom: 1px solid ${borderColor}; padding-bottom: 24px;">
+            <h2 style="color: ${titleColor}; font-size: 48px; font-weight: 300; font-family: ui-sans-serif, system-ui, sans-serif; margin: 0 0 8px 0; letter-spacing: -2px;">${song.toUpperCase()}</h2>
             <h3 style="color: ${pColorHex}; font-size: 12px; font-weight: bold; font-family: ui-sans-serif, system-ui, sans-serif; margin: 0; letter-spacing: 0.4em; text-transform: uppercase;">${artist.toUpperCase()}</h3>
          </div>
          <div style="display: flex; flex-direction: row; gap: 32px; flex: 1; align-items: flex-start;">
       `;
       const getFooter = (pageNum: number) => `
          </div>
-         <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; opacity: 0.6;">
-            <p style="font-size: 8px; font-weight: bold; letter-spacing: 0.3em; text-transform: uppercase; color: white; margin: 0; line-height: 1.6; font-family: ui-sans-serif, system-ui, sans-serif;">
+         <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid ${borderColor}; display: flex; justify-content: space-between; align-items: center; opacity: 0.6;">
+            <p style="font-size: 8px; font-weight: bold; letter-spacing: 0.3em; text-transform: uppercase; color: ${footerColor}; margin: 0; line-height: 1.6; font-family: ui-sans-serif, system-ui, sans-serif;">
                POWERED BY LYRICS.OVH<br/>
                LETRA OBTENIDA A TRAVÉS DE CHORDPRO<br/>
                <span style="opacity: 0.5; letter-spacing: 0.1em;">PÁGINA ${pageNum + 1}</span>
             </p>
-            <span style="font-size: 24px; font-weight: 900; letter-spacing: -1px; color: white; font-family: ui-sans-serif, system-ui, sans-serif; margin: 0;">C</span>
+            <span style="font-size: 24px; font-weight: 900; letter-spacing: -1px; color: ${footerColor}; font-family: ui-sans-serif, system-ui, sans-serif; margin: 0;">C</span>
          </div>
       `;
 
@@ -348,7 +359,7 @@ export default function LyricsSearchPage() {
          }
 
          const stanzaHtml = `
-            <div style="color: #d1d1d1; font-size: 16px; line-height: 1.7; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; font-weight: 400; white-space: pre-wrap;">${stanza}</div>
+            <div style="color: ${textColorMain}; font-size: 16px; line-height: 1.7; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; font-weight: 400; white-space: pre-wrap;">${stanza}</div>
          `;
          currentPageHtml += stanzaHtml;
          currentLinesInsideColumn += blocksNeeded;
@@ -363,7 +374,7 @@ export default function LyricsSearchPage() {
          const pageDiv = document.createElement("div");
          pageDiv.style.width = `${a4Width}px`;
          pageDiv.style.height = `${a4Height}px`;
-         pageDiv.style.background = `radial-gradient(circle at top right, ${pColorHex}25 0%, #0a0a0a 600px), #0a0a0a`;
+         pageDiv.style.background = backgroundStyle;
          pageDiv.style.padding = `${margin}px`;
          pageDiv.style.boxSizing = "border-box";
          pageDiv.style.display = "flex";
@@ -382,7 +393,7 @@ export default function LyricsSearchPage() {
             const pageDiv = document.createElement("div");
             pageDiv.style.width = `${a4Width}px`;
             pageDiv.style.height = `${a4Height}px`;
-            pageDiv.style.background = `radial-gradient(circle at top right, ${pColorHex}25 0%, #0a0a0a 600px), #0a0a0a`;
+            pageDiv.style.background = backgroundStyle;
             pageDiv.style.padding = `${margin}px`;
             pageDiv.style.boxSizing = "border-box";
             pageDiv.style.display = "flex";
@@ -422,24 +433,31 @@ export default function LyricsSearchPage() {
       const maxLineWidth = pdfWidth - margin * 2;
       
       // Theme parser for jsPDF
-      const themeColors: Record<string, [number, number, number]> = {
-        "theme-amber": [245, 158, 11],
-        "theme-violet": [139, 92, 246],
-        "theme-emerald": [16, 185, 129],
-        "theme-rose": [244, 63, 94],
-        "theme-sky": [14, 165, 233],
+      // Theme parser for jsPDF
+      const themeColorsRGB: Record<string, [number, number, number]> = {
+        "theme-amber": [217, 119, 6], "theme-forest": [4, 120, 87], "theme-blue": [37, 99, 235],
+        "theme-red": [220, 38, 38], "theme-orange": [234, 88, 12], "theme-cyan": [8, 145, 178],
+        "theme-purple": [147, 51, 234], "theme-lime": [101, 163, 13], "theme-teal": [13, 148, 136],
+        "theme-indigo": [79, 70, 229], "theme-violet": [124, 58, 237], "theme-fuchsia": [192, 38, 211],
+        "theme-rose": [225, 29, 72], "theme-slate": [71, 85, 105], "theme-gray": [75, 85, 99], "theme-zinc": [82, 82, 91]
       };
-      const pColor = themeColors[settings.colorTheme] || [245, 158, 11];
+      const pColor = themeColorsRGB[settings.colorTheme as keyof typeof themeColorsRGB] || [217, 119, 6];
 
+      const isLight = !document.documentElement.classList.contains('dark');
       const paintBg = () => {
-        pdf.setFillColor(15, 15, 15); // #0f0f0f (Similar to PNG background)
+        if (isLight) {
+          pdf.setFillColor(255, 255, 255);
+        } else {
+          pdf.setFillColor(15, 15, 15);
+        }
         pdf.rect(0, 0, pdfWidth, pdfHeight, 'F');
       };
 
       paintBg();
 
-      // TITULO (Blanco, normal weight, elegant)
-      pdf.setTextColor(255, 255, 255);
+      // TITULO
+      if (isLight) pdf.setTextColor(17, 24, 39);
+      else pdf.setTextColor(255, 255, 255);
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(28);
       // @ts-ignore: charSpace exists in jspdf types
@@ -453,12 +471,14 @@ export default function LyricsSearchPage() {
       pdf.text(artist.toUpperCase(), pdfWidth / 2, margin + 28, { align: "center", charSpace: 3 });
 
       // Separator Line
-      pdf.setDrawColor(40, 40, 40);
+      if (isLight) pdf.setDrawColor(229, 231, 235);
+      else pdf.setDrawColor(40, 40, 40);
       pdf.setLineWidth(0.3);
       pdf.line(margin, margin + 38, pdfWidth - margin, margin + 38);
 
       // TEXTO DE LA CANCIÓN
-      pdf.setTextColor(220, 220, 220); // Better contrast matching PNG
+      if (isLight) pdf.setTextColor(17, 24, 39);
+      else pdf.setTextColor(220, 220, 220); // Better contrast matching PNG
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(10.5);
       
@@ -557,10 +577,11 @@ export default function LyricsSearchPage() {
   if (!isHydrated) return null;
 
   return (
-    <div className={`min-h-screen bg-background text-foreground transition-colors duration-500 font-sans selection:bg-primary selection:text-white ${settings.colorTheme}`}>
-      <Navbar />
+    <div className={`min-h-[100svh] bg-background text-foreground transition-colors duration-500 font-sans selection:bg-primary/30 selection:text-white relative overflow-hidden flex flex-col ${settings.colorTheme}`}>
+      <GlobalAnimatedBackground />
+      <Navbar variant="transparent" />
       
-      <div className="pt-36 pb-32 px-6 sm:px-10 max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-both">
+      <div className="relative z-10 pt-36 pb-32 px-6 sm:px-10 max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-both flex-grow">
         
         {/* CABECERA BUSCADOR ESTÉTICA PREMIUM */}
         <div className="mb-12 text-center flex flex-col items-center">
@@ -573,17 +594,17 @@ export default function LyricsSearchPage() {
         </div>
         
         {/* INPUT DE BÚSQUEDA FLOTANTE Y DROPDOWN */}
-        <div className="relative mb-24 w-full max-w-2xl mx-auto" ref={searchContainerRef}>
+        <div className="relative mb-24 w-full max-w-5xl mx-auto" ref={searchContainerRef}>
           <form onSubmit={handleSearchSubmit}>
             <div className="relative flex items-center shadow-2xl shadow-primary/5 rounded-full ring-1 ring-border bg-background focus-within:ring-2 focus-within:ring-primary transition-all duration-300">
-               <span className="pl-6 text-xl text-muted-foreground">♪</span>
+               <span className="pl-8 text-2xl text-muted-foreground">♪</span>
                <input
                  type="text"
                  value={query}
                  onChange={handleQueryChange}
                  onFocus={() => { if (query.trim()) setShowSuggestions(true); }}
                  placeholder="Busca por canción o artista..."
-                 className="w-full bg-transparent py-5 px-4 text-lg font-medium text-foreground outline-none placeholder:text-muted-foreground/50 h-16"
+                 className="w-full bg-transparent py-6 px-6 text-xl sm:text-2xl font-light text-foreground outline-none placeholder:text-muted-foreground/40 h-20"
                  autoComplete="off"
                  autoFocus
                />
@@ -676,14 +697,13 @@ export default function LyricsSearchPage() {
             {/* THE LYRICS CANVAS - DISEÑO AWWWARDS MINIMALISTA - COMPACTO */}
             <div 
               ref={canvasRef}
-              style={{ backgroundColor: '#0a0a0a', borderColor: '#1a1a1a' }}
-              className="text-[#ededed] p-8 sm:p-12 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border border-[#222] dark:border-[#1a1a1a] w-full relative overflow-hidden group max-w-5xl mx-auto"
+              className="bg-background text-foreground p-8 sm:p-12 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border border-border w-full relative overflow-hidden group max-w-5xl mx-auto rounded-3xl"
             >
               {/* Deco Glow */}
               <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 blur-[100px] pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-1000"></div>
 
-              <div className="relative z-10 w-full text-center mb-8 pb-6 border-b border-[#333]">
-                 <h2 className="text-3xl sm:text-5xl font-light tracking-tighter mb-2 text-white">
+              <div className="relative z-10 w-full text-center mb-8 pb-6 border-b border-border">
+                 <h2 className="text-3xl sm:text-5xl font-light tracking-tighter mb-2 text-foreground">
                    {song.toUpperCase()}
                  </h2>
                  <h3 className="text-xs font-bold tracking-[0.4em] text-primary uppercase">
@@ -691,7 +711,7 @@ export default function LyricsSearchPage() {
                  </h3>
               </div>
               
-              <div className={`columns-1 sm:columns-2 md:columns-3 gap-8 px-2 sm:px-6 mx-auto text-sm sm:text-base leading-relaxed ${settings.fontFamily} ${settings.alignment} text-[#d1d1d1]`}>
+              <div className={`columns-1 sm:columns-2 md:columns-3 gap-8 px-2 sm:px-6 mx-auto text-sm sm:text-base leading-relaxed ${settings.fontFamily} ${settings.alignment} text-foreground/90`}>
                 {lyrics.split(/\n\s*\n/).map((stanza, idx) => (
                   <div key={idx} className="break-inside-avoid mb-6 whitespace-pre-wrap">
                     {stanza}
@@ -699,12 +719,12 @@ export default function LyricsSearchPage() {
                 ))}
               </div>
               
-              <div className="mt-12 pt-6 border-t border-[#333] flex justify-between items-center opacity-40 hover:opacity-100 transition-opacity">
+              <div className="mt-12 pt-6 border-t border-border flex justify-between items-center opacity-40 hover:opacity-100 transition-opacity text-foreground">
                  <p className="text-[7px] font-bold tracking-[0.3em] uppercase">
                    POWERED BY LYRICS.OVH<br/>
                    LETRA OBTENIDA A TRAVÉS DE CHORDPRO
                  </p>
-                 <span className="text-lg font-black tracking-tighter shrink-0 text-white">C</span>
+                 <span className="text-lg font-black tracking-tighter shrink-0 text-foreground">C</span>
               </div>
             </div>
           </div>

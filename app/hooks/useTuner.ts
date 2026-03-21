@@ -1,14 +1,35 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-// Frecuencias exactas de las cuerdas de la guitarra estándar
-const GUITAR_STRINGS = [
-  { note: 'E2', freq: 82.41, string: 6 },
-  { note: 'A2', freq: 110.00, string: 5 },
-  { note: 'D3', freq: 146.83, string: 4 },
-  { note: 'G3', freq: 196.00, string: 3 },
-  { note: 'B3', freq: 246.94, string: 2 },
-  { note: 'E4', freq: 329.63, string: 1 }
-];
+export type TunerInstrument = 'guitar' | 'bass' | 'ukulele' | 'violin' | 'chromatic';
+
+export const INSTRUMENT_STRINGS = {
+  guitar: [
+    { note: 'E2', freq: 82.41, string: 6 },
+    { note: 'A2', freq: 110.00, string: 5 },
+    { note: 'D3', freq: 146.83, string: 4 },
+    { note: 'G3', freq: 196.00, string: 3 },
+    { note: 'B3', freq: 246.94, string: 2 },
+    { note: 'E4', freq: 329.63, string: 1 }
+  ],
+  bass: [
+    { note: 'E1', freq: 41.20, string: 4 },
+    { note: 'A1', freq: 55.00, string: 3 },
+    { note: 'D2', freq: 73.42, string: 2 },
+    { note: 'G2', freq: 98.00, string: 1 }
+  ],
+  ukulele: [
+    { note: 'G4', freq: 392.00, string: 4 },
+    { note: 'C4', freq: 261.63, string: 3 },
+    { note: 'E4', freq: 329.63, string: 2 },
+    { note: 'A4', freq: 440.00, string: 1 }
+  ],
+  violin: [
+    { note: 'G3', freq: 196.00, string: 4 },
+    { note: 'D4', freq: 293.66, string: 3 },
+    { note: 'A4', freq: 440.00, string: 2 },
+    { note: 'E5', freq: 659.25, string: 1 }
+  ]
+};
 
 // Algoritmo de Autocorrelación para detectar el tono (Pitch Detection)
 function autoCorrelate(buf: Float32Array, sampleRate: number) {
@@ -52,13 +73,18 @@ function autoCorrelate(buf: Float32Array, sampleRate: number) {
   return sampleRate / T0;
 }
 
-export function useTuner() {
+export function useTuner(instrument: TunerInstrument = 'chromatic') {
   const [isListening, setIsListening] = useState(false);
   const [pitch, setPitch] = useState<number>(0);
   const [closestString, setClosestString] = useState<{ note: string, freq: number, string: number } | null>(null);
   const [cents, setCents] = useState<number>(0);
 
   const [error, setError] = useState<string | null>(null);
+
+  const instrumentRef = useRef<TunerInstrument>(instrument);
+  useEffect(() => {
+    instrumentRef.current = instrument;
+  }, [instrument]);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -109,32 +135,76 @@ export function useTuner() {
     setClosestString(null);
   }, []);
 
+  // Mantenemos un historial de frecuencias para filtro de mediana (suavizado)
+  const pitchHistoryRef = useRef<number[]>([]);
+
+  const getMedianPitch = (freq: number) => {
+    pitchHistoryRef.current.push(freq);
+    if (pitchHistoryRef.current.length > 5) {
+      pitchHistoryRef.current.shift();
+    }
+    const sorted = [...pitchHistoryRef.current].sort((a, b) => a - b);
+    return sorted[Math.floor(sorted.length / 2)];
+  };
+
   const updatePitch = () => {
     if (!analyserRef.current || !audioCtxRef.current) return;
 
     const buffer = new Float32Array(analyserRef.current.fftSize);
     analyserRef.current.getFloatTimeDomainData(buffer);
-    const freq = autoCorrelate(buffer, audioCtxRef.current.sampleRate);
+    const rawFreq = autoCorrelate(buffer, audioCtxRef.current.sampleRate);
 
-    if (freq !== -1) {
+    // Filter valid pitches
+    if (rawFreq !== -1 && rawFreq > 20 && rawFreq < 2000) {
+      
+      const freq = getMedianPitch(rawFreq);
       setPitch(freq);
       
-      // Encontrar la cuerda más cercana
-      let closest = GUITAR_STRINGS[0];
-      let minDiff = Math.abs(freq - GUITAR_STRINGS[0].freq);
-      for (let i = 1; i < GUITAR_STRINGS.length; i++) {
-        const diff = Math.abs(freq - GUITAR_STRINGS[i].freq);
-        if (diff < minDiff) {
-          closest = GUITAR_STRINGS[i];
-          minDiff = diff;
-        }
-      }
-      setClosestString(closest);
+      const currentInst = instrumentRef.current;
+      let targetFreq = 440;
+      let targetNote = "A4";
+      let targetStringNum = 0;
 
-      // Calcular los "cents" (desviación: 1 cent = 1/100 de un semitono)
-      const centsOff = Math.floor(1200 * Math.log2(freq / closest.freq));
-      // Limitamos el rango visual entre -50 y +50 cents
+      if (currentInst === 'chromatic') {
+        const noteNum = 12 * Math.log2(freq / 440) + 69;
+        const roundedNote = Math.round(noteNum);
+        const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        const noteName = NOTE_NAMES[roundedNote % 12];
+        const octave = Math.floor(roundedNote / 12) - 1;
+        
+        targetFreq = 440 * Math.pow(2, (roundedNote - 69) / 12);
+        targetNote = `${noteName}${octave}`;
+        targetStringNum = 0;
+      } else {
+        const strings = INSTRUMENT_STRINGS[currentInst] || INSTRUMENT_STRINGS.guitar;
+        let minRatio = Infinity;
+        let bestTarget = strings[0];
+
+        for (const str of strings) {
+          const ratioDiff = Math.abs(Math.log2(freq / str.freq));
+          if (ratioDiff < minRatio) {
+            minRatio = ratioDiff;
+            bestTarget = str;
+          }
+        }
+        targetFreq = bestTarget.freq;
+        targetNote = bestTarget.note;
+        targetStringNum = bestTarget.string;
+      }
+      
+      setClosestString({ 
+        note: targetNote, 
+        freq: targetFreq, 
+        string: targetStringNum 
+      });
+
+      const centsOff = Math.floor(1200 * Math.log2(freq / targetFreq));
       setCents(Math.max(-50, Math.min(50, centsOff)));
+    } else {
+       // Opcional: limpiar la mediana si hay silencio para no arrastrar la cola
+       if (rawFreq === -1 && pitchHistoryRef.current.length > 0) {
+         pitchHistoryRef.current.shift();
+       }
     }
 
     rafIdRef.current = requestAnimationFrame(updatePitch);

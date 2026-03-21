@@ -1,107 +1,180 @@
 "use client";
 
-import { useTuner } from "../hooks/useTuner";
+import { useState } from "react";
+import { useTuner, TunerInstrument } from "../hooks/useTuner";
+
+const INSTRUMENTS: { id: TunerInstrument, label: string }[] = [
+  { id: 'guitar', label: 'Guitarra' },
+  { id: 'ukulele', label: 'Ukelele' },
+  { id: 'bass', label: 'Bajo' },
+  { id: 'violin', label: 'Violín' },
+  { id: 'chromatic', label: 'Cromático' }
+];
 
 export default function GuitarTuner({ onClose }: { onClose: () => void }) {
-  const { isListening, startTuning, stopTuning, pitch, closestString, cents, error } = useTuner();
+  const [instrument, setInstrument] = useState<TunerInstrument>('guitar');
+  const { isListening, startTuning, stopTuning, pitch, closestString, cents, error } = useTuner(instrument);
 
-  // El estado ideal es cuando la diferencia está entre -3 y +3 cents
+  // Consider in tune if within +/- 3 cents
   const isInTune = Math.abs(cents) <= 3;
   const hasSignal = pitch > 0;
 
-  // Rotación de la aguja: -50 cents = -90 grados (izq), +50 cents = 90 grados (der)
+  // Needle Rotation: -50 cents = -90 degrees, +50 cents = 90 degrees
   const needleRotation = (cents / 50) * 90;
 
-  return (
-    <div className="fixed inset-0 z-[999] bg-[#0F1115] text-white flex flex-col items-center justify-center font-sans animate-in fade-in duration-300">
-      
-      {/* Botón de cierre */}
-      <button onClick={() => { stopTuning(); onClose(); }} className="absolute top-10 left-10 opacity-50 hover:opacity-100 transition-opacity tracking-widest text-xs uppercase font-bold">
-        ← Volver
-      </button>
+  let statusText = "ESPERANDO SEÑAL...";
+  let statusColor = "text-zinc-600";
+  
+  if (hasSignal && closestString) {
+    if (isInTune) {
+      statusText = "AFINACIÓN PERFECTA";
+      statusColor = "text-teal-400";
+    } else if (cents < -3) {
+      statusText = "APRETAR CUERDA ▲";
+      statusColor = "text-amber-400";
+    } else {
+      statusText = "AFLOJAR CUERDA ▼";
+      statusColor = "text-orange-500";
+    }
+  }
 
-      <div className="flex flex-col items-center w-full max-w-md p-8">
-        <h2 className="text-sm tracking-[0.3em] font-bold text-gray-500 uppercase mb-16">Afinador Inteligente</h2>
+  return (
+    <div className="fixed inset-0 z-[9999] bg-[#0A0C10] text-white flex flex-col items-center justify-center font-sans animate-in fade-in duration-300">
+      
+      {/* Background Decor */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500/5 rounded-full blur-[150px]"></div>
+      </div>
+
+      {/* Top Banner & Back Button */}
+      <div className="absolute top-0 left-0 w-full p-8 flex items-center justify-between z-10">
+        <button onClick={() => { stopTuning(); onClose(); }} className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors tracking-[0.2em] text-xs uppercase font-bold">
+          <span className="text-lg leading-none mb-1">&larr;</span> Volver
+        </button>
+      </div>
+
+      <div className="flex flex-col items-center w-full max-w-2xl px-6 relative z-10 mt-10">
+        
+        <h2 className="text-[10px] tracking-[0.4em] font-bold text-zinc-500 uppercase mb-8">Afinador Inteligente</h2>
+
+        {/* Instrument Selector */}
+        <div className="flex flex-wrap justify-center gap-2 mb-16 bg-white/5 p-2 rounded-full border border-white/5 backdrop-blur-md shadow-2xl">
+          {INSTRUMENTS.map(inst => (
+            <button
+              key={inst.id}
+              onClick={() => {
+                setInstrument(inst.id);
+                // Restart tuner implicitly if listening? 
+                // Currently just changing state works because useTuner listens to it.
+              }}
+              className={`px-5 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all duration-300 ${
+                instrument === inst.id 
+                  ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30 shadow-[0_0_15px_rgba(45,212,191,0.2)]' 
+                  : 'text-zinc-500 hover:text-zinc-300 border border-transparent'
+              }`}
+            >
+              {inst.label}
+            </button>
+          ))}
+        </div>
 
         {error ? (
-          <div className="flex flex-col items-center justify-center h-48 bg-red-500/10 border border-red-500/20 rounded-2xl p-6 text-center">
-            <span className="text-red-500 mb-2 font-bold uppercase tracking-widest text-xs">Error de Micrófono</span>
-            <p className="text-gray-400 text-sm max-w-xs">{error}</p>
+          <div className="flex flex-col items-center justify-center h-48 bg-red-500/5 border border-red-500/10 rounded-[2rem] p-8 text-center max-w-sm w-full mx-auto">
+            <span className="text-red-400 mb-2 font-bold uppercase tracking-[0.2em] text-[10px]">Error de Sistema</span>
+            <p className="text-zinc-500 text-xs leading-relaxed">{error}</p>
           </div>
         ) : (
           <>
-            {/* DIAL PRINCIPAL */}
-            <div className="relative w-72 h-36 mb-12 flex justify-center overflow-hidden">
-          {/* Arco decorativo fondo */}
-          <div className="absolute top-0 w-72 h-72 rounded-full border-2 border-gray-800 border-t-transparent border-l-transparent -rotate-45" />
-          
-          {/* Zona de afinación perfecta (Centro) */}
-          <div className="absolute top-0 w-72 h-72 rounded-full border-t-4 border-transparent border-t-[#22c55e] border-l-transparent rotate-45 opacity-20" style={{ clipPath: 'polygon(45% 0, 55% 0, 50% 50%)' }} />
-
-          {/* LA AGUJA */}
-          <div 
-            className="absolute bottom-0 w-1 h-32 origin-bottom transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
-            style={{ 
-              transform: `rotate(${hasSignal ? needleRotation : 0}deg)`,
-              backgroundColor: hasSignal ? (isInTune ? '#22c55e' : '#ef4444') : '#374151',
-              boxShadow: isInTune ? '0 0 15px #22c55e' : 'none'
-            }}
-          >
-             {/* Círculo base de la aguja */}
-             <div className="absolute -bottom-2 -left-1.5 w-4 h-4 rounded-full bg-inherit" />
-          </div>
-        </div>
-
-        {/* INDICADOR DE NOTA */}
-        <div className="flex flex-col items-center h-40">
-          {hasSignal && closestString ? (
-            <>
-              <div className="flex items-start">
-                <span className={`text-8xl font-black tracking-tighter transition-colors ${isInTune ? 'text-green-500' : 'text-white'}`}>
-                  {closestString.note.charAt(0)}
-                </span>
-                <span className="text-2xl text-gray-400 mt-2 font-bold">{closestString.note.charAt(1)}</span>
-              </div>
-              <p className="text-gray-500 font-mono mt-4 text-sm">{pitch.toFixed(1)} Hz</p>
+            {/* The DIAL */}
+            <div className="relative w-80 h-40 mb-16 flex justify-center overflow-hidden">
               
-              <div className="mt-6 flex items-center gap-4">
-                 <span className={`text-xs font-bold uppercase tracking-widest transition-colors duration-300 ${cents < -3 ? 'text-red-500' : 'text-gray-700'}`}>Bajo</span>
-                 <span className={`w-3 h-3 rounded-full transition-all duration-300 ${isInTune ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-gray-800'}`} />
-                 <span className={`text-xs font-bold uppercase tracking-widest transition-colors duration-300 ${cents > 3 ? 'text-red-500' : 'text-gray-700'}`}>Alto</span>
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full text-gray-600">
-              <span className="text-6xl font-black tracking-tighter mb-4 transition-colors">-</span>
-              <p className="text-sm font-bold tracking-widest uppercase">Esperando señal...</p>
-            </div>
-          )}
-        </div>
-      </>
-    )}
+              {/* Outer Arc (Gray) */}
+              <div className="absolute top-0 w-80 h-80 rounded-full border-[3px] border-zinc-800 border-t-transparent border-l-transparent -rotate-45" />
 
-        {/* CONTROLES */}
-        <div className="mt-20">
+              {/* Tick marks (Simulated by repeating radial gradients if needed, or simple arc) */}
+              <div className="absolute top-2 w-[19.5rem] h-[19.5rem] rounded-full border border-zinc-800/50 border-t-transparent border-l-transparent -rotate-45 border-dashed" />
+              
+              {/* Center Tune Arc (Green) */}
+              <div 
+                className="absolute top-0 w-80 h-80 rounded-full border-t-[4px] border-transparent border-t-teal-500 border-l-transparent rotate-45 opacity-40 blur-[1px]" 
+                style={{ clipPath: 'polygon(46% 0, 54% 0, 50% 50%)' }} 
+              />
+
+              {/* Central Needle Glow */}
+              <div className="absolute bottom-0 w-full h-[100px] bg-teal-500/10 blur-[40px] rounded-full opacity-50"></div>
+
+              {/* THE NEEDLE */}
+              <div 
+                className="absolute bottom-0 w-[3px] h-36 origin-bottom rounded-full transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
+                style={{ 
+                  transform: `rotate(${hasSignal ? needleRotation : 0}deg)`,
+                  backgroundColor: hasSignal ? (isInTune ? '#2dd4bf' : (cents < -3 ? '#fbbf24' : '#f97316')) : '#3f3f46',
+                  boxShadow: hasSignal ? `0 0 20px ${isInTune ? '#2dd4bf' : (cents < -3 ? '#fbbf24' : '#f97316')}` : 'none'
+                }}
+              >
+                 {/* Pivot Base */}
+                 <div className="absolute -bottom-2 -left-2 w-5 h-5 rounded-full bg-[#0A0C10] border-4 border-inherit" />
+              </div>
+            </div>
+
+            {/* STATUS & NOTE DISPLAY */}
+            <div className="flex flex-col items-center justify-center min-h-[160px] relative">
+              
+              {hasSignal && closestString ? (
+                <div className="flex flex-col items-center animate-in zoom-in-95 duration-500">
+                  <div className="flex items-start text-white mb-2 relative">
+                    <span className={`text-[7rem] leading-none font-bold tracking-tighter ${isInTune ? 'text-teal-400 drop-shadow-[0_0_30px_rgba(45,212,191,0.4)]' : ''}`}>
+                      {closestString.note.charAt(0)}
+                    </span>
+                    <span className={`text-4xl mt-2 font-light ${isInTune ? 'text-teal-400 text-opacity-80' : 'text-zinc-500'}`}>
+                      {closestString.note.substring(1)}
+                    </span>
+                    {instrument !== 'chromatic' && closestString.string > 0 && (
+                      <span className="absolute -left-12 top-4 text-xs font-bold text-zinc-600 uppercase tracking-widest border border-zinc-800 rounded-full w-8 h-8 flex items-center justify-center">
+                        {closestString.string}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <p className="text-zinc-600 font-mono text-xs tracking-[0.2em]">{pitch.toFixed(1)} HZ</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-zinc-800">
+                  <span className="text-[7rem] leading-none font-light tracking-tighter mb-2">-</span>
+                  <div className="w-16 h-1 bg-zinc-800/50 rounded-full mb-4"></div>
+                </div>
+              )}
+
+              {/* Feedback Text */}
+              <p className={`absolute -bottom-8 text-[10px] font-bold tracking-[0.3em] uppercase transition-colors duration-500 ${statusColor}`}>
+                {statusText}
+              </p>
+            </div>
+          </>
+        )}
+
+        {/* BOTTOM CONTROLS */}
+        <div className="mt-24 mb-10 w-full flex justify-center">
           {error ? (
              <button 
                onClick={onClose}
-               className="px-12 py-4 bg-white/10 text-white text-xs font-bold uppercase tracking-[0.2em] rounded-full hover:bg-white/20 active:scale-95 transition-all"
+               className="px-14 py-5 bg-white/5 border border-white/10 text-white text-[10px] font-bold uppercase tracking-[0.3em] rounded-full hover:bg-white/10 active:scale-95 transition-all w-64 shadow-xl"
              >
-               Cerrar
+               Salir
              </button>
           ) : !isListening ? (
              <button 
                onClick={startTuning}
-               className="px-12 py-4 bg-white text-black text-xs font-bold uppercase tracking-[0.2em] rounded-full hover:scale-105 active:scale-95 transition-all"
+               className="px-14 py-5 bg-white text-black text-[10px] font-bold uppercase tracking-[0.3em] rounded-full hover:scale-105 active:scale-95 transition-all w-64 shadow-[0_10px_40px_rgba(255,255,255,0.2)]"
              >
                Comenzar
              </button>
           ) : (
              <button 
                onClick={stopTuning}
-               className="px-12 py-4 bg-red-500/10 text-red-500 border border-red-500/20 text-xs font-bold uppercase tracking-[0.2em] rounded-full hover:bg-red-500/20 active:scale-95 transition-all"
+               className="px-14 py-5 bg-transparent border border-zinc-700 text-zinc-400 text-[10px] font-bold uppercase tracking-[0.3em] rounded-full hover:bg-zinc-900 hover:text-white active:scale-95 transition-all w-64"
              >
-               Detener
+               Pausar / Detener
              </button>
           )}
         </div>

@@ -8,7 +8,9 @@ export interface Chord {
 export interface Syllable {
     id: string,
     text: string,
-    chord: Chord | null
+    chord: Chord | null,
+    highlightColor?: string,
+    casing?: 'lowercase' | 'uppercase' | 'capitalize' | 'default'
 }
 
 export interface Word {
@@ -39,7 +41,7 @@ export interface LayoutSettings {
   chordFontSize: number;     // ej: 14 (px)
   lineHeight: number;        // ej: 2.5 (rem/em)
   fontFamily: 'sans' | 'serif' | 'mono';
-  alignment?: 'justify-start' | 'justify-center' | 'justify-end';
+  alignment?: 'justify-start' | 'justify-center' | 'justify-end' | 'justify-between';
   notation?: 'english' | 'spanish' | 'roman';
   showChords?: boolean;
   capo?: number;

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { Menu, X } from "lucide-react";
@@ -21,25 +21,38 @@ interface NavbarProps {
 export default function Navbar({ variant = "default", className = "", centerContent, rightContent, saveStatus, lastSaved, forceSave }: NavbarProps) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  let navClasses = "w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between fixed top-0 z-50 ";
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    handleScroll(); // Check initial scroll
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  let navClasses = "w-full px-6 md:px-12 flex items-center justify-between fixed top-0 z-[100] transition-all duration-500 ";
 
   switch (variant) {
     case "transparent":
-      navClasses += "py-3 sm:py-3 lg:py-3 text-foreground mix-blend-difference ";
+      navClasses += scrolled 
+         ? "py-5 bg-background/90 backdrop-blur-xl border-b border-border text-foreground "
+         : "py-5 text-foreground bg-transparent border-transparent ";
       break;
     case "editor":
-      navClasses += "py-3 sm:py-3 lg:py-3 bg-background/95 backdrop-blur-md border-b border-border shadow-sm transition-transform duration-500 ";
+      navClasses += "py-3 bg-background border-b border-border text-foreground ";
       break;
     case "border":
-      navClasses += "py-3 sm:py-3 lg:py-3 bg-background/80 backdrop-blur-md border-b border-border ";
+      navClasses += "py-5 bg-background/90 backdrop-blur-xl border-b border-border text-foreground ";
       break;
     default:
-      navClasses += "py-3 sm:py-3 lg:py-3 bg-background/80 backdrop-blur-md ";
+      navClasses += "py-5 bg-background/80 backdrop-blur-md border-b border-border text-foreground ";
       break;
   }
 
-  navClasses += className;
+  // Only append if className is explicitly string 
+  if (className) {
+     navClasses += " " + className;
+  }
 
   const isActive = (path: string) => {
     if (path === "/") return pathname === "/";
@@ -55,7 +68,7 @@ export default function Navbar({ variant = "default", className = "", centerCont
 
   return (
     <nav className={navClasses}>
-      <div className="flex-shrink-0 flex items-center">
+      <div className="flex-1 flex items-center justify-start">
         <Link href="/" className="flex items-center gap-2 group">
           
           {/* ISOTIPO SVG HIGH-QUALITY (Exact Logo 2 Style) */}
@@ -84,16 +97,15 @@ export default function Navbar({ variant = "default", className = "", centerCont
       
       {/* Desktop Navigation */}
       {centerContent || (
-        <div className="hidden lg:flex items-center gap-10 text-[10px] font-bold tracking-[0.2em] uppercase">
+        <div className="hidden lg:flex flex-1 justify-center items-center gap-10 text-[10px] font-bold tracking-[0.2em] uppercase">
           <Link href="/" className={linkClass("/")}>Inicio</Link>
           <Link href="/search" className={linkClass("/search")}>Buscar Letras</Link>
           <Link href="/community" className={linkClass("/community")}>Comunidad</Link>
-          <Link href="/pricing" className={linkClass("/pricing")}>Planes (Pro)</Link>
         </div>
       )}
 
       {/* Desktop Right Content */}
-      <div className="hidden lg:flex shrink min-w-0 items-center justify-end gap-6 overflow-hidden">
+      <div className="hidden lg:flex flex-1 items-center justify-end gap-6">
         {rightContent || (
           <>
             <SignedOut>
@@ -119,14 +131,14 @@ export default function Navbar({ variant = "default", className = "", centerCont
       </div>
 
       {/* Mobile Hamburger */}
-      <div className="lg:hidden flex items-center gap-4">
+      <div className="lg:hidden flex items-center gap-4 relative z-50">
         <SignedIn>
            <NotificationBell />
            <UserButton />
         </SignedIn>
         <button 
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-          className="text-foreground p-2"
+          className="text-white p-2"
         >
           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -134,17 +146,16 @@ export default function Navbar({ variant = "default", className = "", centerCont
 
       {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
-        <div className="absolute top-full left-0 w-full bg-background border-b border-border shadow-lg flex flex-col p-6 gap-6 lg:hidden max-h-[80vh] overflow-y-auto">
+        <div className="absolute top-[calc(100%+1rem)] left-0 w-full bg-[#0A0C12]/95 backdrop-blur-3xl border border-white/10 rounded-3xl shadow-2xl flex flex-col p-8 gap-8 lg:hidden animate-in fade-in slide-in-from-top-4 duration-300">
           {centerContent ? centerContent : (
-            <div className="flex flex-col gap-6 text-sm font-bold tracking-[0.2em] uppercase">
+            <div className="flex flex-col gap-6 text-xs font-bold tracking-[0.3em] uppercase items-center">
               <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/")}>Inicio</Link>
               <Link href="/search" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/search")}>Buscar Letras</Link>
               <Link href="/community" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/community")}>Comunidad</Link>
-              <Link href="/pricing" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/pricing")}>Planes (Pro)</Link>
             </div>
           )}
           
-          <div className="w-full h-[1px] bg-border my-2"></div>
+          <div className="w-full h-[1px] bg-white/10 my-2"></div>
 
           {rightContent ? rightContent : (
             <div className="flex flex-col gap-4 w-full">

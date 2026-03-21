@@ -12,7 +12,13 @@ model User {
   id      String  @id @default(uuid())
   clerkId String  @unique // The ID provided by Clerk Authentication
   email   String  @unique
-  name    String?
+  name      String?
+  bio       String?   @db.Text
+  avatarUrl String?
+  bannerUrl String?
+  website   String?
+  instagram String?
+  youtube   String?
 
   // Suscripción Stripe
   stripeCustomerId       String?   @unique @map(name: "stripe_customer_id")

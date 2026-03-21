@@ -24,8 +24,9 @@ import GsapWrapper from "../components/GsapWrapper";
 import dynamic from 'next/dynamic';
 import ExportModal from "../components/ExportModal";
 import EditorSettingsSidebar from "../components/EditorSettingsSidebar";
-import { useAutosaveSong } from "../hooks/useAutosaveSong";
 import { offlineStorage } from "../utils/offlineStorage";
+import { useTuner } from "../hooks/useTuner";
+import { Mic, MicOff, Smartphone } from "lucide-react";
 
 const Piano3D = dynamic(() => import('../components/Piano3D'), {
   ssr: false, 
@@ -35,7 +36,7 @@ const GuitarTuner = dynamic(() => import('../components/GuitarTuner'), { ssr: fa
 
 export default function SongEditor() {
   const [song, setSong] = useState<Song | null>(null);
-  const [songPrice, setSongPrice] = useState<number>(0);
+
   const [isExporting, setIsExporting] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -94,7 +95,6 @@ export default function SongEditor() {
 
   const [show3DPiano, setShow3DPiano] = useState(false);
   const [editorColumns, setEditorColumns] = useState<number>(0);
-  const [editorMargin, setEditorMargin] = useState<'estrecho' | 'normal' | 'amplio'>('normal');
   const [active3DChord, setActive3DChord] = useState<Chord | null>(null);
 
   const hasMultipleSongs = Array.isArray(song?.sections) && song.sections.filter(s => s.title && /^\d+\.\s/.test(s.title)).length > 1;
@@ -111,6 +111,10 @@ export default function SongEditor() {
     showChords: true,
     capo: 0,
     instrument: 'piano' as 'piano' | 'guitar',
+    pageSize: 'A4' as 'A4' | 'CARTA',
+    orientation: 'portrait' as 'portrait' | 'landscape',
+    margin: 'normal' as 'estrecho' | 'normal' | 'amplio',
+    footerStyle: 'simple' as 'none' | 'simple' | 'bandas',
     ...(song?.layout || {})
   };
 
@@ -148,21 +152,30 @@ export default function SongEditor() {
   const actualGap = Math.max(0.25, (layout.lineHeight || 1.5) - 1) * 16;
   const textLineHeight = actualTextHeight + actualGap;
   
-  // Maximum usable height of an A4 container minus headers and footers is roughly 820px.
-  // baseLinesPerColumn asume líneas sin acordes (cost = 1). paginateSong le sumará costo a las líneas con acordes.
-  // Usamos 740 como límite en lugar de 820 para garantizar una zona segura (Safe Zone) de ~80px 
-  // por encima del footer. Así, si el usuario infla el tamaño de fuente y el CSS hace wrap antes que 
-  // las matemáticas, tenemos margen físico de absorción.
-  const baseLinesPerColumn = Math.floor(740 / textLineHeight);
+  // Calculate dynamic dimensions for safe-zones
+  const isLetter = layout?.pageSize === 'CARTA';
+  const isLand = layout?.orientation === 'landscape';
+  const rawPageHeight = isLand ? (isLetter ? 816 : 794) : (isLetter ? 1056 : 1123);
+  const marginOffsets = { estrecho: 180, normal: 260, amplio: 320 };
+  const offset = marginOffsets[(layout?.margin as keyof typeof marginOffsets) || 'normal'];
+  const baseLinesPerColumn = Math.floor((rawPageHeight - offset) / textLineHeight);
 
   // Hook del Teleprompter
-  const { isPlaying, activeLineId, activeChord, togglePlay } = useTeleprompter(song);
+  const { isPlaying, activeLineId, activeSyllableId, activeChord, togglePlay } = useTeleprompter(song);
 
-  // 🚀 NUEVO: Hook de Autoguardado
-  const { status: autosaveStatus, lastSaved, forceSave } = useAutosaveSong(song, isPlaying, () => {
-    // Callback opcional: se ejecuta cuando el guardado es exitoso
-    showToast("Guardado automático exitoso");
-  });
+  // Hook del Tuner para Aura Voice
+  const [isAuraVoiceActive, setIsAuraVoiceActive] = useState(false);
+  const { startTuning, stopTuning, closestString, cents, pitch, isListening } = useTuner('chromatic');
+  const lastProcessedSyllable = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (isAuraVoiceActive) {
+      startTuning();
+    } else {
+      stopTuning();
+      lastProcessedSyllable.current = null;
+    }
+  }, [isAuraVoiceActive, startTuning, stopTuning]);
 
   // Escuchar cuando se hace clic en un acorde (manual) para mostrarlo en el 3D
   useEffect(() => {
@@ -275,9 +288,6 @@ export default function SongEditor() {
                 // 🚀 SENIOR FIX: Al cargar online, guardamos una copia offline
                 offlineStorage.saveSong(loadedSong).catch(console.error);
                 
-                if (found.price != null) {
-                  setSongPrice(Number(found.price));
-                }
               } catch (e) { console.error("Error parsing song", e); }
             }
           } else {
@@ -344,20 +354,6 @@ export default function SongEditor() {
     }
   }, [song]);
 
-  // 🚀 NUEVO: Al cerrar la pestaña o navegar, forzamos el guardado final
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      // Si hay cambios pendientes, intentamos forzar el guardado
-      if (autosaveStatus === 'dirty') {
-        forceSave();
-        // Nota: En navegadores modernos, esto puede no completarse si es muy rápido,
-        // pero es mejor que perderlo.
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [autosaveStatus, forceSave]);
 
   // Rest of imports...
   const handleImport = useCallback(
@@ -380,7 +376,7 @@ export default function SongEditor() {
     [titleInput, bpmInput, lyricsInput, timeSignatureInput]
   );
 
-  const handleChordChange = useCallback((syllableId: string, newChord: Chord | null) => {
+  const handleChordChange = useCallback((syllableId: string, newChord: Chord | null, styleOptions?: { highlightColor?: string, casing?: string }) => {
     setSong((currentSong) => {
       if (!currentSong) return currentSong;
       const updatedSections = currentSong.sections.map((section) => ({
@@ -389,15 +385,99 @@ export default function SongEditor() {
           ...line,
           words: line.words.map((word) => ({
             ...word,
-            syllables: word.syllables.map((syl) =>
-              syl.id === syllableId ? { ...syl, chord: newChord } : syl
-            ),
+            syllables: word.syllables.map((syl) => {
+              if (syl.id === syllableId) {
+                const updatedSyl: any = { ...syl, chord: newChord };
+                if (styleOptions) {
+                  if (styleOptions.highlightColor !== undefined) updatedSyl.highlightColor = styleOptions.highlightColor;
+                  if (styleOptions.casing !== undefined) updatedSyl.casing = styleOptions.casing;
+                }
+                return updatedSyl;
+              }
+              return syl;
+            }),
           })),
         })),
       }));
       return { ...currentSong, sections: updatedSections };
     });
   }, []);
+
+  // Herramienta matemática para ajustar la voz desviada a la escala de la canción
+  const getClosestDiatonicNote = useCallback((note: string, key: string): string => {
+    const CHROMATIC_SCALE = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const MAJOR_SCALE_INTERVALS = [0, 2, 4, 5, 7, 9, 11];
+    
+    const keyMatch = key.match(/^[A-G]#?/);
+    if (!keyMatch) return note;
+    
+    const baseKey = keyMatch[0];
+    let keyIndex = CHROMATIC_SCALE.indexOf(baseKey);
+    if (keyIndex === -1) return note;
+
+    let scaleIndices = MAJOR_SCALE_INTERVALS.map(interval => (keyIndex + interval) % 12);
+    if (key.endsWith('m')) {
+      const relMajorIdx = (keyIndex + 3) % 12; // Menor a Mayor (+3 semitonos)
+      scaleIndices = MAJOR_SCALE_INTERVALS.map(interval => (relMajorIdx + interval) % 12);
+    }
+
+    const noteIndex = CHROMATIC_SCALE.indexOf(note);
+    if (noteIndex === -1) return note;
+
+    if (scaleIndices.includes(noteIndex)) return note;
+
+    let minDiff = 12;
+    let closestIndex = noteIndex;
+
+    for (const idx of scaleIndices) {
+      const dist1 = Math.abs(idx - noteIndex);
+      const dist2 = 12 - dist1;
+      const dist = Math.min(dist1, dist2);
+      if (dist < minDiff) { 
+        minDiff = dist; 
+        closestIndex = idx; 
+      }
+    }
+
+    return CHROMATIC_SCALE[closestIndex];
+  }, []);
+
+  // Efecto acoplado debajo de handleChordChange para funcionar con el Afinador (Aura Voice)
+  useEffect(() => {
+    if (!isAuraVoiceActive || !isPlaying || !activeSyllableId) return;
+    
+    if (lastProcessedSyllable.current !== activeSyllableId) {
+       // Aumentamos la tolerancia para voz a +/- 35 cents porque la voz humana fluctúa más que un instrumento
+       if (pitch > 0 && closestString && Math.abs(cents) <= 35) {
+          const rootNoteMatch = closestString.note.match(/^[A-G]#?/);
+          if (rootNoteMatch) {
+             const rawNote = rootNoteMatch[0];
+             // Auto-tune de Aura Voice: Corrector de Desviación de Tono
+             const rootNote = getClosestDiatonicNote(rawNote, songKey);
+             
+             // Si el modo menor termina asignando un relativo menor, intentamos dar la variación "m", o lo dejamos neutro.
+             let variation = "";
+             if (songKey.endsWith('m')) {
+                // Heurística simple: si la nota coincide con la tónica, es menor.
+                if (rootNote === songKey.replace('m', '')) variation = "m";
+             }
+             
+             const newChord: Chord = {
+                id: `chord-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+                rootNote: rootNote,
+                variation: variation 
+             };
+             
+             // Desacoplamos un ciclo para no bloquear el motor principal
+             requestAnimationFrame(() => {
+                handleChordChange(activeSyllableId, newChord);
+                showToast(`Aura Corrigió Tono: ${rawNote} ➔ ${rootNote}${variation}`);
+             });
+             lastProcessedSyllable.current = activeSyllableId;
+          }
+       }
+    }
+  }, [pitch, closestString, cents, activeSyllableId, isAuraVoiceActive, isPlaying, handleChordChange, getClosestDiatonicNote, songKey]);
 
   const handleSectionRepeatChange = useCallback((sectionId: string) => {
     setSong((currentSong) => {
@@ -417,6 +497,55 @@ export default function SongEditor() {
     setSong((currentSong) => {
       if (!currentSong) return currentSong;
       const updatedSections = currentSong.sections.filter(s => s.id !== sectionId);
+      return { ...currentSong, sections: updatedSections };
+    });
+  }, []);
+
+  const handleRemoveSectionChords = useCallback((sectionId: string) => {
+    setSong((currentSong) => {
+      if (!currentSong) return currentSong;
+      const updatedSections = currentSong.sections.map((section) => {
+        if (section.id === sectionId) {
+          return {
+            ...section,
+            lines: section.lines.map(line => ({
+              ...line,
+              words: line.words.map(word => ({
+                ...word,
+                syllables: word.syllables.map(syl => ({ ...syl, chord: null, highlightColor: undefined }))
+              }))
+            }))
+          };
+        }
+        return section;
+      });
+      return { ...currentSong, sections: updatedSections };
+    });
+  }, []);
+
+  const handleRemoveLineChords = useCallback((sectionId: string, lineId: string) => {
+    setSong((currentSong) => {
+      if (!currentSong) return currentSong;
+      const updatedSections = currentSong.sections.map((section) => {
+        if (section.id === sectionId) {
+          return {
+            ...section,
+            lines: section.lines.map(line => {
+              if (line.id === lineId) {
+                return {
+                  ...line,
+                  words: line.words.map(word => ({
+                    ...word,
+                    syllables: word.syllables.map(syl => ({ ...syl, chord: null, highlightColor: undefined }))
+                  }))
+                };
+              }
+              return line;
+            })
+          };
+        }
+        return section;
+      });
       return { ...currentSong, sections: updatedSections };
     });
   }, []);
@@ -810,7 +939,7 @@ export default function SongEditor() {
       const response = await fetch('/api/songs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ song, price: songPrice })
+        body: JSON.stringify({ song })
       });
 
       const data = await response.json();
@@ -841,11 +970,11 @@ export default function SongEditor() {
     } finally {
       setIsSaving(false);
     }
-  }, [song, songPrice]);
+  }, [song]);
 
   const mobileBlocker = (
     <div className="flex md:hidden min-h-screen bg-background text-foreground flex-col items-center justify-center p-8 text-center pb-32 anim-in fade-in duration-500">
-      <span className="text-7xl mb-10 drop-shadow-2xl">📱</span>
+      <Smartphone size={80} strokeWidth={1} className="mb-10 text-primary opacity-80 drop-shadow-2xl" />
       <h1 className="text-3xl font-black tracking-tight mb-6 mt-4">Estudio no disponible</h1>
       <p className="text-muted-foreground text-base max-w-xl mx-auto leading-relaxed border-t border-border pt-6">
         El estudio avanzado de transcripción requiere de una <span className="font-bold text-foreground">Tablet, Laptop o Pantalla Grande</span> para operar los lienzos.
@@ -864,7 +993,7 @@ export default function SongEditor() {
     return (
       <>
         {mobileBlocker}
-        <div className={`hidden lg:block min-h-screen bg-background text-foreground transition-all duration-700 ease-in-out ${isAnimating ? 'opacity-0' : 'opacity-100'} ${colorTheme}`}>
+        <div className={`hidden lg:block min-h-[100svh] bg-background text-foreground transition-all duration-700 ease-in-out ${isAnimating ? 'opacity-0' : 'opacity-100'} ${colorTheme}`}>
           {/* Navigation Premium */}
           <Navbar variant="default"
           />
@@ -982,17 +1111,16 @@ export default function SongEditor() {
     'normal': 'px-6 pt-6 pb-[8rem] sm:px-10 sm:pt-10 lg:px-16 lg:pt-16 lg:pb-[10rem]',
     'amplio': 'px-10 pt-10 pb-[8rem] sm:px-14 sm:pt-14 lg:px-24 lg:pt-24 lg:pb-[12rem]'
   };
-  const activeMarginClass = marginMap[editorMargin];
+  const activeMarginClass = marginMap[(layout?.margin as keyof typeof marginMap) || 'normal'];
 
   return (
     <>
       {!isReadOnly && mobileBlocker}
-      <div className={`${!isReadOnly ? 'hidden md:flex' : 'flex'} w-full min-h-screen flex-col bg-background text-foreground transition-colors duration-500 overflow-hidden font-sans selection:bg-primary selection:text-white ${colorTheme} ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
+      <div className={`${!isReadOnly ? 'hidden md:flex' : 'flex'} w-full min-h-[100svh] flex-col bg-background text-foreground transition-colors duration-500 overflow-hidden font-sans selection:bg-primary selection:text-foreground ${colorTheme} ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
 
-        {/* Top Fixed Navbar */}
         <Navbar
           variant="editor"
-          className={isPreviewMode ? 'hidden' : ''}
+          className={`z-50 ${isPreviewMode ? 'hidden' : ''}`}
           centerContent={
             <div className="hidden lg:flex items-center gap-12 text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
 
@@ -1018,6 +1146,22 @@ export default function SongEditor() {
           rightContent={
             <div className="flex items-center gap-2 lg:gap-4 w-full lg:w-auto overflow-x-auto hide-scrollbar mt-4 lg:mt-0 pb-1 lg:pb-0">
               <button
+                onClick={() => {
+                  if (isAuraVoiceActive) {
+                    setIsAuraVoiceActive(false);
+                    stopTuning();
+                  } else {
+                    setIsAuraVoiceActive(true);
+                    startTuning();
+                  }
+                }}
+                className={`text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-3 rounded-full shrink-0 flex items-center gap-2 transition-all ${isAuraVoiceActive ? 'bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary-raw),0.5)] animate-pulse' : 'text-foreground border border-transparent hover:border-border hover:bg-accent'}`}
+                title="Dictado por Voz / Instrumento"
+              >
+                {isAuraVoiceActive ? <Mic size={14} /> : <MicOff size={14} className="opacity-50" />} Aura Voice {isAuraVoiceActive ? 'ON' : 'OFF'}
+              </button>
+
+              <button
                 onClick={() => setIsTunerOpen(true)}
                 className="text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-3 rounded-full text-foreground border border-transparent hover:border-border hover:bg-accent transition-colors shrink-0 flex items-center gap-2"
                 title="Afinador Inteligente"
@@ -1040,7 +1184,7 @@ export default function SongEditor() {
 
               <button
                 onClick={togglePlay}
-                className="flex items-center gap-3 px-6 py-3 bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase hover:scale-105 transition-all active:scale-95 rounded-full shadow-lg shrink-0"
+                className="flex items-center gap-3 px-6 py-3 bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase hover:scale-105 transition-all active:scale-95 rounded-full  shrink-0"
               >
                 {isPlaying ? (
                   <>
@@ -1060,10 +1204,10 @@ export default function SongEditor() {
               </button>
 
               {/* Grupo de Exportación */}
-              <div className="flex items-center bg-foreground rounded-full overflow-hidden shadow-xl transition-transform active:scale-95 shrink-0">
+              <div className="flex items-center bg-foreground rounded-full overflow-hidden transition-transform active:scale-95 shrink-0">
                 <button
                   onClick={() => setIsExportModalOpen(true)}
-                  className="px-6 py-3 bg-foreground text-background text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-50 border-r border-background/20 flex items-center gap-2"
+                  className="px-6 py-3 bg-foreground text-background text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-50 border-r border-background/20 flex items-center gap-2 shrink-0"
                 >
                   Exportar Pro
                 </button>
@@ -1072,16 +1216,10 @@ export default function SongEditor() {
                   <button
                     onClick={handleSaveSong}
                     disabled={isSaving || isExporting}
-                    className="px-6 py-3 bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase hover:text-white transition-colors disabled:opacity-50 flex items-center justify-center min-w-[140px] whitespace-nowrap"
+                    className="px-6 py-3 bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase hover:text-white transition-colors disabled:opacity-50 flex items-center justify-center min-w-[140px] whitespace-nowrap shrink-0"
                   >
-                    {isSaving || autosaveStatus === 'saving' ? (
+                    {isSaving ? (
                       <span className="animate-pulse">Guardando...</span>
-                    ) : autosaveStatus === 'dirty' ? (
-                      'Borrador Local'
-                    ) : autosaveStatus === 'saved' && lastSaved ? (
-                      `Nube: ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                    ) : autosaveStatus === 'error' ? (
-                      <span className="text-red-200">Error guardando</span>
                     ) : (
                       'Guardar'
                     )}
@@ -1095,7 +1233,14 @@ export default function SongEditor() {
           }
         />
 
-        <div className={isPreviewMode ? "flex h-screen w-full bg-muted" : "pt-24 sm:pt-36 pb-32 px-4 sm:px-10 flex flex-col lg:flex-row gap-6 lg:gap-10 items-start justify-center animate-in fade-in zoom-in-95 duration-1000 ease-out fill-mode-both"}>
+        <div className={isPreviewMode ? "flex h-screen w-full bg-muted" : "pt-24 sm:pt-36 pb-32 px-4 sm:px-10 flex flex-col lg:flex-row gap-6 lg:gap-10 items-start justify-center animate-in fade-in zoom-in-95 duration-1000 ease-out fill-mode-both relative min-h-screen"}>
+
+          {/* Fondo de Zona de Trabajo Profesional (Big Tech Grid UI) */}
+          {!isPreviewMode && (
+            <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden flex justify-center items-center opacity-[0.04] dark:opacity-[0.08]">
+               <div className="absolute inset-0 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_40%,transparent_100%)]"></div>
+            </div>
+          )}
 
           {/* PANTALLA COMPLETA PRESENTACIÓN (TELEPROMPTER PROFESIONAL) */}
           {isPlaying && (
@@ -1127,7 +1272,7 @@ export default function SongEditor() {
               </div>
 
               {/* Letras Gigantes Estilo Spotify */}
-              <GsapWrapper animationType="fade-up" duration={1} id="teleprompter-container" className="flex-1 w-full overflow-y-auto hide-scrollbar scroll-smooth flex flex-col items-center pt-[45vh] pb-[60vh] px-6 sm:px-10 relative z-20">
+              <GsapWrapper animationType="fade-up" duration={1} id="teleprompter-container" className="flex-1 w-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] scroll-smooth flex flex-col items-center pt-[45vh] pb-[60vh] px-6 sm:px-10 relative z-20">
                 {song.sections.map((sec, sIdx) => (
                   <div key={sec.id} className="w-full max-w-6xl flex flex-col gap-12 sm:gap-16 mb-24 sm:mb-32 text-center items-center">
                     {/* Header de Sección */}
@@ -1147,24 +1292,24 @@ export default function SongEditor() {
                           key={line.id}
                           id={`present-${line.id}`}
                           className={`transition-all duration-700 ease-out flex flex-col gap-3 min-w-full items-center justify-center
-                             ${isActive ? 'opacity-100 scale-100 drop-shadow-[0_0_20px_rgba(var(--primary-raw),0.4)]' : 'opacity-[0.15] blur-[2px] scale-95'}
+                             ${isActive ? 'opacity-100 scale-100 drop-shadow-[0_0_20px_rgba(var(--primary-raw),0.4)]' : 'opacity-40 scale-100'}
                            `}
                         >
                           {/* Texto de la Línea Gigante con Acordes Perfectamente Alineados */}
-                          <div className={`text-white font-black tracking-tight leading-normal overflow-visible transition-all duration-500 flex flex-wrap justify-center items-end ${isActive ? 'text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem]' : 'text-3xl sm:text-4xl md:text-5xl lg:text-6xl'}`}>
+                          <div className={`text-white font-black tracking-tight leading-none overflow-visible transition-all duration-500 flex flex-wrap justify-center items-end ${isActive ? 'text-[clamp(2.5rem,5vw,6.5rem)]' : 'text-[clamp(1.8rem,4vw,5rem)]'}`}>
                             {line.words.map((word, wIdx) => (
                               <div key={word.id} className="flex flex-wrap justify-center mr-5 md:mr-8 last:mr-0">
                                 {word.syllables.map((syl, i) => (
-                                  <div key={syl.id} className="flex flex-col items-start relative pt-6 min-w-max justify-end">
+                                  <div key={syl.id} className="flex flex-col items-start relative pt-3 min-w-max justify-end">
 
                                     {/* Slot del Acorde (Reserva de altura incluso vacío si la línea lo requiere) */}
                                     {hasChords && (
-                                      <div className={`w-full min-h-[1.8em] mb-1 md:mb-2 font-sans font-bold text-primary tracking-widest flex items-end relative leading-normal ${isActive ? 'text-2xl sm:text-4xl' : 'text-xl sm:text-2xl'}`}>
+                                      <div className={`w-full min-h-[1.2em] mb-1 font-sans font-bold text-primary tracking-widest flex items-end relative leading-none ${isActive ? 'text-[clamp(1.5rem,2.8vw,3.5rem)]' : 'text-[clamp(1.2rem,2.2vw,2.8rem)]'}`}>
                                         {syl.chord ? (() => {
                                           const formatted = formatChordText(syl.chord, notation, songKey);
                                           // Aseguramos margen derecho dinámico para evitar solapamientos masivos
                                           return (
-                                            <span className="flex items-start z-10 pt-1 pr-3 lg:pr-5 whitespace-nowrap overflow-visible">
+                                            <span className="flex items-start z-10 pr-3 lg:pr-5 whitespace-nowrap overflow-visible">
                                               <span>{formatted.root}</span>
                                               {formatted.variation && (
                                                 <span className="text-[0.6em] relative top-0 ml-[1px] font-sans font-bold leading-none">{formatted.variation}</span>
@@ -1179,7 +1324,7 @@ export default function SongEditor() {
                                     )}
 
                                     {/* Sílaba Textual */}
-                                    <div className="whitespace-pre">{syl.text}</div>
+                                    <div className="whitespace-pre leading-none pb-2 pt-1">{syl.text}</div>
 
                                   </div>
                                 ))}
@@ -1231,8 +1376,7 @@ export default function SongEditor() {
           {!isPreviewMode && (
             <EditorSettingsSidebar
               isReadOnly={isReadOnly}
-              songPrice={songPrice}
-              setSongPrice={setSongPrice}
+
               handleTranspose={handleTranspose}
               show3DPiano={show3DPiano}
               setShow3DPiano={setShow3DPiano}
@@ -1244,6 +1388,8 @@ export default function SongEditor() {
               setSongKey={setSongKey}
               includeChordsDictionary={includeChordsDictionary}
               setIncludeChordsDictionary={setIncludeChordsDictionary}
+              onPlayTeleprompter={togglePlay}
+              onOpenExport={() => setIsExportModalOpen(true)}
             />
           )}
 
@@ -1275,16 +1421,7 @@ export default function SongEditor() {
                 : "flex gap-6 lg:gap-12 overflow-x-auto snap-x lg:snap-mandatory hide-scrollbar pb-12 w-full lg:pr-[50vw] relative"
             }
           >
-            {/* BANNER DE PREVIEW DE PAGO */}
-            {song.isPreviewRestriction && (
-              <div className="sticky left-1/2 -ml-[1px] md:absolute md:bottom-24 md:left-1/2 md:-translate-x-1/2 z-50 bg-background/95 backdrop-blur-xl p-8 sm:p-12 rounded-3xl border border-primary/20 shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.4)] text-center max-w-lg w-[90%] mt-8 mb-24 md:mt-0 md:mb-0 flex flex-col items-center animate-in slide-in-from-bottom-12 duration-1000 shrink-0 self-center">
-                <span className="text-4xl mb-4 opacity-80">🔒</span>
-                <h3 className="text-2xl font-black tracking-tight mb-2">Obra Premium</h3>
-                <p className="text-muted-foreground text-sm mb-8 leading-relaxed">El creador ha protegido esta pieza. Adquiere los derechos de transcripción para ver todos los acordes, imprimir PDF y habilitar el Teleprompter.</p>
 
-                <PurchaseButton songId={song.id} price={song.price || 1.00} />
-              </div>
-            )}
             
             {/* 
               Cálculo definitivo de capacidad. 
@@ -1294,13 +1431,15 @@ export default function SongEditor() {
               Límite matemático JS expandido a 820px para asegurar que las columnas aprovechen el máximo real estate físico sin desbordar el footer.
             */}
             {song && (() => {
-               const textLineHeight = (layout.baseFontSize || 16) * 1.25 + Math.max(0.25, ((layout.lineHeight || 1.5) - 1)) * 16;
-               const baseLinesPerColumn = Math.floor(820 / textLineHeight);
+               const pageW = isLand ? (isLetter ? 1056 : 1123) : (isLetter ? 816 : 794);
+               const pageH = isLand ? (isLetter ? 816 : 794) : (isLetter ? 1056 : 1123);
+               // Use dynamic variables from outside
                
                return paginateSong(song, baseLinesPerColumn, activeColumns).map((page, index) => (
                  <div
                    key={page.id}
-                className={`a4-page bg-background text-foreground ${activeMarginClass} overflow-hidden relative lg:shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.15)] transition-all duration-500 flex flex-col justify-start w-[794px] min-w-[794px] max-w-[794px] h-[1123px] min-h-[1123px] max-h-[1123px] ring-0 lg:ring-1 lg:ring-border origin-top rounded-xl lg:rounded-none border border-border lg:border-none
+                   style={{ width: `${pageW}px`, minWidth: `${pageW}px`, maxWidth: `${pageW}px`, height: `${pageH}px`, minHeight: `${pageH}px`, maxHeight: `${pageH}px` }}
+                className={`a4-page bg-background text-foreground ${activeMarginClass} overflow-hidden relative lg:shadow-[0_30px_60px_-15px_rgba(var(--primary-raw),0.15)] transition-all duration-500 flex flex-col justify-start ring-0 lg:ring-1 lg:ring-border origin-top rounded-xl lg:rounded-none border border-border lg:border-none
                 ${isPreviewMode ? 'transform shrink-0 scale-[0.6] sm:scale-75 lg:scale-[0.85] -mt-[40mm] sm:-mt-[20mm] lg:-mt-[10mm]' : 'shrink-0 lg:snap-center'}
               `}
               >
@@ -1308,19 +1447,19 @@ export default function SongEditor() {
                 {index === 0 ? (
                   hasMultipleSongs ? (
                     <div className="mb-6 shrink-0 border-b border-gray-200 dark:border-gray-800 pb-4">
-                      <h1 className={`text-2xl sm:text-3xl font-serif font-black italic tracking-tight ${layout.alignment}`}>
+                      <h1 className={`text-2xl sm:text-3xl font-serif font-black italic tracking-tight w-full ${layout.alignment === 'justify-center' ? 'text-center' : layout.alignment === 'justify-end' ? 'text-right' : layout.alignment === 'justify-between' ? 'text-justify' : 'text-left'}`}>
                         {!isReadOnly ? (
                           <input 
                             value={song.title} 
                             onChange={(e) => setSong({...song, title: e.target.value} as any)}
-                            className="bg-transparent border-none outline-none w-full"
+                            className={`bg-transparent border-none outline-none w-full ${layout.alignment === 'justify-center' ? 'text-center' : layout.alignment === 'justify-end' ? 'text-right' : layout.alignment === 'justify-between' ? 'text-justify' : 'text-left'}`}
                           />
                         ) : song.title}
                       </h1>
                     </div>
                   ) : (
-                    <div className="mb-6 shrink-0">
-                      <h1 className="text-3xl sm:text-4xl lg:text-5xl font-light tracking-tight break-words leading-[1.1] mb-4">
+                    <div className="mb-3 shrink-0 flex flex-col w-full">
+                      <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight break-words leading-[1.1] mb-2 w-full ${layout.alignment === 'justify-center' ? 'text-center' : layout.alignment === 'justify-end' ? 'text-right' : layout.alignment === 'justify-between' ? 'text-justify' : 'text-left'}`}>
                         {!isReadOnly ? (
                           <textarea 
                             value={song.title} 
@@ -1353,28 +1492,6 @@ export default function SongEditor() {
                           )}
                         </span>
                         <div className="h-px bg-gray-200 dark:bg-gray-800 flex-1 min-w-[50px] max-w-[200px]"></div>
-
-                        <div className="flex items-center gap-2">
-                          {!isReadOnly ? (
-                            <div className="flex items-center gap-2 text-yellow-500">
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" /></svg>
-                              <span className="text-[10px] uppercase tracking-widest font-bold">
-                                {Math.max(song.ratings?.length || 0, 0) > 0 ? ((song.ratings?.reduce((acc: number, r) => acc + r.value, 0) || 0) / (song.ratings?.length || 1)).toFixed(1) : "0.0"} / 5.0
-                              </span>
-                            </div>
-                          ) : (
-                            <>
-                              <StarRatingInteractive
-                                songId={song.id}
-                                myInitialRating={user ? (song.ratings?.find((r) => r.userId === user?.id)?.value || 0) : 0}
-                                readOnly={!user}
-                              />
-                              <span className="text-[10px] uppercase tracking-widest font-bold opacity-30">
-                                {Math.max(song.ratings?.length || 0, 0) > 0 ? ((song.ratings?.reduce((acc: number, r) => acc + r.value, 0) || 0) / (song.ratings?.length || 1)).toFixed(1) : "0.0"} / 5.0
-                              </span>
-                            </>
-                          )}
-                        </div>
                       </div>
                     </div>
                   )
@@ -1394,7 +1511,7 @@ export default function SongEditor() {
                       {col.map((section, sIdx) => (
                         <div
                           key={`${section.id}-${sIdx}`}
-                          className={`flex flex-col gap-6 relative group break-inside-avoid ${!isReadOnly ? 'cursor-grab active:cursor-grabbing hover:bg-black/5 dark:hover:bg-white/5 rounded-xl p-2 -m-2 transition-all' : ''} ${draggedSectionId === section.id ? 'opacity-30' : ''} ${dragOverSectionId === section.id && dragOverDirection === 'top' ? 'border-t-2 border-t-primary !pt-4' : ''} ${dragOverSectionId === section.id && dragOverDirection === 'bottom' ? 'border-b-2 border-b-primary !pb-4' : ''}`}
+                          className={`flex flex-col gap-1 sm:gap-2 relative group break-inside-avoid w-full ${!isReadOnly ? 'cursor-grab active:cursor-grabbing hover:bg-black/5 dark:hover:bg-white/5 rounded-xl p-2 -m-2 transition-all' : ''} ${draggedSectionId === section.id ? 'opacity-30' : ''} ${dragOverSectionId === section.id && dragOverDirection === 'top' ? 'border-t-2 border-t-primary !pt-4' : ''} ${dragOverSectionId === section.id && dragOverDirection === 'bottom' ? 'border-b-2 border-b-primary !pb-4' : ''}`}
                           draggable={!isReadOnly}
                           onDragStart={(e) => {
                             if (isReadOnly) return;
@@ -1451,27 +1568,29 @@ export default function SongEditor() {
                           {section.title && !section.isContinuation && (
                             /^(?:[IVX]+\.|\d+\.)/i.test(section.title) ? (
                               // DEVOTIONAL SONG HEADER (e.g. "I.", "1. Te Adoramos")
-                              <div className="w-full mt-2 mb-2">
-                                <h2 className={`text-lg sm:text-xl font-serif font-black italic tracking-wide opacity-90 ${alignment === 'justify-center' ? 'text-center' : alignment === 'justify-end' ? 'text-right' : 'text-left'}`}>
+                              <div className="w-full mt-2 mb-2 flex">
+                                <h2 className={`text-lg sm:text-xl font-serif font-black italic tracking-wide opacity-90 w-full ${alignment === 'justify-center' ? 'text-center' : alignment === 'justify-end' ? 'text-right' : alignment === 'justify-between' ? 'text-justify' : 'text-left'}`}>
                                   {section.title}
                                 </h2>
                               </div>
                             ) : (
                               // NORMAL SECTION TITLE
-                              <h2 className={`text-xl sm:text-2xl font-sans font-black italic tracking-tight mb-0 opacity-90 ${alignment === 'justify-center' ? 'text-center' : alignment === 'justify-end' ? 'text-right' : 'text-left'}`}>
-                                {section.title}
-                              </h2>
+                              <div className="flex w-full">
+                                <h2 className={`text-xl sm:text-2xl font-sans font-black italic tracking-tight mb-0 opacity-90 w-full ${alignment === 'justify-center' ? 'text-center' : alignment === 'justify-end' ? 'text-right' : alignment === 'justify-between' ? 'text-justify' : 'text-left'}`}>
+                                  {section.title}
+                                </h2>
+                              </div>
                             )
                           )}
 
                           {/* Minimalist Section Label con Repetidor Numérico - Sólo si empieza aquí */}
                           {!section.isContinuation && (
-                            <div className="flex items-center gap-2 sm:gap-4 group/secHeader w-full flex-nowrap">
-                              <span className="text-[10px] font-bold tracking-[0.4em] text-gray-400 uppercase flex items-center gap-2 shrink-0">
+                            <div className="flex items-center gap-2 sm:gap-4 group/secHeader w-full flex-nowrap border-b border-border/10 pb-2">
+                              <span className="text-[10px] sm:text-[11px] font-black tracking-[0.4em] text-zinc-400 dark:text-zinc-500 uppercase flex items-center gap-2 shrink-0">
                                 <select
                                   value={section.type}
                                   onChange={(e) => handleSectionTypeChange(section.id, e.target.value)}
-                                  className="bg-transparent border-none appearance-none outline-none font-bold tracking-[0.4em] uppercase text-gray-400 cursor-pointer hover:text-primary transition-colors focus:outline-none focus:ring-0 max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap"
+                                  className="bg-transparent border-none appearance-none outline-none font-black tracking-[0.4em] uppercase text-zinc-400 dark:text-zinc-500 cursor-pointer hover:text-primary transition-colors focus:outline-none focus:ring-0 max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap"
                                   title="Cambiar tipo de sección"
                                 >
                                   {![
@@ -1486,145 +1605,175 @@ export default function SongEditor() {
 
                                 <span
                                   onClick={() => handleSectionRepeatChange(section.id)}
-                                  className="text-gray-200 dark:text-gray-700 cursor-pointer hover:text-primary transition-colors hover:scale-110 active:scale-95"
+                                  className="text-zinc-300 dark:text-zinc-600 cursor-pointer hover:text-primary transition-colors hover:scale-110 active:scale-95 px-1 font-bold"
                                   title="Cambiar repeticiones"
                                 >
-                                  x{section.repeat || 1}
+                                  X {section.repeat || 1}
                                 </span>
                               </span>
 
-                              <div className="h-px bg-gray-100 dark:bg-gray-800 flex-1 opacity-20 group-hover/secHeader:opacity-100 transition-opacity min-w-[10px]"></div>
+                              <div className="h-px bg-zinc-200 dark:bg-zinc-800 flex-1 opacity-0 group-hover/secHeader:opacity-100 transition-opacity min-w-[10px]"></div>
 
                               <div className="flex items-center gap-1 sm:gap-2 shrink-0 z-20 justify-end transition-all flex-nowrap">
-                                {/* Auto-rellenar acordes lógico */}
-                                {(() => {
-                                  const hasChords = section.lines.some(l => l.words.some(w => w.syllables.some(s => s.chord !== null)));
-                                  const globalSecIdx = song.sections.findIndex(s => s.id === section.id);
-                                  // Only show if this section has NO chords, and is NOT the first section ever
-                                  if (!hasChords && globalSecIdx > 0 && !isReadOnly) {
-                                    return (
-                                      <button
-                                        onClick={() => handleAutoFillChords(section.id)}
-                                        className="opacity-0 group-hover/secHeader:opacity-100 transition-opacity px-3 py-1 bg-primary text-primary-foreground text-[8px] sm:text-[9px] font-bold tracking-widest uppercase rounded flex items-center gap-2 shrink-0 border border-primary  active:scale-95 shadow-lg"
-                                        title="Copiar acordes de la estrofa anterior idéntica"
-                                      >
-                                        <span className="text-[12px] leading-none">✨</span> Auto-Rellenar
-                                      </button>
-                                    );
-                                  }
-                                  return null;
-                                })()}
+                                <div className="flex items-center gap-1.5 opacity-0 group-hover/secHeader:opacity-100 transition-opacity">
+                                  {(() => {
+                                    const hasChords = section.lines.some(l => l.words.some(w => w.syllables.some(s => s.chord !== null)));
+                                    const globalSecIdx = song.sections.findIndex(s => s.id === section.id);
+                                    if (!hasChords && globalSecIdx > 0 && !isReadOnly) {
+                                      return (
+                                        <button
+                                          onClick={() => handleAutoFillChords(section.id)}
+                                          className="px-3 py-1.5 bg-red-400/10 hover:bg-red-400/20 text-red-400 text-[9px] font-black tracking-widest uppercase rounded flex items-center gap-1.5 shrink-0 transition-colors shadow-sm"
+                                          title="Copiar acordes de la estrofa anterior idéntica"
+                                        >
+                                          <span>✨</span> AUTO-RELLENAR
+                                        </button>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
 
-                                {!isReadOnly && (
-                                  <div className="flex items-center gap-1 opacity-0 group-hover/secHeader:opacity-100 transition-opacity bg-background/80 rounded px-1">
-                                  <button
-                                    onClick={() => handleMergeWithNext(section.id)}
-                                    className="text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 p-1.5 rounded active:scale-95 transition-all text-[8px] sm:text-[9px] font-bold tracking-widest uppercase mr-1"
-                                    title="Unir con la siguiente estrofa"
-                                  >
-                                    ↑ Unir
-                                  </button>
-                                  <button
-                                    onClick={() => handleDuplicateSection(section.id)}
-                                    className="text-gray-300 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 p-1.5 rounded active:scale-95 transition-all"
-                                    title="Duplicar esta estrofa"
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
-                                    </svg>
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteSection(section.id)}
-                                    className="text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 p-1.5 rounded active:scale-95 transition-all"
-                                    title="Eliminar esta estrofa"
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                                    </svg>
-                                  </button>
+                                  {!isReadOnly && (
+                                    <>
+                                      <button
+                                        onClick={() => handleMergeWithNext(section.id)}
+                                        className="text-zinc-600 dark:text-zinc-400 hover:text-white hover:bg-zinc-700 dark:hover:bg-zinc-800 bg-zinc-200 dark:bg-[#1E1E1E] px-3 py-1.5 rounded transition-all text-[9px] font-black tracking-widest uppercase shadow-sm"
+                                        title="Unir con la siguiente estrofa"
+                                      >
+                                        ↑ UNIR
+                                      </button>
+                                      <button
+                                        onClick={() => handleDuplicateSection(section.id)}
+                                        className="text-zinc-600 dark:text-zinc-400 hover:text-white hover:bg-zinc-700 dark:hover:bg-zinc-800 bg-zinc-200 dark:bg-[#1E1E1E] p-1.5 rounded transition-all shadow-sm flex items-center justify-center w-7 h-7"
+                                        title="Duplicar esta estrofa"
+                                      >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-[14px] h-[14px]">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+                                        </svg>
+                                      </button>
+                                      <button
+                                        onClick={() => handleRemoveSectionChords(section.id)}
+                                        className="text-zinc-600 dark:text-zinc-400 hover:text-white hover:bg-zinc-700 dark:hover:bg-zinc-800 bg-zinc-200 dark:bg-[#1E1E1E] p-1.5 rounded transition-all shadow-sm flex items-center justify-center w-7 h-7"
+                                        title="Borrar todos los acordes de la estrofa"
+                                      >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-[14px] h-[14px]">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9.75L14.25 12m0 0l2.25 2.25M14.25 12l2.25-2.25M14.25 12L12 14.25m-2.58 4.92l-6.375-6.375a1.125 1.125 0 010-1.59L9.42 4.83c.211-.211.498-.33.796-.33H19.5a2.25 2.25 0 012.25 2.25v10.5a2.25 2.25 0 01-2.25 2.25h-9.284c-.298 0-.585-.119-.796-.33z" />
+                                        </svg>
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteSection(section.id)}
+                                        className="text-zinc-600 dark:text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 bg-zinc-200 dark:bg-[#1E1E1E] p-1.5 rounded transition-all shadow-sm flex items-center justify-center w-7 h-7"
+                                        title="Eliminar esta estrofa"
+                                      >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-[14px] h-[14px]">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                        </svg>
+                                      </button>
+                                    </>
+                                  )}
                                 </div>
-                              )}
                             </div>
                             </div>
                           )}
 
-                          <div className="flex flex-col mt-1" style={{ gap: `${Math.max(0.25, (layout.lineHeight || 1.5) - 1)}rem` }}>
-                            {section.lines.map((line) => {
-                              const playingStyle = activeLineId === line.id
-                                ? 'opacity-100 scale-[1.02] transform origin-left ml-4 text-primary'
-                                : isPlaying
-                                  ? 'opacity-30 blur-[1px]'
-                                  : 'opacity-100';
+                          {(() => {
+                            let currentHighlightColor: string | undefined = undefined;
+                            return (
+                              <div className="flex flex-col mt-1 gap-1">
+                                {section.lines.map((line) => {
+                                  const playingStyle = activeLineId === line.id
+                                    ? 'opacity-100 scale-[1.02] transform origin-left ml-4 text-primary'
+                                    : isPlaying
+                                      ? 'opacity-30 blur-[1px]'
+                                      : 'opacity-100';
 
-                              return (
-                                <div
-                                  key={line.id}
-                                  id={line.id}
-                                  className={`flex flex-wrap items-end content-start ${layout.alignment} transition-all duration-700 ease-in-out relative group/line ${playingStyle} font-${layout.fontFamily} shrink-0`}
-                                  style={{
-                                    '--base-font': `${layout.baseFontSize || 16}px`,
-                                    '--chord-font': `${layout.chordFontSize || 14}px`,
-                                    lineHeight: layout.lineHeight || 2.0,
-                                    rowGap: '1.5em'
-                                  } as React.CSSProperties}
-                                >
-                                  {line.words.map((word, wIdx) => (
-                                    <div key={word.id} className="flex flex-wrap items-end mr-3 sm:mr-4 group/word">
-                                      {word.syllables.map((syl, i) => {
-                                        return (
-                                          <SyllableComponent
-                                            key={syl.id}
-                                            syllable={syl}
-                                            capo={layout.capo || 0}
-                                            notation={layout.notation}
-                                            songKey={songKey}
-                                            instrument={layout.instrument}
-                                            colorTheme={colorTheme}
-                                            nextHasChord={Boolean(
-                                              // Look ahead for next syllable in same word, OR first syllable of next word
-                                              word.syllables[i + 1]?.chord ||
-                                              (!word.syllables[i + 1] && line.words[wIdx + 1]?.syllables[0]?.chord)
-                                            )}
-                                            onChordChange={(syllableId, newChord) => {
-                                              // If capo is active, the chord typed by user is also visually shifted. We must shift it UP back to store in DB!
-                                              const realStoredChord = (newChord && typeof newChord !== 'string') ? transposeChord(newChord, (layout.capo || 0)) : null;
-                                              handleChordChange(syllableId, realStoredChord);
-                                            }}
-                                            onGlobalChordChange={(newChord) => {
-                                              if (syl.chord) {
-                                                const originalStoredOldChord = transposeChord(syl.chord, (layout.capo || 0));
-                                                const realStoredNewChord = (newChord && typeof newChord !== 'string') ? transposeChord(newChord, (layout.capo || 0)) : null;
-                                                handleGlobalChordChange(originalStoredOldChord, realStoredNewChord);
-                                              }
-                                            }}
-                                            readOnly={isReadOnly}
-                                            showChords={layout.showChords}
-                                          />
-                                        )
-                                      })}
-                                    </div>
-                                  ))}
+                                  return (
+                                    <div
+                                      key={line.id}
+                                      id={line.id}
+                                      className={`flex flex-wrap items-end content-start pt-2 pb-1 ${layout.alignment} transition-all duration-700 ease-in-out relative group/line ${playingStyle} font-${layout.fontFamily} shrink-0 leading-loose`}
+                                      style={{
+                                        '--base-font': `${layout.baseFontSize || 16}px`,
+                                        '--chord-font': `${layout.chordFontSize || 14}px`,
+                                        lineHeight: layout.lineHeight || 2.0
+                                      } as React.CSSProperties}
+                                    >
+                                      {line.words.map((word, wIdx) => (
+                                        <div key={word.id} className="flex flex-wrap items-end mr-3 sm:mr-4 group/word">
+                                          {word.syllables.map((syl, i) => {
+                                            
+                                            if (syl.chord) {
+                                              currentHighlightColor = syl.highlightColor || undefined;
+                                            } else if (syl.highlightColor !== undefined) {
+                                              currentHighlightColor = syl.highlightColor || undefined;
+                                            }
+
+                                            return (
+                                              <SyllableComponent
+                                                key={syl.id}
+                                                syllable={syl}
+                                                capo={layout.capo || 0}
+                                                notation={layout.notation}
+                                                songKey={songKey}
+                                                instrument={layout.instrument}
+                                                colorTheme={colorTheme}
+                                                inheritedHighlightColor={currentHighlightColor}
+                                                casing={(layout as any).casing}
+                                                isLastInWord={i === word.syllables.length - 1}
+                                                nextHasChord={Boolean(
+                                                  word.syllables[i + 1]?.chord ||
+                                                  (!word.syllables[i + 1] && line.words[wIdx + 1]?.syllables[0]?.chord)
+                                                )}
+                                                onChordChange={(syllableId, newChord, styleOptions) => {
+                                                  const realStoredChord = (newChord && typeof newChord !== 'string') ? transposeChord(newChord, (layout.capo || 0)) : null;
+                                                  handleChordChange(syllableId, realStoredChord, styleOptions);
+                                                }}
+                                                onGlobalChordChange={(newChord) => {
+                                                  if (syl.chord) {
+                                                    const originalStoredOldChord = transposeChord(syl.chord, (layout.capo || 0));
+                                                    const realStoredNewChord = (newChord && typeof newChord !== 'string') ? transposeChord(newChord, (layout.capo || 0)) : null;
+                                                    handleGlobalChordChange(originalStoredOldChord, realStoredNewChord);
+                                                  }
+                                                }}
+                                                readOnly={isReadOnly}
+                                                showChords={layout.showChords}
+                                              />
+                                            )
+                                          })}
+                                        </div>
+                                      ))}
+
 
                                   {!isReadOnly && (
-                                    <div className="absolute right-0 bg-background/90 pl-3 pr-1 py-1 rounded-l-md items-center gap-2 lg:gap-3 ml-2 opacity-0 group-hover/line:opacity-100 transition-opacity duration-300 self-center flex z-20 shadow-[-10px_0_15px_rgba(var(--background-rgb),1)]">
-                                      {/* El botón de separar solo tiene sentido si la línea no es la primera, pero handleSplitSection ya lo bloquea. Lo mostramos siempre para ser intuitivos. */}
+                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-zinc-100 dark:bg-[#1A1A1A] p-1.5 rounded-lg items-center gap-1.5 opacity-0 group-hover/line:opacity-100 flex shadow-sm origin-right pointer-events-none group-hover/line:pointer-events-auto transform translate-x-4 group-hover/line:translate-x-0 transition-all duration-300 border border-zinc-200 dark:border-zinc-800/80">
                                       <button
                                         onClick={() => handleSplitSection(section.id, line.id)}
-                                        className="text-[9px] font-bold text-gray-400 hover:text-red-500 bg-gray-100/50 dark:bg-gray-800/50 hover:bg-red-50 dark:hover:bg-red-950/30 rounded px-2 py-1 tracking-widest active:scale-95 transition-all uppercase whitespace-nowrap"
+                                        className="text-[9px] font-black text-zinc-500 hover:text-white bg-zinc-200 dark:bg-[#252525] hover:bg-zinc-700 dark:hover:bg-zinc-700 rounded px-2.5 py-1.5 tracking-widest transition-all uppercase whitespace-nowrap shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
                                         title="Separar estrofa a partir de esta línea hacia abajo"
                                       >
-                                        ↓ Separar
+                                        ↓ SEPARAR
                                       </button>
                                       
                                       <button
-                                        onClick={() => handleAddTrailingChord(section.id, line.id)}
-                                        className="text-[9px] font-bold text-primary-foreground bg-primary border border-transparent rounded px-3 py-1.5 tracking-widest hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all shadow-md uppercase whitespace-nowrap"
+                                        onClick={() => handleRemoveLineChords(section.id, line.id)}
+                                        className="text-[9px] font-black text-zinc-500 hover:text-white bg-zinc-200 dark:bg-[#252525] hover:bg-zinc-700 dark:hover:bg-zinc-700 rounded px-2.0 py-1.5 tracking-widest transition-all uppercase whitespace-nowrap shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+                                        title="Borrar todos los acordes de esta línea"
                                       >
-                                        + Acorde
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-[12px] h-[12px]">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9.75L14.25 12m0 0l2.25 2.25M14.25 12l2.25-2.25M14.25 12L12 14.25m-2.58 4.92l-6.375-6.375a1.125 1.125 0 010-1.59L9.42 4.83c.211-.211.498-.33.796-.33H19.5a2.25 2.25 0 012.25 2.25v10.5a2.25 2.25 0 01-2.25 2.25h-9.284c-.298 0-.585-.119-.796-.33z" />
+                                        </svg>
                                       </button>
+
+                                      <button
+                                        onClick={() => handleAddTrailingChord(section.id, line.id)}
+                                        className="text-[9px] font-black text-white bg-red-500/90 dark:bg-[#8e2936] hover:bg-red-500 rounded px-3 py-1.5 tracking-widest hover:scale-[1.03] active:scale-95 transition-all shadow-[0_2px_10px_rgba(225,29,72,0.2)] uppercase whitespace-nowrap"
+                                      >
+                                        + ACORDE
+                                      </button>
+                                      
                                       <span
                                         onClick={() => handleLineRepeatChange(section.id, line.id)}
-                                        className="text-[10px] font-bold tracking-wider text-gray-200 dark:text-gray-700 cursor-pointer hover:text-primary transition-colors border border-transparent hover:border-primary rounded px-2"
+                                        className="text-[10px] font-black tracking-widest text-zinc-400 hover:text-white cursor-pointer px-2 transition-colors flex items-center justify-center min-w-[30px]"
                                         title="Repeticiones de la línea"
                                       >
                                         x{line.repeat || 1}
@@ -1632,10 +1781,12 @@ export default function SongEditor() {
                                     </div>
                                   )}
 
-                                </div>
-                              );
-                            })}
-                          </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                           );
+                          })()}
                         </div>
                       ))}
                     </div>
@@ -1792,6 +1943,8 @@ export default function SongEditor() {
           onClose={() => setIsExportModalOpen(false)}
           onExportPDF={handleExportToPDF}
           onExportPNG={handleExportToImage}
+          includeDictionary={includeChordsDictionary}
+          setIncludeDictionary={setIncludeChordsDictionary}
         />
       )}
 

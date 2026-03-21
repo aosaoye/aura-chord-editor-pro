@@ -13,14 +13,14 @@
 }
 
 .dark {
-  --background: #0f0f0f;
-  --foreground: #ededed;
+  --background: #05060A;
+  --foreground: #ffffff;
   --primary: #818cf8;      /* Indigo dark */
   --primary-raw: 129 140 248;
   --primary-foreground: #000000;
   --muted: #1f1f1f;
   --muted-foreground: #a3a3a3;
-  --border: #27272a;
+  --border: #ffffff0d;     /* Equivalent to border-white/5 */
 }
 
 /* Theme: Purple Premium */

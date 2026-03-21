@@ -116,6 +116,52 @@ export default function LiveGuitarFretboard({ activeChord, themeColor = "theme-p
           );
         })}
 
+        {/* Logic for Barre (Cejilla) */}
+        {(() => {
+          if (!fingering) return null;
+          const activeFrets = fingering.frets.filter((f) => f > 0);
+          const minPlayedFret = activeFrets.length > 0 ? Math.min(...activeFrets) : -1;
+          const minFretIndices = fingering.frets.map((f, i) => (f === minPlayedFret ? i : -1)).filter((i) => i !== -1);
+
+          let hasBarre = false;
+          let barreStartIdx = -1;
+          let barreEndIdx = -1;
+
+          if (minFretIndices.length >= 2) {
+            const span = minFretIndices[minFretIndices.length - 1] - minFretIndices[0];
+            if (span >= 2) { 
+              // More than 2 strings bounded usually indicates a barre check
+              hasBarre = true;
+              barreStartIdx = minFretIndices[0];
+              barreEndIdx = minFretIndices[minFretIndices.length - 1];
+            }
+          }
+
+          if (hasBarre && minPlayedFret > 0 && minPlayedFret <= numFrets) {
+            const x = leftMargin + (minPlayedFret - 0.5) * fretSpacing;
+            // High string is index 5 (bottom), low string is index 0 (top)
+            const yStart = topMargin + barreStartIdx * stringSpacing;
+            const yEnd = topMargin + barreEndIdx * stringSpacing;
+            
+            return (
+              <rect
+                key="barre-overlay"
+                x={x - 10}
+                y={yStart - 10}
+                width={20}
+                height={yEnd - yStart + 20}
+                rx={10}
+                ry={10}
+                fill={color}
+                opacity={0.45}
+                style={{ filter: `drop-shadow(0 0 15px ${color})` }}
+                className="animate-in zoom-in duration-300"
+              />
+            );
+          }
+          return null;
+        })()}
+
         {/* Pressed Notes */}
         {fingering && fingering.frets.map((fretIndex, stringIndex) => {
            const y = topMargin + stringIndex * stringSpacing;

@@ -6,46 +6,46 @@ import { useGlobalSettings, themeClasses } from "../context/SettingsContext";
 import { useTheme } from "next-themes";
 import type { NotationType } from "../helpers/chordFormatter";
 import { useState, useEffect } from "react";
+import { ArrowLeft } from "lucide-react";
 
 export default function SettingsPage() {
   const { settings, updateSettings, isHydrated } = useGlobalSettings();
   const { theme, setTheme } = useTheme();
   
-  // Mounted state to avoid hydration mismatch when accessing next-themes
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
   if (!isHydrated || !mounted) return null;
 
+  const selectClasses = "w-full bg-transparent border-b border-border py-3 text-sm font-medium text-foreground outline-none focus:border-primary cursor-pointer transition-colors appearance-none pr-8 relative";
+
   return (
-    <div className={`min-h-screen bg-background text-foreground transition-colors duration-500 font-sans selection:bg-primary selection:text-white ${settings.colorTheme}`}>
-      <Navbar 
-      variant="default"
-      />
+    <div className={`min-h-[100svh] bg-background text-foreground transition-colors duration-500 font-sans selection:bg-primary/30 selection:text-foreground ${settings.colorTheme}`}>
+      <Navbar variant="border" />
       
-      <div className="pt-36 pb-32 px-6 sm:px-10 max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-both">
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight mb-4">
-          Preferencias Globales
+      <div className="pt-36 pb-32 px-6 md:px-12 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-both">
+        <h1 className="text-5xl md:text-7xl font-light tracking-tighter mb-6 text-foreground leading-none">
+          Preferencias <span className="font-serif italic font-bold">Globales</span>
         </h1>
-        <p className="text-sm text-muted-foreground mb-16 max-w-2xl leading-relaxed">
-          Personaliza tu experiencia. Todos los ajustes de tipografía, formato y diseño se guardarán localmente y se aplicarán de forma global a tus partituras exportadas.
+        <p className="text-sm text-muted-foreground mb-20 max-w-2xl leading-relaxed border-l-[1px] border-border pl-4">
+          Personaliza tu experiencia de composición. Todos los ajustes de tipografía, formato y diseño se guardarán localmente en este entorno y se aplicarán de forma global a tus proyectos.
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 sm:gap-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-20 md:gap-32">
           
           {/* BLOQUE: ESTÉTICA Y TEMAS */}
-          <section className="flex flex-col gap-8">
+          <section className="flex flex-col gap-10">
             <div className="border-b border-border pb-4">
-               <h2 className="text-xs font-bold tracking-[0.2em] uppercase text-foreground">Tema Visual</h2>
+               <h2 className="text-[10px] font-bold tracking-[0.4em] uppercase text-muted-foreground">Tema Visual</h2>
             </div>
             
-            <div className="flex flex-col gap-3">
-              <label className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">Modo de Apariencia</label>
-              <div className="grid grid-cols-3 gap-2 bg-muted p-1.5 rounded-xl border border-border">
+            <div className="flex flex-col gap-4">
+              <label className="text-[9px] font-bold tracking-[0.3em] text-muted-foreground uppercase">Modo de Apariencia</label>
+              <div className="flex bg-foreground/5 p-1 rounded-full border border-border w-full">
                 {["system", "light", "dark"].map((t) => (
                   <button 
                     key={t} onClick={() => setTheme(t)}
-                    className={`py-3 rounded-lg text-xs font-bold capitalize transition-all focus:outline-none ${theme === t ? 'bg-background text-foreground shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`flex-1 py-3 px-4 rounded-full text-[10px] sm:text-xs font-bold tracking-widest uppercase transition-all focus:outline-none ${theme === t ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/20 border border-transparent' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     {t === "system" ? "Sistema" : t === "light" ? "Claro" : "Oscuro"}
                   </button>
@@ -53,104 +53,136 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-3">
-              <label className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">Paleta de Color (Acentos)</label>
-              <div className="grid grid-cols-3 gap-4">
+            <div className="flex flex-col gap-4">
+              <label className="text-[9px] font-bold tracking-[0.3em] text-muted-foreground uppercase">Acentos del Sistema</label>
+              <div className="grid grid-cols-2 gap-4">
                 {themeClasses.map((palette) => (
                   <div 
                     key={palette.id}
                     onClick={() => updateSettings({ colorTheme: palette.id })}
-                    className={`cursor-pointer group flex flex-col items-center gap-3 p-4 rounded-2xl border transition-all ${settings.colorTheme === palette.id ? 'border-foreground bg-accent' : 'border-border bg-background hover:border-foreground/30'}`}
+                    className={`cursor-pointer group flex items-center gap-4 py-3 px-4 rounded-full border transition-all duration-300 ${settings.colorTheme === palette.id ? 'border-primary bg-primary/5' : 'border-border bg-foreground/5 hover:border-foreground/20 hover:bg-foreground/10'}`}
                   >
-                     <div className={`w-8 h-8 rounded-full ${palette.bg} shadow-inner group-hover:scale-110 transition-transform`} />
-                     <span className="text-[9px] font-bold tracking-widest uppercase text-center">{palette.label}</span>
+                     <div className={`w-3 h-3 rounded-full ${palette.bg} shadow-[0_0_15px_rgba(255,255,255,0.2)] group-hover:scale-125 transition-transform duration-300`} />
+                     <span className={`text-[9px] font-bold tracking-[0.2em] uppercase transition-colors ${settings.colorTheme === palette.id ? 'text-primary' : 'text-muted-foreground'}`}>
+                       {palette.label}
+                     </span>
                   </div>
                 ))}
               </div>
             </div>
           </section>
 
-          {/* BLOQUE: TIPOGRAFÍA */}
-          <section className="flex flex-col gap-8">
+          {/* BLOQUE: TIPOGRAFÍA Y DISEÑO */}
+          <section className="flex flex-col gap-10">
             <div className="border-b border-border pb-4">
-               <h2 className="text-xs font-bold tracking-[0.2em] uppercase text-foreground">Diseño de Partitura</h2>
+               <h2 className="text-[10px] font-bold tracking-[0.4em] uppercase text-muted-foreground">Diseño de Partitura</h2>
             </div>
 
-            <div className="flex flex-col gap-3">
-               <label className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">Familia de Fuente</label>
-               <select 
-                 value={settings.fontFamily} onChange={(e) => updateSettings({ fontFamily: e.target.value })}
-                 className="w-full bg-background border-b-2 border-border py-3 text-sm font-medium text-foreground outline-none focus:border-primary cursor-pointer transition-colors"
-               >
-                 <option value="font-sans">Modern Sans (Defecto)</option>
-                 <option value="font-serif">Classic Serif</option>
-                 <option value="font-mono">Monospace Code</option>
-                 <option value="font-[Arial]">Arial Clásica</option>
-                 <option value="font-[Georgia]">Georgia Serif</option>
-                 <option value="font-[Impact]">Impact Display</option>
-               </select>
-            </div>
-
-            <div className="flex flex-col gap-3">
-               <label className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">Tamaño del Texto</label>
-               <select 
-                 value={settings.fontSize} onChange={(e) => updateSettings({ fontSize: e.target.value })}
-                 className="w-full bg-background border-b-2 border-border py-3 text-sm font-medium text-foreground outline-none focus:border-primary cursor-pointer transition-colors"
-               >
-                 <option value="text-sm">Pequeño (Ideal para A4 impreso)</option>
-                 <option value="text-base">Normal</option>
-                 <option value="text-lg">Grande (Para Tablet/Stage)</option>
-                 <option value="text-xl">Extra Grande</option>
-                 <option value="text-2xl">Ultra Gigante</option>
-               </select>
-            </div>
-
-            <div className="flex flex-col gap-3">
-               <label className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">Espaciado y Alineación</label>
-               <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center gap-6">
+               <div className="w-1/3">
+                 <label className="text-[9px] font-bold tracking-[0.3em] text-muted-foreground uppercase">Tipografía</label>
+               </div>
+               <div className="w-2/3 relative">
                  <select 
-                   value={settings.lineHeight} onChange={(e) => updateSettings({ lineHeight: e.target.value })}
-                   className="w-full bg-background border-b-2 border-border py-3 text-sm font-medium text-foreground outline-none focus:border-primary cursor-pointer transition-colors"
+                   value={settings.fontFamily} onChange={(e) => updateSettings({ fontFamily: e.target.value })}
+                   className={selectClasses}
                  >
-                   <option value="leading-normal">Interlineado Estrecho</option>
-                   <option value="leading-loose">Interlineado Amplio</option>
-                   <option value="leading-[3]">Ultra Amplio</option>
+                   <option value="font-sans" className="bg-[#05060A]">Modern Sans (Por Defecto)</option>
+                   <option value="font-serif" className="bg-[#05060A]">Classic Serif</option>
+                   <option value="font-mono" className="bg-[#05060A]">Monospace Code</option>
+                   <option value="font-[Arial]" className="bg-[#05060A]">Arial Clásica</option>
+                   <option value="font-[Georgia]" className="bg-[#05060A]">Georgia Serif</option>
                  </select>
-
-                 <select 
-                   value={settings.alignment} onChange={(e) => updateSettings({ alignment: e.target.value })}
-                   className="w-full bg-background border-b-2 border-border py-3 text-sm font-medium text-foreground outline-none focus:border-primary cursor-pointer transition-colors"
-                 >
-                   <option value="justify-start">Izquierda</option>
-                   <option value="justify-center">Centro</option>
-                   <option value="justify-end">Derecha</option>
-                 </select>
+                 <span className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground/30 pointer-events-none text-[10px]">▼</span>
                </div>
             </div>
 
-            <div className="flex flex-col gap-3 pt-6">
-               <label className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">Sistema de Cifrado</label>
-               <select 
-                 value={settings.notation} onChange={(e) => updateSettings({ notation: e.target.value as NotationType })}
-                 className="w-full bg-background border-b-2 border-border py-3 text-sm font-medium text-foreground outline-none focus:border-primary cursor-pointer transition-colors"
-               >
-                 <option value="english">Americano (C, D, E)</option>
-                 <option value="spanish">Latino (Do, Re, Mi)</option>
-                 <option value="roman">Grados Romanos (I, ii, V)</option>
-               </select>
-               <p className="text-[11px] text-muted-foreground font-medium mt-1">Este ajuste afecta a todas tus partituras existentes y futuras.</p>
+            <div className="flex items-center gap-6">
+               <div className="w-1/3">
+                 <label className="text-[9px] font-bold tracking-[0.3em] text-muted-foreground uppercase">Tamaño Base</label>
+               </div>
+               <div className="w-2/3 relative">
+                 <select 
+                   value={settings.fontSize} onChange={(e) => updateSettings({ fontSize: e.target.value })}
+                   className={selectClasses}
+                 >
+                   <option value="text-sm" className="bg-[#05060A]">A4 (Impreso)</option>
+                   <option value="text-base" className="bg-[#05060A]">Estándar</option>
+                   <option value="text-lg" className="bg-[#05060A]">Grande (Display)</option>
+                   <option value="text-xl" className="bg-[#05060A]">Extra Grande</option>
+                   <option value="text-2xl" className="bg-[#05060A]">Jumbo</option>
+                 </select>
+                 <span className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground/30 pointer-events-none text-[10px]">▼</span>
+               </div>
+            </div>
+
+            <div className="flex items-center gap-6">
+               <div className="w-1/3">
+                 <label className="text-[9px] font-bold tracking-[0.3em] text-muted-foreground uppercase leading-relaxed">Lectura y Espaciado</label>
+               </div>
+               <div className="w-2/3 grid grid-cols-2 gap-4">
+                 <div className="relative">
+                   <select 
+                     value={settings.lineHeight} onChange={(e) => updateSettings({ lineHeight: e.target.value })}
+                     className={selectClasses}
+                   >
+                     <option value="leading-normal" className="bg-[#05060A]">Estrecho</option>
+                     <option value="leading-loose" className="bg-[#05060A]">Amplio</option>
+                     <option value="leading-[3]" className="bg-[#05060A]">Ultra</option>
+                   </select>
+                   <span className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground/30 pointer-events-none text-[10px]">▼</span>
+                 </div>
+                 <div className="relative">
+                   <select 
+                     value={settings.alignment} onChange={(e) => updateSettings({ alignment: e.target.value })}
+                     className={selectClasses}
+                   >
+                     <option value="justify-start" className="bg-[#05060A]">Izquierda</option>
+                     <option value="justify-center" className="bg-[#05060A]">Centro</option>
+                     <option value="justify-end" className="bg-[#05060A]">Derecha</option>
+                   </select>
+                   <span className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground/30 pointer-events-none text-[10px]">▼</span>
+                 </div>
+               </div>
+            </div>
+
+            <div className="flex items-start gap-6 border-t border-border pt-10 mt-6 relative">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-[80px] rounded-full pointer-events-none mix-blend-screen"></div>
+               
+               <div className="w-1/3 relative z-10">
+                 <label className="text-[9px] font-bold tracking-[0.3em] text-primary uppercase flex flex-col gap-1">
+                   <span>Notación</span>
+                   <span>Global</span>
+                 </label>
+               </div>
+               
+               <div className="w-2/3 relative z-10 flex flex-col gap-4">
+                 <div className="relative">
+                   <select 
+                     value={settings.notation} onChange={(e) => updateSettings({ notation: e.target.value as NotationType })}
+                     className={selectClasses}
+                   >
+                     <option value="english" className="bg-[#05060A]">Americano (C, D, E)</option>
+                     <option value="spanish" className="bg-[#05060A]">Latino (Do, Re, Mi)</option>
+                     <option value="roman" className="bg-[#05060A]">Grados Romanos (I, ii, V)</option>
+                   </select>
+                   <span className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground/30 pointer-events-none text-[10px]">▼</span>
+                 </div>
+                 <p className="text-[8px] text-muted-foreground leading-relaxed mt-2 max-w-xs font-mono">
+                   Este es el núcleo de transcripción. Alterar el sistema afectará la visibilidad en todos tus proyectos visuales.
+                 </p>
+               </div>
             </div>
 
           </section>
         </div>
         
-        <div className="mt-24 pt-8 border-t border-border flex justify-between items-center px-4 sm:px-0">
-          <Link href="/editor" className="group flex items-center gap-4 text-primary font-bold text-sm tracking-widest uppercase hover:text-foreground transition-colors">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-background transition-colors">
-               &larr;
-            </div>
-            Volver al Estudio
-          </Link>
+        {/* ACTION / BACK BOTONES */}
+        <div className="mt-32 flex justify-center">
+           <Link href="/editor" className="group rounded-full p-4 border border-border bg-foreground/5 hover:bg-foreground/10 hover:border-border/50 text-foreground transition-all duration-500 shadow-xl overflow-hidden relative">
+              <span className="sr-only">Volver al Estudio</span>
+              <ArrowLeft className="w-6 h-6 transform group-hover:-translate-x-2 transition-transform duration-500" strokeWidth={1} />
+           </Link>
         </div>
       </div>
     </div>

@@ -1,26 +1,9 @@
-import { Queue } from "bullmq";
-import Redis from "ioredis";
+// MOCK TEMPORAL PARA QUE NO CRASHEE TU NEXT.JS POR CULPA DE REDISLABS (ETIMEDOUT)
+// Esto simula la cola sin conectarse a Redis para que puedas programar sin que se cierre Vercel Dev.
 
-const retryPolicy = {
-  maxRetriesPerRequest: null,
-  retryStrategy: (times: number) => {
-    if (times > 3) return null; // Aborta tras 3 intentos para no spamearte
-    return Math.min(times * 1000, 3000);
+export const notificationQueue = {
+  add: async (name: string, payload: any) => {
+    console.log(`[Queue Mock] Job '${name}' omitido porque Redis está desactivado.`);
+    return true;
   }
-};
-
-const redisInstance = process.env.REDIS_HOST?.startsWith("redis")
-  ? new Redis(process.env.REDIS_HOST, retryPolicy)
-  : new Redis({
-      host: process.env.REDIS_HOST || "127.0.0.1",
-      port: parseInt(process.env.REDIS_PORT || "6379"),
-      password: process.env.REDIS_PASSWORD || undefined,
-      ...retryPolicy,
-    });
-
-// Silenciar errores feos del SDK de Redis para que no inunden Node ni NextJS
-redisInstance.on("error", () => {});
-
-export const notificationQueue = new Queue("notifications", {
-  connection: redisInstance as any,
-});
+} as any;

@@ -17,7 +17,6 @@ export default function ExportModal({
 }: any) {
   const [activeTab, setActiveTab] = useState("documentos"); // documentos | redes
   const [isExporting, setIsExporting] = useState(false);
-  const [includeCover, setIncludeCover] = useState(false);
 
   // Opciones de Redes
   const [socialFormat, setSocialFormat] = useState("instagram-story");
@@ -85,7 +84,7 @@ export default function ExportModal({
   if (isPosterMode) {
     let currentPage: any[] = [];
     let currentLinesCount = 0;
-    const MAX_LINES_PER_PAGE = 27; // ~9 líneas por columna x 3 columnas en layout de 1080px (con padding y headers)
+    const MAX_LINES_PER_PAGE = 22; // ~7 líneas por columna x 3 columnas en layout de 1080px (con padding y headers)
     
     formattedSections.forEach((sec: any) => {
       const secLines = sec.lines.length + 2; // +2 por el título
@@ -110,20 +109,27 @@ export default function ExportModal({
         onClick={onClose}
       ></div>
 
-      {/* Modal Content */}
-      <div className="relative bg-background border border-border w-full max-w-5xl rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in slide-in-from-bottom-12 duration-500 h-[85vh]">
-        {/* Left Sidebar - Options */}
-        <div className="w-full md:w-80 bg-muted/30 border-r border-border flex flex-col hide-scrollbar overflow-y-auto">
-          <div className="p-6 border-b border-border">
-            <h2 className="text-2xl font-black tracking-tight">
-              Exportación Pro
-            </h2>
-            <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase mt-2">
-              Configura tu salida
-            </p>
+      {/* Modal Content - ONLY OPTIONS */}
+      <div className="relative bg-background border border-border w-[360px] max-w-full rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="w-full bg-background flex flex-col hide-scrollbar overflow-y-auto">
+          <div className="p-6 border-b border-border flex items-start justify-between">
+            <div>
+              <h2 className="text-2xl font-black tracking-tight">
+                Exportación Pro
+              </h2>
+              <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase mt-2">
+                Configura tu salida
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground hover:text-white transition-colors shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
-          <div className="flex p-2 gap-2 border-b border-border bg-muted/50">
+          <div className="flex p-2 gap-2 border-b border-border bg-muted/20">
             <button
               onClick={() => setActiveTab("documentos")}
               className={`flex-1 text-[10px] font-bold uppercase tracking-widest py-3 rounded-xl transition-all ${activeTab === "documentos" ? "bg-background shadow-md border border-border text-foreground" : "text-muted-foreground hover:bg-muted"}`}
@@ -185,17 +191,6 @@ export default function ExportModal({
                         Diagramas al Final
                       </span>
                     </label>
-                    <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-accent/50 transition-colors">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 accent-primary"
-                        checked={includeCover}
-                        onChange={(e) => setIncludeCover(e.target.checked)}
-                      />
-                      <span className="text-xs font-semibold">
-                        Generar Portada
-                      </span>
-                    </label>
                   </div>
                 </div>
               </div>
@@ -237,7 +232,7 @@ export default function ExportModal({
                 <button
                   onClick={handleExportSocial}
                   disabled={isExporting}
-                  className="w-full bg-foreground text-background py-4 rounded-xl text-xs font-black tracking-[0.2em] uppercase hover:scale-105 active:scale-95 transition-all disabled:opacity-50 shadow-xl mt-4 shrink-0"
+                  className="w-full bg-foreground text-background py-4 rounded-full text-xs font-black tracking-[0.2em] uppercase hover:scale-105 active:scale-95 transition-all disabled:opacity-50 shadow-xl mt-4 shrink-0"
                 >
                   {isExporting ? "Generando..." : "Descargar Recurso"}
                 </button>
@@ -245,35 +240,17 @@ export default function ExportModal({
             )}
           </div>
         </div>
+      </div>
 
-        {/* Right Preview Area */}
-        <div className="flex-1 bg-zinc-900 flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden relative">
-          <div className="sticky top-0 w-full z-50 flex justify-between p-6 pointer-events-none">
-            <div className="text-zinc-500 font-bold text-[10px] tracking-[0.3em] uppercase">
-              Vista Previa en Vivo
-            </div>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-colors pointer-events-auto"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="w-full h-full flex items-start justify-center pb-32">
-            {activeTab === "redes" ? (
-              <div
-                className={`origin-top transition-all duration-500 flex items-start justify-center ${
-                  socialFormat === "poster-cinematico"
-                    ? "scale-[0.25] sm:scale-[0.3] md:scale-[0.35] lg:scale-[0.4] xl:scale-[0.45] 2xl:scale-[0.5]"
-                    : "scale-[0.35] sm:scale-[0.4] md:scale-50 lg:scale-[0.55]"
-                }`}
-              >
+      {/* OFF-SCREEN DOM FOR HTML-TO-IMAGE PROCESSING */}
+      <div className="fixed top-0 left-[-20000px] pointer-events-none opacity-0 flex flex-col items-center justify-start h-[1920px] w-[1920px]">
+        {activeTab === "redes" ? (
+          <div className="flex items-start justify-center">
                 {socialFormat === "poster-cinematico" ? (
                   <div ref={socialRef} className="shrink-0 flex flex-col gap-12 items-center">
                     {posterPages.map((pageSections: any[], pIdx: number) => {
                       const totalPageLines = pageSections.reduce((acc: number, sec: any) => acc + sec.lines.length + 2, 0);
-                      const columnsNeeded = Math.min(3, Math.max(1, Math.ceil(totalPageLines / 9)));
+                      const columnsNeeded = Math.min(3, Math.max(1, Math.ceil(totalPageLines / 7)));
                       
                       return (
                         <div
@@ -281,7 +258,7 @@ export default function ExportModal({
                           className="poster-page shrink-0 flex justify-center p-16 sm:p-24 relative overflow-hidden bg-[#0a0a09] w-[1920px] h-[1080px] font-sans"
                         >
                           <div className="absolute inset-0 bg-gradient-to-b from-[#111] to-[#050505] opacity-80 pointer-events-none"></div>
-                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4/5 h-[800px] bg-orange-900/10 blur-[150px] rounded-full pointer-events-none"></div>
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4/5 h-[800px] bg-primary/10 blur-[150px] rounded-full pointer-events-none"></div>
 
                           <div className="relative z-10 w-full max-w-[1600px] flex flex-col items-center">
                             {pIdx === 0 ? (
@@ -289,7 +266,7 @@ export default function ExportModal({
                                 <h1 className="text-white font-[200] text-[4rem] tracking-[0.2em] uppercase text-center w-full leading-tight mb-4 drop-shadow-lg px-8 max-w-[1500px] break-words">
                                   {formattedTitle || "VASIJA QUEBRANTADA"}
                                 </h1>
-                                <h2 className="text-[#ea580c] font-black text-xl tracking-[0.5em] uppercase text-center w-full mb-16 drop-shadow-md">
+                                <h2 className="text-primary font-black text-xl tracking-[0.5em] uppercase text-center w-full mb-16 drop-shadow-md">
                                   {song?.artist || "AURA CHORDS PRO STUDIO"}
                                 </h2>
                                 <hr className="w-full border-t border-white/10 mb-16" />
@@ -317,7 +294,7 @@ export default function ExportModal({
                                     {sec.lines.map((line: any, lIdx: number) => (
                                       <div
                                         key={lIdx}
-                                        className="mb-7 flex flex-wrap items-end content-start relative font-sans leading-none min-h-[50px] pt-8"
+                                        className="mb-7 flex flex-wrap items-end content-start relative font-sans leading-none min-h-[50px] pt-8 gap-y-12"
                                       >
                                         {line.words.map((word: any, wIdx: number) => (
                                           <div
@@ -334,11 +311,11 @@ export default function ExportModal({
                                                 return (
                                                   <div
                                                     key={syl.id || i}
-                                                    className="relative flex flex-col justify-end text-center group cursor-text transition-all duration-200"
+                                                    className="relative flex flex-col items-start justify-end text-left group transition-all duration-200"
                                                   >
                                                     {chordHtml && (
                                                       <span
-                                                        className="absolute bottom-full mb-2 text-[#eb5f15] text-[18px] font-bold font-sans tracking-tight min-w-max left-1/3 -translate-x-1/3 z-10"
+                                                        className="absolute bottom-full mb-2 text-primary text-[18px] font-bold font-sans tracking-tight min-w-max left-0 z-10"
                                                         dangerouslySetInnerHTML={{ __html: chordHtml }}
                                                       />
                                                     )}
@@ -408,11 +385,11 @@ export default function ExportModal({
                                     return (
                                       <div
                                         key={syl.id || i}
-                                        className="relative flex flex-col justify-end text-center"
+                                        className="relative flex flex-col items-start justify-end text-left"
                                       >
                                         {chordHtml && (
                                           <span
-                                            className="absolute bottom-full mb-4 text-[#eb5f15] text-[26px] sm:text-[32px] font-black font-sans tracking-tight min-w-max left-1/3 -translate-x-1/3 z-10 drop-shadow-md"
+                                            className="absolute bottom-full mb-4 text-primary text-[26px] sm:text-[32px] font-black font-sans tracking-tight min-w-max left-0 z-10 drop-shadow-md"
                                             dangerouslySetInnerHTML={{
                                               __html: chordHtml,
                                             }}
@@ -489,11 +466,11 @@ export default function ExportModal({
                                     return (
                                       <div
                                         key={i}
-                                        className="relative flex flex-col justify-end text-center"
+                                        className="relative flex flex-col items-start justify-end text-left"
                                       >
                                         {cHtml && (
                                           <span
-                                            className="absolute bottom-full mb-1 text-primary text-[11px] font-bold font-sans tracking-tight min-w-max left-1/3 -translate-x-1/3"
+                                            className="absolute bottom-full mb-1 text-primary text-[11px] font-bold font-sans tracking-tight min-w-max left-0 z-10"
                                             dangerouslySetInnerHTML={{
                                               __html: cHtml,
                                             }}
@@ -520,8 +497,6 @@ export default function ExportModal({
                 </p>
               </div>
             )}
-          </div>
-        </div>
       </div>
     </div>
   );

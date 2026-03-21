@@ -7,7 +7,7 @@ import { useState } from "react";
 export default function PricingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground font-sans relative overflow-hidden transition-colors duration-500 pt-[72px]">
-      <Navbar variant="border" className="bg-background/80 border-b border-border" />
+      <Navbar variant="border" />
 
       <main className="max-w-[1200px] mx-auto px-6 py-20 flex flex-col items-center">
         

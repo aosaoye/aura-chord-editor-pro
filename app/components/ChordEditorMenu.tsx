@@ -5,7 +5,8 @@ import type { Chord } from "../config/config";
 
 interface ChordEditorMenuProps {
   initialChord: Chord | null;
-  onSave: (newChord: Chord | null) => void;
+  initialHighlight?: string;
+  onSave: (newChord: Chord | null, styleOptions?: { highlightColor?: string }) => void;
   onCancel: () => void;
 }
 
@@ -14,30 +15,32 @@ const VARIATIONS = ["", "m", "maj7", "m7", "7", "sus4", "sus2", "dim", "aug", "m
 
 export default function ChordEditorMenu({
   initialChord,
+  initialHighlight = '',
   onSave,
   onCancel,
 }: ChordEditorMenuProps) {
   const [rootNote, setRootNote] = useState<string>(initialChord?.rootNote || "C");
   const [variation, setVariation] = useState<string>(initialChord?.variation || "");
   const [bassNote, setBassNote] = useState<string>(initialChord?.bassNote || "");
+  const [highlightColor, setHighlightColor] = useState<string>(initialHighlight);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const select = containerRef.current?.querySelector("select");
-    if (select) select.focus();
+    if (select) select.focus({ preventScroll: true });
   }, []);
 
   const handleApply = useCallback(() => {
     const newId =
       initialChord?.id ?? `chord-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-    onSave({ id: newId, rootNote, variation, bassNote: bassNote || undefined });
-  }, [initialChord, rootNote, variation, bassNote, onSave]);
+    onSave({ id: newId, rootNote, variation, bassNote: bassNote || undefined }, { highlightColor: highlightColor || undefined });
+  }, [initialChord, rootNote, variation, bassNote, highlightColor, onSave]);
 
   const handleRemove = useCallback(() => {
-    onSave(null);
-  }, [onSave]);
+    onSave(null,  { highlightColor: highlightColor || undefined });
+  }, [onSave, highlightColor]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
@@ -130,6 +133,31 @@ export default function ChordEditorMenu({
               </option>
             ))}
           </select>
+        </div>
+      </div>
+
+      {/* Selector de Resaltado */}
+      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mt-4 pt-4 border-t border-gray-100 w-full">
+        <div className="flex flex-col gap-2 flex-1">
+          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-1">
+             Resaltador
+             {highlightColor && (
+               <div className="w-2 h-2 rounded-full border border-gray-300 ml-1" style={{ backgroundColor: highlightColor }} />
+             )}
+          </label>
+          <div className="flex gap-2">
+             {["", "#fef08a", "#86efac", "#a5f3fc", "#f9a8d4", "#d8b4fe"].map((color, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setHighlightColor(color)}
+                  className={`w-6 h-6 rounded-md border border-gray-200 transition-transform hover:scale-110 flex items-center justify-center ${highlightColor === color ? 'outline outline-2 outline-offset-1 outline-black bg-gray-100 scale-105' : ''}`}
+                  style={{ backgroundColor: color || 'transparent' }}
+                  title={color ? "Resaltar" : "Sin resaltado"}
+                >
+                  {!color && <span className="opacity-40 text-xs">🚫</span>}
+                </button>
+             ))}
+          </div>
         </div>
       </div>
 

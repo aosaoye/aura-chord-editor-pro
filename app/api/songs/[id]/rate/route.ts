@@ -3,9 +3,10 @@ import { requireUser } from "@/lib/auth";
 import { songService } from "@/modules/songs/songs.service";
 import { ratingSchema } from "@/modules/songs/songs.schema";
 
-export async function PUT(req: Request, { params }: any) {
+export async function PUT(req: Request, context: any) {
   try {
     const userId = await requireUser();
+    const params = await context.params;
     const body = await req.json();
 
     const { rating } = ratingSchema.parse(body);

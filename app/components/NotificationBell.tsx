@@ -13,17 +13,44 @@ export default function NotificationBell() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  // Reference to track the latest unread ID to avoid spamming the same notification
+  const lastNotifiedIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (typeof window !== 'undefined' && "Notification" in window && Notification.permission === "default") {
       Notification.requestPermission();
     }
 
-    fetchNotifications();
-    // Poll every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    // Configuración de Servidor-Sent Events para un sincronismo mágico estilo Google Classroom
+    const eventSource = new EventSource("/api/notifications/stream");
+    
+    eventSource.onmessage = (event) => {
+       try {
+         const newNotifs = JSON.parse(event.data) || [];
+         
+         // Trigger native push notification if there is a NEW unread notification
+         const latestUnread = newNotifs.find((n: any) => !n.read);
+         if (latestUnread && latestUnread.id !== lastNotifiedIdRef.current) {
+            lastNotifiedIdRef.current = latestUnread.id;
+            
+            if (typeof window !== 'undefined' && "Notification" in window && Notification.permission === "granted") {
+               new window.Notification("Novedades Studio", {
+                  body: latestUnread.message,
+                  icon: "/images/icon.png"
+               });
+            }
+         }
+         
+         setNotifications(newNotifs);
+       } catch (e) {
+         console.error("SSE parse error", e);
+       }
+    };
 
+    return () => {
+       eventSource.close();
+    };
+  }, []);
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -33,37 +60,6 @@ export default function NotificationBell() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  // Reference to track the latest unread ID to avoid spamming the same notification
-  const lastNotifiedIdRef = useRef<string | null>(null);
-
-  const fetchNotifications = async () => {
-    try {
-      const res = await fetch("/api/notifications");
-      if (res.ok) {
-        const data = await res.json();
-        const newNotifs = data.notifications || [];
-        
-        // Trigger native push notification if there is a NEW unread notification
-        const latestUnread = newNotifs.find((n: any) => !n.read);
-        if (latestUnread && latestUnread.id !== lastNotifiedIdRef.current) {
-           lastNotifiedIdRef.current = latestUnread.id;
-           
-           if (typeof window !== 'undefined' && "Notification" in window && Notification.permission === "granted") {
-              new window.Notification("Nueva Partitura - Studio", {
-                 body: latestUnread.message,
-                 icon: "/images/logo.png"
-              });
-           }
-        }
-        
-        setNotifications(newNotifs);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
   const handleOpenDropdown = async () => {
     setIsOpen(!isOpen);
     if (!isOpen && unreadCount > 0) {

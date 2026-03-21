@@ -44,8 +44,10 @@ export function paginateSong(song: Song, linesPerColumn: number = 17, columnsPer
       // Section header label (text-[10px] + padding) + mt-1 (4px)
       const titlePhysicalPx = !isContinuation ? 19 : 0; 
       // Available content box (899px) minus Top Header (~108px) = ~790px.
-      // Use 780px to leave a perfect microscopic safe-zone margin.
-      const MAX_PIXELS_PER_COLUMN = 780; 
+      // Use 680px as a ultra-safe baseline to prevent text clipping from varying OS font-metrics
+      // or large Song Titles that push the first columns deeply downwards.
+      // Expand MAX_PIXELS_PER_COLUMN from 680 to 830 to prevent breaking too early and leaving huge empty spaces
+      const MAX_PIXELS_PER_COLUMN = 830; 
       let availablePixels = MAX_PIXELS_PER_COLUMN - currentLinesCount - titlePhysicalPx;
       
       if (availablePixels <= (singleLinePhysicalPx + lineGap) && currentColumnSections.length > 0) {

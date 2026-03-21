@@ -5,7 +5,6 @@ import { getAuth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import PublicToggle from "./PublicToggle";
 import DeleteSongButton from "./DeleteSongButton";
 import GsapWrapper from "../components/GsapWrapper";
 import { Prisma } from "@prisma/client";
@@ -49,16 +48,29 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans relative overflow-hidden transition-colors duration-500 flex flex-col pt-[72px]">
-      <Navbar variant="border" className="bg-background/80 border-b border-border" />
+    <div className="min-h-screen bg-background text-foreground font-sans relative transition-colors duration-500 flex flex-col pt-[72px]">
       
-      <div className="flex flex-1 w-full max-w-[1600px] mx-auto overflow-hidden">
+      {/* FONDO PROFESIONAL "BIG TECH WORKSHOP" GLOBAL */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute inset-0 bg-background" /> 
+        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" 
+          style={{ backgroundImage: `linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)`, backgroundSize: '40px 40px' }} 
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-transparent to-background" />
+        <div className="absolute top-0 right-0 w-[50vw] h-[50vh] bg-primary/5 blur-[150px] rounded-full" />
+        <div className="absolute bottom-0 left-0 w-[50vw] h-[50vh] bg-blue-500/5 blur-[150px] rounded-full" />
+      </div>
+
+      <Navbar variant="border" />
+      
+      <div className="flex flex-1 w-full max-w-[1600px] mx-auto z-10">
         
-        {/* Sidebar Vertical (Hidden on mobile, very similar to the reference image) */}
-        <aside className="hidden md:flex flex-col w-64 border-r border-border bg-background p-6 gap-8">
+        {/* Sidebar Vertical (Hidden on mobile) */}
+        <aside className="hidden md:flex flex-col w-64 border-r border-border/50 bg-background/50 backdrop-blur-md p-6 gap-8">
           <div className="flex flex-col gap-2">
              <p className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase mb-2">Mi Espacio</p>
-             <Link href="/dashboard" className="flex items-center gap-3 text-sm font-semibold p-3 rounded-lg bg-primary/10 text-primary transition-colors">
+             <Link href="/dashboard" className="flex items-center gap-3 text-sm font-semibold p-3 rounded-lg bg-primary/[0.08] text-primary border border-primary/20 shadow-[0_0_15px_rgba(var(--primary-raw),0.1)] transition-colors">
                <LayoutDashboard size={18} />
                Visión General
              </Link>
@@ -66,11 +78,8 @@ export default async function DashboardPage() {
 
           <div className="flex flex-col gap-2">
              <p className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase mb-2">Ajustes</p>
-             <Link href="/dashboard/marketplace" className="flex items-center gap-3 text-sm font-medium p-3 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 text-muted-foreground hover:text-foreground transition-colors group">
-               <span className="group-hover:text-primary transition-colors">💳</span>
-               Marketplace (Ventas)
-             </Link>
-             <Link href="/settings" className="flex items-center gap-3 text-sm font-medium p-3 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 text-muted-foreground hover:text-foreground transition-colors">
+
+             <Link href="/settings" className="flex items-center gap-3 text-sm font-medium p-3 rounded-lg hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all">
                <Settings size={18} />
                Configuración
              </Link>
@@ -99,16 +108,18 @@ export default async function DashboardPage() {
            {/* Metrics Grid */}
            <GsapWrapper animationType="stagger-children" className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12" delay={0.2}>
              
-             <div className="bg-background border border-border rounded-3xl p-6 flex flex-col justify-between shadow-sm relative overflow-hidden group">
+             <div className="bg-background/60 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-3xl p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden group">
                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all"></div>
-               <p className="text-muted-foreground font-semibold text-sm flex items-center gap-2 relative z-10"><Music size={16}/> Total Obras</p>
-               <h3 className="text-5xl font-bold tracking-tighter mt-4 relative z-10">{songs.length}</h3>
+               <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+               <p className="text-muted-foreground font-semibold text-sm flex items-center gap-2 relative z-10"><Music size={16} className="text-primary"/> Total Obras</p>
+               <h3 className="text-5xl font-bold tracking-tighter mt-4 relative z-10 drop-shadow-md">{songs.length}</h3>
              </div>
 
-             <div className="bg-background border border-border rounded-3xl p-6 flex flex-col justify-between shadow-sm relative overflow-hidden group">
+             <div className="bg-background/60 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-3xl p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden group">
                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all"></div>
-               <p className="text-muted-foreground font-semibold text-sm flex items-center gap-2 relative z-10"><Clock size={16}/> Última Edictión</p>
-               <h3 className="text-2xl font-bold tracking-tight mt-4 relative z-10">
+               <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+               <p className="text-muted-foreground font-semibold text-sm flex items-center gap-2 relative z-10"><Clock size={16} className="text-blue-500"/> Última Edición</p>
+               <h3 className="text-2xl font-bold tracking-tight mt-4 relative z-10 drop-shadow-md">
                  {songs.length > 0 ? format(new Date(songs[0].updatedAt), "d MMM yyyy", { locale: es }) : "—"}
                </h3>
              </div>
@@ -144,27 +155,27 @@ export default async function DashboardPage() {
                 <GsapWrapper animationType="stagger-children" delay={0.4} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {songs.map((song) => (
                     <div key={song.id} className="relative group">
-                      <PublicToggle songId={song.id} initialIsPublic={song.isPublic ?? false} />
                       <DeleteSongButton songId={song.id} />
-                      <Link href={`/editor?id=${song.id}`} className="cursor-pointer">
-                        <div className="bg-background border border-border rounded-2xl p-6 h-48 flex flex-col justify-between hover:border-primary hover:shadow-lg transition-all duration-300 relative overflow-hidden">
+                      <Link href={`/editor?id=${song.id}`} className="cursor-pointer block h-full">
+                        <div className="bg-background/40 backdrop-blur-sm border border-white/10 dark:border-white/5 rounded-2xl p-6 h-48 flex flex-col justify-between hover:border-primary/50 hover:bg-background/80 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(var(--primary-raw),0.1)] transition-all duration-300 relative overflow-hidden">
                           
                           <div className="flex justify-between items-start z-10 w-full pr-16">
-                             <div className="bg-primary/10 text-primary p-2 rounded-lg">
+                             <div className="bg-primary/10 text-primary border border-primary/20 shadow-inner p-2 rounded-lg">
                                <Music size={20} />
                              </div>
                              <div className="text-right">
-                               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{song.bpm} BPM</p>
+                               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest bg-foreground/5 px-2 py-1 rounded-md border border-border/50">{song.bpm || 120} BPM</p>
                              </div>
                           </div>
 
                         <div className="z-10 mt-auto">
-                          <h3 className="text-lg font-bold tracking-tight group-hover:text-primary transition-colors line-clamp-1">{song.title}</h3>
-                          <p className="text-xs text-muted-foreground mt-1">Actualizado: {format(new Date(song.updatedAt), "dd/MM/yyyy")}</p>
+                          <h3 className="text-lg font-bold tracking-tight group-hover:text-primary transition-colors line-clamp-1 drop-shadow-sm">{song.title}</h3>
+                          <p className="text-xs text-muted-foreground mt-1 font-medium">Actualizado: {format(new Date(song.updatedAt), "dd/MM/yyyy")}</p>
                         </div>
                         
                         {/* Decorative background visual */}
-                        <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors"></div>
+                        <div className="absolute -bottom-16 -right-16 w-40 h-40 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/20 transition-colors duration-500"></div>
+                        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                       </div>
                       </Link>
                     </div>

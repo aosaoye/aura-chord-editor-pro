@@ -1,0 +1,912 @@
+[
+  {
+    "id": "895e6431-1481-4ff3-b89b-4ea7ff2738d6",
+    "clerkId": "user_3B4F5t3vzvp5UzjtfZ9M69SPYN8",
+    "email": "exploitx86@gmail.com",
+    "name": "John",
+    "stripeCustomerId": null,
+    "stripeSubscriptionId": null,
+    "stripePriceId": null,
+    "stripeCurrentPeriodEnd": null,
+    "stripeConnectAccountId": null,
+    "createdAt": "2026-03-18T23:49:44.886Z",
+    "updatedAt": "2026-03-18T23:49:44.886Z",
+    "songs": [
+      {
+        "id": "71b19fd0-b90e-4a35-9a5f-e1eea27c5b71",
+        "userId": "user_3B4F5t3vzvp5UzjtfZ9M69SPYN8",
+        "title": "Quiero Llenar Tu Trono de Alabanza",
+        "bpm": 90,
+        "rawLyrics": "(Letra generada)",
+        "parsedData": {
+          "id": "821ea30b-75fb-4a9c-8a06-0c1b53244d50",
+          "bpm": 90,
+          "title": "Quiero Llenar Tu Trono de Alabanza",
+          "userId": "user_3B4NWiv8HXfHJoHdxeV4M0YFvAW",
+          "sections": [
+            {
+              "id": "sec-mmulazlr-2unk",
+              "type": "verse",
+              "lines": [
+                {
+                  "id": "line-mmulazlq-mmpy",
+                  "beats": 8,
+                  "words": [
+                    {
+                      "id": "word-mmulazlq-88he",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlq-n3zz",
+                          "text": "Quie",
+                          "chord": {
+                            "id": "chord-1773750603432-symw2av",
+                            "rootNote": "C",
+                            "variation": ""
+                          }
+                        },
+                        {
+                          "id": "syl-mmulazlq-hi2a",
+                          "text": "ro",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmulazlq-z0ma",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlq-1chy",
+                          "text": "lle",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmulazlq-3uac",
+                          "text": "nar",
+                          "chord": {
+                            "id": "chord-1773750610069-c6pzwoh",
+                            "rootNote": "A",
+                            "variation": "m7"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmulazlq-lq62",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlq-g8yk",
+                          "text": "Tu",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmulazlq-dd5h",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlq-pdwk",
+                          "text": "tro",
+                          "chord": {
+                            "id": "chord-1773750615747-57lo1rt",
+                            "rootNote": "D",
+                            "variation": "m7"
+                          }
+                        },
+                        {
+                          "id": "syl-mmulazlq-t6hs",
+                          "text": "no",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmulazlq-yvy5",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlq-4fz4",
+                          "text": "de",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmulazlq-plmf",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlq-h8xw",
+                          "text": "a",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmulazlq-wgfx",
+                          "text": "la",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmulazlq-vq7g",
+                          "text": "ban",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmulazlq-vwjt",
+                          "text": "za",
+                          "chord": {
+                            "id": "chord-1773750626755-kpjlq69",
+                            "bassNote": "C",
+                            "rootNote": "D",
+                            "variation": "m7"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "repeat": 1,
+                  "endTime": 5.333333333333333,
+                  "startTime": 0
+                },
+                {
+                  "id": "line-mmulazlr-tbw4",
+                  "beats": 8,
+                  "words": [
+                    {
+                      "id": "word-mmulazlr-d9lf",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlr-jppx",
+                          "text": "Quie",
+                          "chord": {
+                            "id": "chord-1773750634582-mr0gvg2",
+                            "bassNote": "B",
+                            "rootNote": "G",
+                            "variation": ""
+                          }
+                        },
+                        {
+                          "id": "syl-mmulazlr-80mo",
+                          "text": "ro",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmulazlr-od7o",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlr-bem3",
+                          "text": "lle",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmulazlr-el2g",
+                          "text": "nar",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmulazlr-iecf",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlr-uu97",
+                          "text": "Tu",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmulazlr-8hn5",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlr-j2pv",
+                          "text": "tro",
+                          "chord": {
+                            "id": "chord-1773750639822-lrj5w5d",
+                            "rootNote": "C",
+                            "variation": ""
+                          }
+                        },
+                        {
+                          "id": "syl-mmulazlr-hq0t",
+                          "text": "no",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmulazlr-e23f",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlr-kgj9",
+                          "text": "de",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmulazlr-1pk8",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlr-q2jp",
+                          "text": "a",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmulazlr-gv3n",
+                          "text": "do",
+                          "chord": {
+                            "id": "chord-1773750655058-mw5vybh",
+                            "rootNote": "B",
+                            "variation": "dim7"
+                          }
+                        },
+                        {
+                          "id": "syl-mmulazlr-7e90",
+                          "text": "ra",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmulazlr-9nv7",
+                          "text": "ción",
+                          "chord": {
+                            "id": "chord-1773750711494-54gm46f",
+                            "rootNote": "E",
+                            "variation": ""
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "repeat": 1,
+                  "endTime": 10.666666666666666,
+                  "startTime": 5.333333333333333
+                },
+                {
+                  "id": "line-mmulazlr-7e35",
+                  "beats": 8,
+                  "words": [
+                    {
+                      "id": "word-mmulazlr-o0kp",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlr-utgw",
+                          "text": "Quie",
+                          "chord": {
+                            "id": "chord-1773750725704-s2kywlg",
+                            "rootNote": "A",
+                            "variation": "m7"
+                          }
+                        },
+                        {
+                          "id": "syl-mmulazlr-is96",
+                          "text": "ro",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmulazlr-hzpp",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlr-14on",
+                          "text": "a",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmulazlr-i1t7",
+                          "text": "do",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmulazlr-rquq",
+                          "text": "rar,",
+                          "chord": {
+                            "id": "chord-1773750735425-6d3qvcg",
+                            "bassNote": "C",
+                            "rootNote": "A",
+                            "variation": "m7"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmulazlr-klro",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlr-jgxu",
+                          "text": "pos",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmulazlr-wdbm",
+                          "text": "trar",
+                          "chord": {
+                            "id": "chord-1773750741034-mev9tfu",
+                            "rootNote": "D",
+                            "variation": "m7"
+                          }
+                        },
+                        {
+                          "id": "syl-mmulazlr-36cs",
+                          "text": "me",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmulazlr-x891",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlr-vwid",
+                          "text": "en",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmulazlr-d4px",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlr-lll1",
+                          "text": "Tu",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmulazlr-4p9u",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlr-j2ai",
+                          "text": "pre",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmulazlr-nrng",
+                          "text": "sen",
+                          "chord": {
+                            "id": "chord-1773750746262-rifbmf9",
+                            "rootNote": "D",
+                            "variation": ""
+                          }
+                        },
+                        {
+                          "id": "syl-mmulazlr-ppnh",
+                          "text": "cia",
+                          "chord": null
+                        }
+                      ]
+                    }
+                  ],
+                  "repeat": 1,
+                  "endTime": 16,
+                  "startTime": 10.666666666666666
+                },
+                {
+                  "id": "line-mmulazlr-em58",
+                  "beats": 8,
+                  "words": [
+                    {
+                      "id": "word-mmulazlr-a0oj",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlr-52sd",
+                          "text": "Y",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmulazlr-bsgj",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlr-l0db",
+                          "text": "proc",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmulazlr-kqs9",
+                          "text": "la",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmulazlr-rdno",
+                          "text": "mar",
+                          "chord": {
+                            "id": "chord-1773750752890-68a11xa",
+                            "rootNote": "D",
+                            "variation": "m7"
+                          }
+                        },
+                        {
+                          "id": "syl-mmulazlr-n2s4",
+                          "text": "te",
+                          "chord": {
+                            "id": "chord-1773750757850-ub1qqpi",
+                            "rootNote": "G",
+                            "variation": ""
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmulazlr-cc7c",
+                      "syllables": [
+                        {
+                          "id": "syl-mmulazlr-3g3k",
+                          "text": "Se",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmulazlr-eme7",
+                          "text": "ñor",
+                          "chord": {
+                            "id": "chord-1773750760205-9uc54k2",
+                            "rootNote": "C",
+                            "variation": ""
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "repeat": 1,
+                  "endTime": 21.333333333333332,
+                  "startTime": 16
+                }
+              ],
+              "repeat": 2
+            }
+          ],
+          "authorName": "OSA OYE",
+          "timeSignature": "4/4"
+        },
+        "isPublic": true,
+        "price": 0,
+        "createdAt": "2026-03-18T23:49:45.931Z",
+        "updatedAt": "2026-03-20T07:38:50.773Z"
+      }
+    ]
+  },
+  {
+    "id": "51916c79-994c-4b4b-ac0f-2659a8a160cc",
+    "clerkId": "user_3B42Z0h0Kvi4whmZWTVzDgWL5Vq",
+    "email": "22.osaoye@gmail.com",
+    "name": "Amalio",
+    "stripeCustomerId": "cus_UBMNG28zVm5hc3",
+    "stripeSubscriptionId": null,
+    "stripePriceId": null,
+    "stripeCurrentPeriodEnd": null,
+    "stripeConnectAccountId": null,
+    "createdAt": "2026-03-18T23:55:22.342Z",
+    "updatedAt": "2026-03-20T09:47:27.348Z",
+    "songs": []
+  },
+  {
+    "id": "a4e2fe55-f189-4b1e-bdfd-433a60e66ffe",
+    "clerkId": "user_3B4NWiv8HXfHJoHdxeV4M0YFvAW",
+    "email": "a29322@svalero.com",
+    "name": "OSA OYE",
+    "stripeCustomerId": "cus_UBMVfExVGFaCSs",
+    "stripeSubscriptionId": null,
+    "stripePriceId": null,
+    "stripeCurrentPeriodEnd": null,
+    "stripeConnectAccountId": null,
+    "createdAt": "2026-03-18T21:52:02.182Z",
+    "updatedAt": "2026-03-20T09:56:04.078Z",
+    "songs": [
+      {
+        "id": "56a872fb-ee24-4e35-95c0-cf9c11e1921a",
+        "userId": "user_3B4NWiv8HXfHJoHdxeV4M0YFvAW",
+        "title": "Tu fidelidad - Marcos Witt",
+        "bpm": 90,
+        "rawLyrics": "(Letra generada)",
+        "parsedData": {
+          "id": "56a872fb-ee24-4e35-95c0-cf9c11e1921a",
+          "bpm": 90,
+          "title": "Tu fidelidad - Marcos Witt",
+          "userId": "user_3B4NWiv8HXfHJoHdxeV4M0YFvAW",
+          "metadata": {
+            "authorName": "OSA OYE",
+            "originalCreatorId": "user_3B4NWiv8HXfHJoHdxeV4M0YFvAW"
+          },
+          "sections": [
+            {
+              "id": "sec-mmwktvf1-entv",
+              "type": "Coro",
+              "lines": [
+                {
+                  "id": "line-mmwktvf1-11x7",
+                  "beats": 8,
+                  "words": [
+                    {
+                      "id": "word-mmwktvf1-mxau",
+                      "syllables": [
+                        {
+                          "id": "syl-mmwktvf1-xien",
+                          "text": "Tu",
+                          "chord": {
+                            "id": "chord-1773870765559-8fb32v4",
+                            "rootNote": "D",
+                            "variation": ""
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmwktvf1-308z",
+                      "syllables": [
+                        {
+                          "id": "syl-mmwktvf1-dicx",
+                          "text": "fi",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmwktvf1-q8v4",
+                          "text": "de",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmwktvf1-rhds",
+                          "text": "li",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmwktvf1-77un",
+                          "text": "dad",
+                          "chord": {
+                            "id": "chord-1773870787148-64kx05h",
+                            "rootNote": "B",
+                            "variation": "m7"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmwktvf1-ijfq",
+                      "syllables": [
+                        {
+                          "id": "syl-mmwktvf1-immx",
+                          "text": "es",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmwktvf1-sjjk",
+                      "syllables": [
+                        {
+                          "id": "syl-mmwktvf1-s7z1",
+                          "text": "gran",
+                          "chord": {
+                            "id": "chord-1773870799117-na6qub8",
+                            "rootNote": "E",
+                            "variation": "m7"
+                          }
+                        },
+                        {
+                          "id": "syl-mmwktvf1-9xjw",
+                          "text": "de",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-1773870803026-tt37",
+                      "syllables": [
+                        {
+                          "id": "syl-1773870803026-e3d0",
+                          "text": " ",
+                          "chord": {
+                            "id": "chord-1773871247620-nk1hga1",
+                            "bassNote": "D",
+                            "rootNote": "E",
+                            "variation": "m7"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "repeat": 1,
+                  "endTime": 4,
+                  "startTime": 0
+                },
+                {
+                  "id": "line-mmwktvf1-ckvw",
+                  "beats": 8,
+                  "words": [
+                    {
+                      "id": "word-mmwktvf1-u1nk",
+                      "syllables": [
+                        {
+                          "id": "syl-mmwktvf1-jxt8",
+                          "text": "Tu",
+                          "chord": {
+                            "id": "chord-1773871261580-mqy3mbn",
+                            "rootNote": "A",
+                            "variation": ""
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmwktvf1-vqgl",
+                      "syllables": [
+                        {
+                          "id": "syl-mmwktvf1-ynf5",
+                          "text": "fi",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmwktvf1-34mu",
+                          "text": "de",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmwktvf1-q88g",
+                          "text": "li",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmwktvf1-gzft",
+                          "text": "dad",
+                          "chord": {
+                            "id": "chord-1773871274058-fs9z2dv",
+                            "bassNote": "C#",
+                            "rootNote": "A",
+                            "variation": ""
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmwktvf1-9yas",
+                      "syllables": [
+                        {
+                          "id": "syl-mmwktvf1-4drw",
+                          "text": "in",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmwktvf1-ysck",
+                          "text": "com",
+                          "chord": {
+                            "id": "chord-1773871278820-2gqnnp6",
+                            "rootNote": "D",
+                            "variation": ""
+                          }
+                        },
+                        {
+                          "id": "syl-mmwktvf1-itf1",
+                          "text": "pa",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmwktvf1-6tx2",
+                          "text": "rab",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmwktvf1-307k",
+                          "text": "le",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmwktvf1-9mjd",
+                      "syllables": [
+                        {
+                          "id": "syl-mmwktvf1-4nfu",
+                          "text": "es",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-1773871283441-d34z",
+                      "syllables": [
+                        {
+                          "id": "syl-1773871283441-0w5a",
+                          "text": " ",
+                          "chord": {
+                            "id": "chord-1773871297556-rods03a",
+                            "bassNote": "C#",
+                            "rootNote": "A",
+                            "variation": ""
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "repeat": 1,
+                  "endTime": 8,
+                  "startTime": 4
+                },
+                {
+                  "id": "line-mmwktvf1-7q2c",
+                  "beats": 8,
+                  "words": [
+                    {
+                      "id": "word-mmwktvf1-hnhb",
+                      "syllables": [
+                        {
+                          "id": "syl-mmwktvf1-j3iw",
+                          "text": "Na",
+                          "chord": {
+                            "id": "chord-1773871304580-ge2ze7s",
+                            "rootNote": "B",
+                            "variation": "m7"
+                          }
+                        },
+                        {
+                          "id": "syl-mmwktvf1-52u9",
+                          "text": "die",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmwktvf1-juwu",
+                      "syllables": [
+                        {
+                          "id": "syl-mmwktvf1-giv8",
+                          "text": "co",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmwktvf1-gdva",
+                          "text": "mo",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmwktvf1-gmpg",
+                      "syllables": [
+                        {
+                          "id": "syl-mmwktvf1-sq09",
+                          "text": "tú,",
+                          "chord": {
+                            "id": "chord-1773871335167-fgx0adu",
+                            "bassNote": "A",
+                            "rootNote": "B",
+                            "variation": "m7"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmwktvf1-7kof",
+                      "syllables": [
+                        {
+                          "id": "syl-mmwktvf1-27px",
+                          "text": "ben",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmwktvf1-7azr",
+                          "text": "di",
+                          "chord": {
+                            "id": "chord-1773871344084-7wltzl6",
+                            "rootNote": "E",
+                            "variation": "m7"
+                          }
+                        },
+                        {
+                          "id": "syl-mmwktvf1-xxxn",
+                          "text": "to",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmwktvf1-3y15",
+                      "syllables": [
+                        {
+                          "id": "syl-mmwktvf1-vkkv",
+                          "text": "Dios",
+                          "chord": null
+                        }
+                      ]
+                    }
+                  ],
+                  "repeat": 1,
+                  "endTime": 12,
+                  "startTime": 8
+                },
+                {
+                  "id": "line-mmwktvf1-zy2g",
+                  "beats": 8,
+                  "words": [
+                    {
+                      "id": "word-mmwktvf1-ezo7",
+                      "syllables": [
+                        {
+                          "id": "syl-mmwktvf1-cpgn",
+                          "text": "Gran",
+                          "chord": {
+                            "id": "chord-1773871401125-bxr2x1x",
+                            "bassNote": "G",
+                            "rootNote": "A",
+                            "variation": ""
+                          }
+                        },
+                        {
+                          "id": "syl-mmwktvf1-8bah",
+                          "text": "de",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmwktvf1-zzch",
+                      "syllables": [
+                        {
+                          "id": "syl-mmwktvf1-g3xx",
+                          "text": "es",
+                          "chord": null
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmwktvf1-kisr",
+                      "syllables": [
+                        {
+                          "id": "syl-mmwktvf1-qnas",
+                          "text": "tu",
+                          "chord": {
+                            "id": "chord-1773871409166-le3sxrs",
+                            "rootNote": "G",
+                            "variation": "m7"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "word-mmwktvf1-9uq2",
+                      "syllables": [
+                        {
+                          "id": "syl-mmwktvf1-2lpm",
+                          "text": "fi",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmwktvf1-cadc",
+                          "text": "de",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmwktvf1-am6h",
+                          "text": "li",
+                          "chord": null
+                        },
+                        {
+                          "id": "syl-mmwktvf1-ufgn",
+                          "text": "dad",
+                          "chord": {
+                            "id": "chord-1773871412650-rejpvr5",
+                            "rootNote": "D",
+                            "variation": ""
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "repeat": 1,
+                  "endTime": 16,
+                  "startTime": 12
+                }
+              ],
+              "repeat": 1
+            }
+          ],
+          "authorName": "OSA OYE",
+          "timeSignature": "4/4"
+        },
+        "isPublic": true,
+        "price": 0,
+        "createdAt": "2026-03-18T22:03:52.282Z",
+        "updatedAt": "2026-03-20T07:40:45.571Z"
+      }
+    ]
+  }
+]

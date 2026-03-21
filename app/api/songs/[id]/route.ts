@@ -3,8 +3,9 @@ import { requireUser } from "@/lib/auth";
 import { songService } from "@/modules/songs/songs.service";
 import { updateSongSchema } from "@/modules/songs/songs.schema";
 
-export async function GET(_: Request, { params }: any) {
+export async function GET(_: Request, context: any) {
   try {
+    const params = await context.params;
     const song = await songService.getById(params.id);
     return ok(song);
   } catch (e) {
@@ -12,9 +13,10 @@ export async function GET(_: Request, { params }: any) {
   }
 }
 
-export async function PATCH(req: Request, { params }: any) {
+export async function PATCH(req: Request, context: any) {
   try {
     const userId = await requireUser();
+    const params = await context.params;
     const body = await req.json();
 
     const data = updateSongSchema.parse(body);
@@ -27,9 +29,10 @@ export async function PATCH(req: Request, { params }: any) {
   }
 }
 
-export async function DELETE(_: Request, { params }: any) {
+export async function DELETE(_: Request, context: any) {
   try {
     const userId = await requireUser();
+    const params = await context.params;
 
     await songService.delete(userId, params.id);
 

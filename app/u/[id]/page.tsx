@@ -65,7 +65,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-foreground font-sans relative overflow-hidden transition-colors duration-500 flex flex-col pt-[72px]">
-      <Navbar variant="border" className="bg-white/80 dark:bg-zinc-950/80 border-b border-border" />
+      <Navbar variant="border" />
       
       <main className="flex-1 w-full max-w-[1200px] mx-auto p-6 md:p-10 lg:p-12">
         {/* Cabecera de Perfil */}
@@ -121,15 +121,6 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{song.bpm} BPM</p>
-                        {song.price && song.price > 0 ? (
-                          <span className="text-[10px] font-black px-2 py-0.5 bg-amber-500/10 text-amber-500 rounded border border-amber-500/20 shadow-sm">
-                            {song.price.toFixed(2)} €
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-black px-2 py-0.5 bg-primary/10 text-primary rounded border border-primary/20 shadow-sm">
-                            GRATIS
-                          </span>
-                        )}
                       </div>
                    </div>
 

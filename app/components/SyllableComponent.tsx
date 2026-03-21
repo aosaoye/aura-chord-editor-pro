@@ -10,11 +10,13 @@ import ChordEditorMenu from "./ChordEditorMenu";
 import { formatChordText, NotationType } from "../helpers/chordFormatter";
 import MiniGuitar2D from "./MiniGuitar2D";
 import { transposeChord } from "../helpers/transpose";
+import { getChordKeys } from "../helpers/chordToPianoKeys";
+import { audioEngine } from "../helpers/audioEngine";
 
 export interface SyllableProps {
   syllable: Syllable;
   capo?: number;
-  onChordChange: (syllableId: string, newChord: Chord | null) => void;
+  onChordChange: (syllableId: string, newChord: Chord | null, styleOptions?: { highlightColor?: string, casing?: string }) => void;
   onGlobalChordChange?: (newChord: Chord | null) => void;
   nextHasChord?: boolean;
   notation?: NotationType;
@@ -23,10 +25,13 @@ export interface SyllableProps {
   showChords?: boolean;
   instrument?: 'piano' | 'guitar';
   colorTheme?: string;
+  inheritedHighlightColor?: string;
+  isLastInWord?: boolean;
+  casing?: 'default' | 'uppercase' | 'lowercase';
 }
 
 export default function SyllableComponent({ 
-  syllable, capo = 0, onChordChange, onGlobalChordChange, nextHasChord = true, notation = 'english', songKey = 'C', readOnly = false, showChords = true, instrument = 'piano', colorTheme
+  syllable, capo = 0, onChordChange, onGlobalChordChange, nextHasChord = true, notation = 'english', songKey = 'C', readOnly = false, showChords = true, instrument = 'piano', colorTheme, inheritedHighlightColor, isLastInWord, casing
 }: SyllableProps) {
   const { id, text, chord } = syllable;
   
@@ -69,15 +74,19 @@ export default function SyllableComponent({
   const handleActionClick = useCallback(() => {
      if (chord) {
          window.dispatchEvent(new CustomEvent('chord-picker-opened', { detail: { chord } }));
+         if (audioEngine) {
+            const keys = getChordKeys(chord.rootNote, chord.variation, chord.bassNote || undefined);
+            audioEngine.playChord(keys, instrument);
+         }
      }
   }, [chord]);
 
-  const handleSaveClickMenu = useCallback((newChord: Chord | null) => {
+  const handleSaveClickMenu = useCallback((newChord: Chord | null, styleOptions?: { highlightColor?: string, casing?: string }) => {
     setIsClickOpen(false);
     if (replaceGlobal && onGlobalChordChange) {
        onGlobalChordChange(newChord);
     } else {
-       onChordChange(id, newChord);
+       onChordChange(id, newChord, styleOptions);
     }
   }, [id, onChordChange, onGlobalChordChange, replaceGlobal]);
 
@@ -100,34 +109,53 @@ export default function SyllableComponent({
           onKeyDown: (e) => {
             if ((e.key === "Enter" || e.key === " ") && chord) {
               window.dispatchEvent(new CustomEvent('chord-picker-opened', { detail: { chord } }));
+              if (audioEngine) {
+                 const keys = getChordKeys(chord.rootNote, chord.variation, chord.bassNote || undefined);
+                 audioEngine.playChord(keys, instrument);
+              }
             }
           }
         }))}
         role="button"
         tabIndex={0}
         className={
-          "relative inline-flex flex-col items-start group transition-all duration-300 outline-none rounded-sm " +
+          "relative inline-block text-left align-bottom group transition-all duration-300 outline-none rounded-sm " +
           (readOnly ? "cursor-default" : "cursor-pointer hover:bg-black/[0.04] focus-visible:bg-black/5 focus-visible:ring-1 focus-visible:ring-black")
         }
         aria-label={`Sílaba: ${text}, Acorde: ${chord ? chord.rootNote + chord.variation : "ninguno"}`}
       >
         {showChords && (
-          <span className="min-h-[1.5em] w-full flex items-end justify-start mb-0.5 text-[length:var(--chord-font)] font-bold text-primary tracking-tight select-none opacity-90 group-hover:opacity-100 transition-opacity relative" aria-hidden="true">
+          <span className="block min-h-[1.5em] w-full mb-0.5 text-[length:var(--chord-font)] font-bold text-primary tracking-tight select-none opacity-90 group-hover:opacity-100 transition-opacity relative" aria-hidden="true">
             {chord ? (() => {
               const formatted = formatChordText(chord, notation, songKey);
               return (
-                <span className={`group-active:scale-95 transition-transform duration-100 ${nextHasChord ? 'pr-2' : 'absolute left-0 bottom-0 whitespace-nowrap'}`}>
+                <span className={`inline-block group-active:scale-95 transition-transform duration-100 ${nextHasChord ? 'pr-2' : 'absolute left-0 bottom-0 whitespace-nowrap'}`}>
                   <span className="text-[1.05em]">{formatted.root}</span>
                   {formatted.variation && <span className="text-[0.65em] ml-[1px] font-normal tracking-wider relative -top-[0.25em]">{formatted.variation}</span>}
                   {formatted.bass && <span className="text-[0.8em] font-normal opacity-80 ml-[0.5px]">/{formatted.bass}</span>}
                 </span>
               );
             })() : (
-               <span className={`opacity-0 ${!readOnly ? 'group-hover:opacity-100' : ''} flex items-end justify-center pb-0.5 text-[0.8em] font-light text-gray-400 transition-opacity absolute left-1/2 -translate-x-1/2 w-full pointer-events-none`}>+</span>
+               <span className={`opacity-0 ${!readOnly ? 'group-hover:opacity-100' : ''} inline-block pb-0.5 text-[0.8em] font-light text-gray-400 transition-opacity absolute left-1/2 -translate-x-1/2 pointer-events-none`}>+</span>
             )}
           </span>
         )}
-        <span className="text-[length:var(--base-font)] text-foreground font-normal tracking-normal leading-tight">{text}</span>
+        <span 
+          className={`block text-[length:var(--base-font)] font-normal tracking-normal leading-tight ${casing === 'uppercase' ? 'uppercase' : casing === 'lowercase' ? 'lowercase' : ''}`}
+          style={inheritedHighlightColor ? { 
+            backgroundColor: inheritedHighlightColor, 
+            color: '#000', 
+            // Para conectar colores sin saltos: le damos padding extra a los lados y margen negativo.
+            // Si tiene mr-4 (ej. fin de palabra), lo compensamos. Pero para mantenerlo simple:
+            paddingTop: '2px',
+            paddingBottom: '2px',
+            paddingRight: isLastInWord ? '1rem' : '0px',
+            marginLeft: '-0.1rem',
+            paddingLeft: '0.1rem'
+          } : { color: 'var(--foreground)' }}
+        >
+          {text}
+        </span>
       </span>
 
       {/* Menú de Click Tradicional */}
@@ -141,6 +169,7 @@ export default function SyllableComponent({
           >
             <ChordEditorMenu
               initialChord={chord}
+              initialHighlight={syllable.highlightColor}
               onSave={handleSaveClickMenu}
               onCancel={() => setIsClickOpen(false)}
             />

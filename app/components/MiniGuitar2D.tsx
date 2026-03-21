@@ -73,37 +73,77 @@ export default function MiniGuitar2D({ chord, themeColor = "theme-purple", class
           );
         })}
 
-        {/* Fingerings / Circles / X's / O's */}
-        {frets.map((fret, stringIndex) => {
-          const x = leftMargin + stringIndex * stringSpacing;
+        {/* Logic for Barre (Cejilla) */}
+        {(() => {
+          const activeFrets = frets.filter((f) => f > 0);
+          const minPlayedFret = activeFrets.length > 0 ? Math.min(...activeFrets) : -1;
+          const minFretIndices = frets.map((f, i) => (f === minPlayedFret ? i : -1)).filter((i) => i !== -1);
 
-          if (fret === -1) {
-            // Draw 'X'
-            return (
-              <text key={`note-${stringIndex}`} x={x} y={topMargin - 10} fontSize="12" fontWeight="bold" fill="#ef4444" textAnchor="middle">
-                X
-              </text>
-            );
+          let hasBarre = false;
+          let barreStartIdx = -1;
+          let barreEndIdx = -1;
+
+          if (minFretIndices.length >= 2) {
+            const span = minFretIndices[minFretIndices.length - 1] - minFretIndices[0];
+            if (span >= 3) {
+              hasBarre = true;
+              barreStartIdx = minFretIndices[0];
+              barreEndIdx = minFretIndices[minFretIndices.length - 1];
+            }
           }
 
-          if (fret === 0) {
-            // Draw 'O' (open string)
-            return (
-              <circle key={`note-${stringIndex}`} cx={x} cy={topMargin - 12} r={4} fill="transparent" stroke="currentColor" strokeWidth={1} opacity={0.5} />
-            );
-          }
+          const renderBarreFret = minPlayedFret - baseFret;
+          const barreOverlay =
+            hasBarre && renderBarreFret >= 0 && renderBarreFret < numFrets ? (
+              <rect
+                key="barre-overlay"
+                x={leftMargin + barreStartIdx * stringSpacing - 6}
+                y={topMargin + renderBarreFret * fretSpacing + fretSpacing / 2 - 6}
+                width={(barreEndIdx - barreStartIdx) * stringSpacing + 12}
+                height={12}
+                rx={6}
+                fill={color}
+              />
+            ) : null;
 
-          // Draw filled circle for pressed fret
-          const renderFret = fret - baseFret;
-          // Only draw if within visual bounds
-          if (renderFret >= 0 && renderFret < numFrets) {
-            const y = topMargin + renderFret * fretSpacing + (fretSpacing / 2);
-            return (
-              <circle key={`note-${stringIndex}`} cx={x} cy={y} r={7} fill={color} />
-            );
-          }
-          return null;
-        })}
+          return (
+            <>
+              {barreOverlay}
+              {/* Fingerings / Circles / X's / O's */}
+              {frets.map((fret, stringIndex) => {
+                const x = leftMargin + stringIndex * stringSpacing;
+
+                if (fret === -1) {
+                  // Draw 'X'
+                  return (
+                    <text key={`note-${stringIndex}`} x={x} y={topMargin - 10} fontSize="12" fontWeight="bold" fill="#ef4444" textAnchor="middle">
+                      X
+                    </text>
+                  );
+                }
+
+                if (fret === 0) {
+                  // Draw 'O' (open string)
+                  return (
+                    <circle key={`note-${stringIndex}`} cx={x} cy={topMargin - 12} r={4} fill="transparent" stroke="currentColor" strokeWidth={1} opacity={0.5} />
+                  );
+                }
+
+                // Draw filled circle for pressed fret
+                const renderFret = fret - baseFret;
+                
+                // Si es el fret de la cejilla y está dentro de la línea de la cejilla, no dibujamos punto individual
+                const isPartOfBarre = hasBarre && fret === minPlayedFret && stringIndex >= barreStartIdx && stringIndex <= barreEndIdx;
+
+                if (renderFret >= 0 && renderFret < numFrets && !isPartOfBarre) {
+                  const y = topMargin + renderFret * fretSpacing + fretSpacing / 2;
+                  return <circle key={`note-${stringIndex}`} cx={x} cy={y} r={7} fill={color} />;
+                }
+                return null;
+              })}
+            </>
+          );
+        })()}
       </svg>
     </div>
   );

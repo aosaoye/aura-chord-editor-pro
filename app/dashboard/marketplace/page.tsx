@@ -57,7 +57,7 @@ export default async function MarketplaceDashboardPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans relative overflow-hidden transition-colors duration-500 flex flex-col pt-[72px]">
-      <Navbar variant="border" className="bg-background/80 border-b border-border" />
+      <Navbar variant="border" />
       
       <div className="flex flex-1 w-full max-w-[1600px] mx-auto overflow-hidden">
         
