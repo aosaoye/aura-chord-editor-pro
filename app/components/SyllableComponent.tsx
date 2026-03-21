@@ -126,29 +126,32 @@ export default function SyllableComponent({
       >
         {showChords && (
           <span 
-            className={`block min-h-[1.5em] w-full mb-0.5 text-[length:var(--chord-font)] font-bold tracking-tight select-none opacity-90 group-hover:opacity-100 transition-opacity relative ${!inheritedHighlightColor ? 'text-primary' : ''}`}
+            className={`flex items-end min-h-[1.5em] w-full mb-0.5 text-[length:var(--chord-font)] font-bold tracking-tight select-none opacity-90 group-hover:opacity-100 transition-opacity relative z-0 ${!inheritedHighlightColor ? 'text-primary' : ''}`}
             aria-hidden="true"
-            style={inheritedHighlightColor ? { 
-              backgroundColor: inheritedHighlightColor, 
-              color: '#000', 
-              paddingTop: '2px',
-              paddingBottom: '2px',
-              paddingRight: isLastInWord ? '1rem' : '0px',
-              marginLeft: '-0.1rem',
-              paddingLeft: '0.1rem'
-            } : {}}
           >
+            {/* The absolute pill bar for highlighting. It merges seamlessly between syllables using negative left/right. */}
+            {inheritedHighlightColor && (
+              <span 
+                className="absolute top-1/2 -translate-y-1/2 h-2 rounded-full z-[-1] pointer-events-none"
+                style={{ 
+                  backgroundColor: inheritedHighlightColor, 
+                  left: '-0.2rem',   // Overlap prev slightly
+                  right: isLastInWord ? '-1.5rem' : '-0.2rem' // Bridge the word gap or overlap next
+                }}
+              />
+            )}
+
             {chord ? (() => {
               const formatted = formatChordText(chord, notation, songKey);
               return (
-                <span className={`inline-block group-active:scale-95 transition-transform duration-100 ${nextHasChord ? 'pr-2' : 'absolute left-0 bottom-0 whitespace-nowrap'}`}>
+                <span className={`inline-block whitespace-nowrap z-10 bg-background group-active:scale-95 transition-transform duration-100 pr-1 sm:pr-2 ${nextHasChord && !isLastInWord ? 'mr-2' : ''}`}>
                   <span className="text-[1.05em]">{formatted.root}</span>
                   {formatted.variation && <span className="text-[0.65em] ml-[1px] font-normal tracking-wider relative -top-[0.25em]">{formatted.variation}</span>}
                   {formatted.bass && <span className="text-[0.8em] font-normal opacity-80 ml-[0.5px]">/{formatted.bass}</span>}
                 </span>
               );
             })() : (
-               <span className={`opacity-0 ${!readOnly ? 'group-hover:opacity-100' : ''} inline-block pb-0.5 text-[0.8em] font-light text-gray-400 transition-opacity absolute left-1/2 -translate-x-1/2 pointer-events-none`}>+</span>
+               <span className={`opacity-0 ${!readOnly ? 'group-hover:opacity-100' : ''} inline-block z-10 bg-background text-[0.8em] font-light text-gray-400 transition-opacity absolute left-1/2 -translate-x-1/2 pointer-events-none px-1`}>+</span>
             )}
           </span>
         )}
