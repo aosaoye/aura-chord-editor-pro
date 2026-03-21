@@ -131,13 +131,48 @@ export default function EditorSettingsSidebar({
       </button>
 
       {/* 4.5. Marcadores de Acordes (Timelines) */}
-      <button 
-         onClick={() => updateLayout({ showTimelines: !layout.showTimelines })} 
-         className={`${btnClass} ${layout.showTimelines ? 'ring-1 ring-primary bg-primary/5' : ''}`}
-      >
-        <Minus className={layout.showTimelines ? 'w-4 h-4 text-primary shrink-0' : iconClass} />
-        <span className={`flex-1 text-left ${layout.showTimelines ? 'text-primary font-bold' : ''}`}>Timelines de Acordes</span>
-      </button>
+      <div className="flex flex-col rounded-xl overflow-hidden shadow-sm bg-background border border-border">
+         <button onClick={() => toggleExpand("timelines")} className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-accent transition-all text-sm font-medium">
+           <div className="flex items-center gap-3">
+              <Minus className={layout.showTimelines ? 'w-4 h-4 text-primary shrink-0' : iconClass} />
+              <span className={layout.showTimelines ? 'text-primary font-bold' : ''}>Timelines de Acordes</span>
+           </div>
+         </button>
+         <div className={`overflow-hidden transition-all ease-in-out duration-300 ${(layout.showTimelines || expandedRow === "timelines") ? "max-h-40 opacity-100 border-t border-border bg-muted/20" : "max-h-0 opacity-0"}`}>
+            <div className="p-4 flex flex-col gap-3">
+               <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-muted-foreground">Mostrar líneas</span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" checked={layout.showTimelines || false} onChange={() => updateLayout({ showTimelines: !layout.showTimelines })} />
+                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                  </label>
+               </div>
+               
+               {layout.showTimelines && (
+                 <div className="flex flex-col gap-2 pt-2 border-t border-border">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Estilo de Color</span>
+                    <div className="flex gap-2">
+                       <button 
+                          onClick={() => updateLayout({ timelineColor: 'multicolor' })}
+                          className={`w-6 h-6 rounded-full border border-gray-200 shadow-sm flex items-center justify-center transition-all ${(!layout.timelineColor || layout.timelineColor === 'multicolor') ? 'ring-2 ring-primary ring-offset-1 scale-110' : 'hover:scale-105'}`}
+                          style={{ background: 'conic-gradient(#0ea5e9, #16a34a, #a855f7, #e11d48, #ea580c, #0ea5e9)' }}
+                          title="Multicolor Automático"
+                       />
+                       {["#0ea5e9", "#16a34a", "#a855f7", "#e11d48", "#ea580c", "#334155"].map((clr) => (
+                           <button 
+                             key={clr}
+                             onClick={() => updateLayout({ timelineColor: clr })}
+                             className={`w-6 h-6 rounded-full border shadow-sm transition-all ${layout.timelineColor === clr ? 'ring-2 ring-primary ring-offset-1 scale-110' : 'hover:scale-105 border-transparent'}`}
+                             style={{ backgroundColor: clr }}
+                             title="Color Sólido"
+                           />
+                       ))}
+                    </div>
+                 </div>
+               )}
+            </div>
+         </div>
+      </div>
 
       {/* 4.1 Instrumento (Piano/Guitarra) */}
       <div className="flex items-center justify-between bg-background border border-border rounded-xl shadow-sm text-sm font-medium text-foreground overflow-hidden">

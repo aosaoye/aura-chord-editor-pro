@@ -1711,6 +1711,24 @@ export default function SongEditor() {
                                             
                                             if (syl.chord) {
                                               currentHighlightColor = syl.highlightColor || undefined;
+                                              
+                                              // Auto-timeline colors feature
+                                              if (!currentHighlightColor && (layout as any).showTimelines) {
+                                                  const tc = (layout as any).timelineColor || 'multicolor';
+                                                  if (tc === 'multicolor') {
+                                                      // Strong, solid colors for mockups
+                                                      const COLORS = ["#0ea5e9", "#16a34a", "#a855f7", "#e11d48", "#ea580c"];
+                                                      const root = typeof syl.chord === 'string' ? syl.chord : syl.chord.rootNote;
+                                                      let h = 0;
+                                                      if (root) {
+                                                          for(let c=0;c<root.length;c++) h = root.charCodeAt(c) + ((h<<5)-h);
+                                                      }
+                                                      currentHighlightColor = COLORS[Math.abs(h) % COLORS.length];
+                                                  } else {
+                                                      currentHighlightColor = tc;
+                                                  }
+                                              }
+                                              
                                             } else if (syl.highlightColor !== undefined) {
                                               currentHighlightColor = syl.highlightColor || undefined;
                                             }
@@ -1720,7 +1738,20 @@ export default function SongEditor() {
                                             let nextColor = currentHighlightColor;
                                             if (nextSyl) {
                                                 if (nextSyl.chord) {
-                                                    nextColor = nextSyl.highlightColor || undefined;
+                                                    let tempNext = nextSyl.highlightColor || undefined;
+                                                    if (!tempNext && (layout as any).showTimelines) {
+                                                        const tc = (layout as any).timelineColor || 'multicolor';
+                                                        if (tc === 'multicolor') {
+                                                            const COLORS = ["#0ea5e9", "#16a34a", "#a855f7", "#e11d48", "#ea580c"];
+                                                            const root = typeof nextSyl.chord === 'string' ? nextSyl.chord : nextSyl.chord.rootNote;
+                                                            let h = 0;
+                                                            if (root) for(let c=0;c<root.length;c++) h = root.charCodeAt(c) + ((h<<5)-h);
+                                                            tempNext = COLORS[Math.abs(h) % COLORS.length];
+                                                        } else {
+                                                            tempNext = tc;
+                                                        }
+                                                    }
+                                                    nextColor = tempNext;
                                                 } else if (nextSyl.highlightColor !== undefined) {
                                                     nextColor = nextSyl.highlightColor || undefined;
                                                 }
@@ -1729,9 +1760,8 @@ export default function SongEditor() {
                                             }
 
                                             let maintainsConnection = false;
+                                            // Bridge gap only if exact same strong color continues
                                             if (currentHighlightColor && nextColor === currentHighlightColor) {
-                                                maintainsConnection = true;
-                                            } else if (!currentHighlightColor && !nextColor && (layout as any).showTimelines && nextSyl) {
                                                 maintainsConnection = true;
                                             }
 

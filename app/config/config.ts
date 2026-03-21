@@ -45,6 +45,7 @@ export interface LayoutSettings {
   notation?: 'english' | 'spanish' | 'roman';
   showChords?: boolean;
   showTimelines?: boolean;
+  timelineColor?: string;
   capo?: number;
   instrument?: 'piano' | 'guitar';
   pageSize?: 'A4' | 'CARTA';
