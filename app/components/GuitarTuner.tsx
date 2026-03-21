@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTuner, TunerInstrument } from "../hooks/useTuner";
 
 const INSTRUMENTS: { id: TunerInstrument, label: string }[] = [
@@ -14,6 +14,15 @@ const INSTRUMENTS: { id: TunerInstrument, label: string }[] = [
 export default function GuitarTuner({ onClose }: { onClose: () => void }) {
   const [instrument, setInstrument] = useState<TunerInstrument>('guitar');
   const { isListening, startTuning, stopTuning, pitch, closestString, cents, error } = useTuner(instrument);
+
+  // Lock body scroll when Tuner is open to prevent double scrollbars
+  useEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow;  
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, []);
 
   // Consider in tune if within +/- 3 cents
   const isInTune = Math.abs(cents) <= 3;
