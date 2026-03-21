@@ -102,7 +102,7 @@ export default function LandingPage() {
                 { label: 'Live Mode', num: '03', icon: <Smartphone size={28}/> },
                 { label: 'Comunidad', num: '04', icon: <Users size={28}/> }
              ].map((card, i) => (
-               <div key={i} className="aspect-square bg-foreground/[0.03] dark:bg-[#0B0D14] border border-border rounded-2xl md:rounded-[2.5rem] p-6 md:p-10 flex flex-col justify-between items-center text-center hover:bg-foreground/5 dark:hover:bg-[#11141D] hover:border-primary/20 transition-all duration-500 group">
+               <div key={i} className="aspect-square bg-transparent border border-border rounded-2xl md:rounded-[2.5rem] p-6 md:p-10 flex flex-col justify-between items-center text-center hover:border-primary/50 transition-all duration-500 group">
                   <div className="mt-4 text-muted-foreground group-hover:text-primary transition-colors duration-500 group-hover:scale-110 transform">
                     {card.icon}
                   </div>
