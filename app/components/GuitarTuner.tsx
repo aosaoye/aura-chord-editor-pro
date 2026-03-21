@@ -39,21 +39,24 @@ export default function GuitarTuner({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-[#0A0C10] text-white flex flex-col items-center justify-center font-sans animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[9999] bg-[#0A0C10] text-white overflow-y-auto overflow-x-hidden font-sans animate-in fade-in duration-300">
       
-      {/* Background Decor */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Background Decor (Fixed so it stays centered while scrolling) */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500/5 rounded-full blur-[150px]"></div>
       </div>
 
-      {/* Top Banner & Back Button */}
-      <div className="absolute top-0 left-0 w-full p-8 flex items-center justify-between z-10">
-        <button onClick={() => { stopTuning(); onClose(); }} className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors tracking-[0.2em] text-xs uppercase font-bold">
-          <span className="text-lg leading-none mb-1">&larr;</span> Volver
-        </button>
-      </div>
+      {/* Main scrolling wrapper for small tablets/phones */}
+      <div className="min-h-[100svh] flex flex-col items-center justify-center relative py-20 px-4 w-full">
 
-      <div className="flex flex-col items-center w-full max-w-2xl px-6 relative z-10 mt-10">
+        {/* Top Banner & Back Button */}
+        <div className="absolute top-0 left-0 w-full p-6 md:p-8 flex items-center justify-between z-10">
+          <button onClick={() => { stopTuning(); onClose(); }} className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors tracking-[0.2em] text-xs uppercase font-bold">
+            <span className="text-lg leading-none mb-1">&larr;</span> Volver
+          </button>
+        </div>
+
+        <div className="flex flex-col items-center w-full max-w-2xl px-2 sm:px-6 relative z-10 mt-10">
         
         <h2 className="text-[10px] tracking-[0.4em] font-bold text-zinc-500 uppercase mb-8">Afinador Inteligente</h2>
 
@@ -154,7 +157,7 @@ export default function GuitarTuner({ onClose }: { onClose: () => void }) {
         )}
 
         {/* BOTTOM CONTROLS */}
-        <div className="mt-24 mb-10 w-full flex justify-center">
+        <div className="mt-16 md:mt-24 mb-10 w-full flex justify-center">
           {error ? (
              <button 
                onClick={onClose}
@@ -179,6 +182,7 @@ export default function GuitarTuner({ onClose }: { onClose: () => void }) {
           )}
         </div>
 
+      </div>
       </div>
     </div>
   );

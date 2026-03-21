@@ -110,9 +110,9 @@ export default function ExportModal({
       ></div>
 
       {/* Modal Content - ONLY OPTIONS */}
-      <div className="relative bg-background border border-border w-[360px] max-w-full rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
-        <div className="w-full bg-background flex flex-col hide-scrollbar overflow-y-auto">
-          <div className="p-6 border-b border-border flex items-start justify-between">
+      <div className="relative bg-background border border-border w-[360px] sm:w-[420px] max-w-full max-h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="w-full h-full bg-background flex flex-col hide-scrollbar overflow-y-auto">
+          <div className="p-6 border-b border-border flex items-start justify-between shrink-0">
             <div>
               <h2 className="text-2xl font-black tracking-tight">
                 Exportación Pro
@@ -129,7 +129,7 @@ export default function ExportModal({
             </button>
           </div>
 
-          <div className="flex p-2 gap-2 border-b border-border bg-muted/20">
+          <div className="flex p-2 gap-2 border-b border-border bg-muted/20 shrink-0">
             <button
               onClick={() => setActiveTab("documentos")}
               className={`flex-1 text-[10px] font-bold uppercase tracking-widest py-3 rounded-xl transition-all ${activeTab === "documentos" ? "bg-background shadow-md border border-border text-foreground" : "text-muted-foreground hover:bg-muted"}`}
