@@ -29,10 +29,11 @@ export interface SyllableProps {
   isLastInWord?: boolean;
   casing?: 'default' | 'uppercase' | 'lowercase';
   showTimelines?: boolean;
+  continuesHighlight?: boolean;
 }
 
 export default function SyllableComponent({ 
-  syllable, capo = 0, onChordChange, onGlobalChordChange, nextHasChord = true, notation = 'english', songKey = 'C', readOnly = false, showChords = true, instrument = 'piano', colorTheme, inheritedHighlightColor, isLastInWord, casing, showTimelines = false
+  syllable, capo = 0, onChordChange, onGlobalChordChange, nextHasChord = true, notation = 'english', songKey = 'C', readOnly = false, showChords = true, instrument = 'piano', colorTheme, inheritedHighlightColor, isLastInWord, casing, showTimelines = false, continuesHighlight = true
 }: SyllableProps) {
   const { id, text, chord } = syllable;
   
@@ -146,13 +147,13 @@ export default function SyllableComponent({
             {/* The structural Highlight Pill (Flex element sitting adjacent, NOT behind text) */}
             {(inheritedHighlightColor || showTimelines) && (
               <span 
-                className="flex-grow h-[8px] sm:h-[10px] rounded-full z-[-1] pointer-events-none"
+                className="flex-grow h-[12px] sm:h-[16px] rounded-full z-[-1] pointer-events-none"
                 style={{ 
                   backgroundColor: inheritedHighlightColor || 'var(--primary)',
                   opacity: inheritedHighlightColor ? 1 : 0.2, 
-                  marginLeft: chord ? '2px' : '-8px',   // Push away from chord text, or merge left smoothly
-                  marginRight: isLastInWord ? '-1.5rem' : '-8px', // Bridge the word gap perfectly!
-                  minWidth: chord ? '4px' : '0'
+                  marginLeft: chord ? '6px' : '-8px',   // Push away from chord text, or merge left smoothly
+                  marginRight: continuesHighlight ? (isLastInWord ? '-1.5rem' : '-8px') : '4px', // Cap it safely before the next chord/word
+                  minWidth: chord ? '8px' : '0'
                 }}
               />
             )}

@@ -1715,6 +1715,26 @@ export default function SongEditor() {
                                               currentHighlightColor = syl.highlightColor || undefined;
                                             }
 
+                                            // Determine if the string should conceptually connect to the next syllable
+                                            const nextSyl = word.syllables[i + 1] || line.words[wIdx + 1]?.syllables[0];
+                                            let nextColor = currentHighlightColor;
+                                            if (nextSyl) {
+                                                if (nextSyl.chord) {
+                                                    nextColor = nextSyl.highlightColor || undefined;
+                                                } else if (nextSyl.highlightColor !== undefined) {
+                                                    nextColor = nextSyl.highlightColor || undefined;
+                                                }
+                                            } else {
+                                                nextColor = undefined; // End of line caps it automatically
+                                            }
+
+                                            let maintainsConnection = false;
+                                            if (currentHighlightColor && nextColor === currentHighlightColor) {
+                                                maintainsConnection = true;
+                                            } else if (!currentHighlightColor && !nextColor && (layout as any).showTimelines && nextSyl) {
+                                                maintainsConnection = true;
+                                            }
+
                                             return (
                                               <SyllableComponent
                                                 key={syl.id}
@@ -1728,6 +1748,7 @@ export default function SongEditor() {
                                                 casing={(layout as any).casing}
                                                 showTimelines={(layout as any).showTimelines}
                                                 isLastInWord={i === word.syllables.length - 1}
+                                                continuesHighlight={maintainsConnection}
                                                 nextHasChord={Boolean(
                                                   word.syllables[i + 1]?.chord ||
                                                   (!word.syllables[i + 1] && line.words[wIdx + 1]?.syllables[0]?.chord)
