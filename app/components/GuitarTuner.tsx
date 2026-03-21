@@ -15,12 +15,15 @@ export default function GuitarTuner({ onClose }: { onClose: () => void }) {
   const [instrument, setInstrument] = useState<TunerInstrument>('guitar');
   const { isListening, startTuning, stopTuning, pitch, closestString, cents, error, isCalibrating } = useTuner(instrument);
 
-  // Lock body scroll when Tuner is open to prevent double scrollbars
+  // Lock body and HTML scroll when Tuner is open to prevent double scrollbars
   useEffect(() => {
-    const originalStyle = window.getComputedStyle(document.body).overflow;  
+    const originalBodyStyle = window.getComputedStyle(document.body).overflow;  
+    const originalHtmlStyle = window.getComputedStyle(document.documentElement).overflow;  
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = originalStyle;
+      document.body.style.overflow = originalBodyStyle;
+      document.documentElement.style.overflow = originalHtmlStyle;
     };
   }, []);
 
