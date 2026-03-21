@@ -13,7 +13,7 @@ const INSTRUMENTS: { id: TunerInstrument, label: string }[] = [
 
 export default function GuitarTuner({ onClose, isStandalone = false }: { onClose?: () => void, isStandalone?: boolean }) {
   const [instrument, setInstrument] = useState<TunerInstrument>('guitar');
-  const { isListening, startTuning, stopTuning, pitch, closestString, cents, error, isCalibrating } = useTuner(instrument);
+  const { isListening, startTuning, stopTuning, pitch, closestString, cents, error, isCalibrating, noiseLevel } = useTuner(instrument);
 
   // Lock body and HTML scroll when Tuner is open to prevent double scrollbars, ONLY if not standalone
   useEffect(() => {
@@ -107,6 +107,19 @@ export default function GuitarTuner({ onClose, isStandalone = false }: { onClose
           </div>
         ) : (
           <>
+            {/* INDICADOR DE ENTORNO LIMPIO (Noise Level Traffic Light) */}
+            {!isCalibrating && isListening && noiseLevel !== 'low' && (
+              <div className={`mb-12 px-6 py-3 rounded-[1rem] text-[9px] font-bold tracking-widest uppercase flex flex-col items-center justify-center gap-2 animate-in fade-in slide-in-from-top-4 w-full max-w-sm text-center shadow-lg backdrop-blur-md ${noiseLevel === 'high' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'}`}>
+                  <div className="flex items-center gap-3">
+                    <span className={`w-2.5 h-2.5 rounded-full animate-pulse shadow-[0_0_10px_currentColor] shrink-0 ${noiseLevel === 'high' ? 'bg-orange-500' : 'bg-yellow-500'}`}></span>
+                    <span className="text-[10px]">{noiseLevel === 'high' ? "Entorno Ruidoso" : "Ruido Moderado"}</span>
+                  </div>
+                  <span className="text-zinc-500 mt-1 capitalize-none lowercase text-[10px] font-medium tracking-normal border-t border-white/5 pt-2">
+                    {noiseLevel === 'high' ? 'Podría fallar la detección. Acércate al micrófono o silencia el cuarto.' : 'Se detectó fondo moderado. Canta con claridad.'}
+                  </span>
+              </div>
+            )}
+
             {/* The DIAL */}
             <div className="relative w-80 h-40 mb-16 flex justify-center overflow-hidden">
               

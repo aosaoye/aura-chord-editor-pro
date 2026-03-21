@@ -42,6 +42,7 @@ export function useTuner(instrument: TunerInstrument = 'chromatic') {
 
   const [error, setError] = useState<string | null>(null);
   const [isCalibrating, setIsCalibrating] = useState(false);
+  const [noiseLevel, setNoiseLevel] = useState<'low' | 'medium' | 'high'>('low');
   const noiseGateThreshold = useRef<number>(0.005); // Default threshold
 
   const instrumentRef = useRef<TunerInstrument>(instrument);
@@ -63,7 +64,16 @@ export function useTuner(instrument: TunerInstrument = 'chromatic') {
         throw new Error("El acceso al micrófono requiere una conexión segura (HTTPS) o localhost.");
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Solicitamos a la API el audio más puro y crudo posible (Raw Capture)
+      // Desactivamos los filtros nativos del navegador que destruyen los armónicos musicales
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+          channelCount: 1
+        } 
+      });
       streamRef.current = stream;
       
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
@@ -92,7 +102,13 @@ export function useTuner(instrument: TunerInstrument = 'chromatic') {
             noiseSamples.push(rms);
             if (noiseSamples.length > 50) { // ~1.5 segundos a 44.1kHz / 2048
                const avgNoise = noiseSamples.reduce((a,b) => a+b, 0) / noiseSamples.length;
-               noiseGateThreshold.current = Math.max(0.001, avgNoise * 2.5); // 250% por encima del ruido base
+               noiseGateThreshold.current = Math.max(0.001, avgNoise * 1.5); // 150% por encima del ruido base
+               
+               // Evaluar la calidad del entorno acústico
+               if (avgNoise > 0.05) setNoiseLevel('high');
+               else if (avgNoise > 0.015) setNoiseLevel('medium');
+               else setNoiseLevel('low');
+
                setIsCalibrating(false);
                stopCalibration = true;
             }
@@ -200,5 +216,5 @@ export function useTuner(instrument: TunerInstrument = 'chromatic') {
     return stopTuning; // Cleanup on unmount
   }, [stopTuning]);
 
-  return { isListening, startTuning, stopTuning, pitch, closestString, cents, error, isCalibrating };
+  return { isListening, startTuning, stopTuning, pitch, closestString, cents, error, isCalibrating, noiseLevel };
 }
