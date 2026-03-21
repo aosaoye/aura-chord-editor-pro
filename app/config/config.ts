@@ -44,6 +44,7 @@ export interface LayoutSettings {
   alignment?: 'justify-start' | 'justify-center' | 'justify-end' | 'justify-between';
   notation?: 'english' | 'spanish' | 'roman';
   showChords?: boolean;
+  showTimelines?: boolean;
   capo?: number;
   instrument?: 'piano' | 'guitar';
   pageSize?: 'A4' | 'CARTA';

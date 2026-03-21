@@ -1726,6 +1726,7 @@ export default function SongEditor() {
                                                 colorTheme={colorTheme}
                                                 inheritedHighlightColor={currentHighlightColor}
                                                 casing={(layout as any).casing}
+                                                showTimelines={(layout as any).showTimelines}
                                                 isLastInWord={i === word.syllables.length - 1}
                                                 nextHasChord={Boolean(
                                                   word.syllables[i + 1]?.chord ||

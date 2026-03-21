@@ -130,6 +130,15 @@ export default function EditorSettingsSidebar({
         <span className="flex-1 text-left">Acordes {layout.showChords === false ? "(Ocultos)" : ""}</span>
       </button>
 
+      {/* 4.5. Marcadores de Acordes (Timelines) */}
+      <button 
+         onClick={() => updateLayout({ showTimelines: !layout.showTimelines })} 
+         className={`${btnClass} ${layout.showTimelines ? 'ring-1 ring-primary bg-primary/5' : ''}`}
+      >
+        <Minus className={layout.showTimelines ? 'w-4 h-4 text-primary shrink-0' : iconClass} />
+        <span className={`flex-1 text-left ${layout.showTimelines ? 'text-primary font-bold' : ''}`}>Timelines de Acordes</span>
+      </button>
+
       {/* 4.1 Instrumento (Piano/Guitarra) */}
       <div className="flex items-center justify-between bg-background border border-border rounded-xl shadow-sm text-sm font-medium text-foreground overflow-hidden">
          <button 

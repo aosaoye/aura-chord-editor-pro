@@ -28,10 +28,11 @@ export interface SyllableProps {
   inheritedHighlightColor?: string;
   isLastInWord?: boolean;
   casing?: 'default' | 'uppercase' | 'lowercase';
+  showTimelines?: boolean;
 }
 
 export default function SyllableComponent({ 
-  syllable, capo = 0, onChordChange, onGlobalChordChange, nextHasChord = true, notation = 'english', songKey = 'C', readOnly = false, showChords = true, instrument = 'piano', colorTheme, inheritedHighlightColor, isLastInWord, casing
+  syllable, capo = 0, onChordChange, onGlobalChordChange, nextHasChord = true, notation = 'english', songKey = 'C', readOnly = false, showChords = true, instrument = 'piano', colorTheme, inheritedHighlightColor, isLastInWord, casing, showTimelines = false
 }: SyllableProps) {
   const { id, text, chord } = syllable;
   
@@ -143,14 +144,15 @@ export default function SyllableComponent({
             )}
 
             {/* The structural Highlight Pill (Flex element sitting adjacent, NOT behind text) */}
-            {inheritedHighlightColor && (
+            {(inheritedHighlightColor || showTimelines) && (
               <span 
-                className="flex-grow h-[8px] sm:h-[10px] rounded-full z-[-1] pointer-events-none opacity-90"
+                className="flex-grow h-[8px] sm:h-[10px] rounded-full z-[-1] pointer-events-none"
                 style={{ 
-                  backgroundColor: inheritedHighlightColor, 
-                  marginLeft: chord ? '8px' : '-8px',   // Push away from chord text, or merge left smoothly
+                  backgroundColor: inheritedHighlightColor || 'var(--primary)',
+                  opacity: inheritedHighlightColor ? 1 : 0.2, 
+                  marginLeft: chord ? '2px' : '-8px',   // Push away from chord text, or merge left smoothly
                   marginRight: isLastInWord ? '-1.5rem' : '-8px', // Bridge the word gap perfectly!
-                  minWidth: chord ? '6px' : '0'
+                  minWidth: chord ? '4px' : '0'
                 }}
               />
             )}
