@@ -126,32 +126,33 @@ export default function SyllableComponent({
       >
         {showChords && (
           <span 
-            className={`flex items-end min-h-[1.5em] w-full mb-0.5 text-[length:var(--chord-font)] font-bold tracking-tight select-none opacity-90 group-hover/syl:opacity-100 transition-opacity relative z-0 ${!inheritedHighlightColor ? 'text-primary' : ''}`}
+            className={`flex items-center h-[1.25em] md:h-[1.5em] w-full mb-0.5 text-[length:var(--chord-font)] font-bold tracking-tight select-none opacity-90 transition-opacity relative z-0 ${!inheritedHighlightColor ? 'text-primary' : ''}`}
             aria-hidden="true"
           >
-            {/* The absolute pill bar for highlighting. It merges seamlessly between syllables using negative left/right. */}
-            {inheritedHighlightColor && (
-              <span 
-                className="absolute top-1/2 -translate-y-1/2 h-2 rounded-full z-[-1] pointer-events-none"
-                style={{ 
-                  backgroundColor: inheritedHighlightColor, 
-                  left: '-0.2rem',   // Overlap prev slightly
-                  right: isLastInWord ? '-1.5rem' : '-0.2rem' // Bridge the word gap or overlap next
-                }}
-              />
-            )}
-
             {chord ? (() => {
               const formatted = formatChordText(chord, notation, songKey);
               return (
-                <span className={`inline-block whitespace-nowrap z-10 bg-background group-active/syl:scale-95 transition-transform duration-100 pr-1 sm:pr-2 ${nextHasChord && !isLastInWord ? 'mr-2' : ''}`}>
+                <span className={`inline-block whitespace-nowrap z-10 group-active/syl:scale-95 transition-transform duration-100 shrink-0`}>
                   <span className="text-[1.05em]">{formatted.root}</span>
                   {formatted.variation && <span className="text-[0.65em] ml-[1px] font-normal tracking-wider relative -top-[0.25em]">{formatted.variation}</span>}
                   {formatted.bass && <span className="text-[0.8em] font-normal opacity-80 ml-[0.5px]">/{formatted.bass}</span>}
                 </span>
               );
             })() : (
-               <span className={`opacity-0 ${!readOnly ? 'group-hover/syl:opacity-100' : ''} inline-block z-10 bg-background text-[0.8em] font-light text-gray-400 transition-opacity absolute left-1/2 -translate-x-1/2 pointer-events-none px-1`}>+</span>
+               <span className={`opacity-0 ${!readOnly ? 'group-hover/syl:opacity-100' : ''} inline-block z-10 text-[0.8em] font-light text-gray-400 transition-opacity absolute left-1/2 -translate-x-1/2 pointer-events-none px-1`}>+</span>
+            )}
+
+            {/* The structural Highlight Pill (Flex element sitting adjacent, NOT behind text) */}
+            {inheritedHighlightColor && (
+              <span 
+                className="flex-grow h-[8px] sm:h-[10px] rounded-full z-[-1] pointer-events-none opacity-90"
+                style={{ 
+                  backgroundColor: inheritedHighlightColor, 
+                  marginLeft: chord ? '8px' : '-8px',   // Push away from chord text, or merge left smoothly
+                  marginRight: isLastInWord ? '-1.5rem' : '-8px', // Bridge the word gap perfectly!
+                  minWidth: chord ? '6px' : '0'
+                }}
+              />
             )}
           </span>
         )}
