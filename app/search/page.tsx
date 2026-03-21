@@ -581,7 +581,7 @@ export default function LyricsSearchPage() {
       <GlobalAnimatedBackground />
       <Navbar variant="transparent" />
       
-      <div className="relative z-10 pt-36 pb-32 px-6 sm:px-10 max-w-8xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-both flex-grow">
+      <div className="relative z-10 pt-36 pb-32 px-6 sm:px-10 max-w-4xl w-full mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-both flex-grow">
         
         {/* CABECERA BUSCADOR ESTÉTICA PREMIUM */}
         <div className="mb-12 text-center flex flex-col items-center">
@@ -594,7 +594,7 @@ export default function LyricsSearchPage() {
         </div>
         
         {/* INPUT DE BÚSQUEDA FLOTANTE Y DROPDOWN */}
-        <div className="relative mb-24 max-w-2xl mx-auto" ref={searchContainerRef}>
+        <div className="relative mb-24 max-w-5xl w-full mx-auto" ref={searchContainerRef}>
           <form onSubmit={handleSearchSubmit}>
             <div className="relative flex items-center shadow-2xl w-full shadow-primary/5 rounded-full ring-1 ring-border bg-background focus-within:ring-2 focus-within:ring-primary transition-all duration-300">
                <span className="pl-8 text-2xl text-muted-foreground">♪</span>
@@ -604,7 +604,7 @@ export default function LyricsSearchPage() {
                  onChange={handleQueryChange}
                  onFocus={() => { if (query.trim()) setShowSuggestions(true); }}
                  placeholder="Busca por canción o artista..."
-                 className="w-full bg-transparent py-4 px-6 text-xl sm:text-2xl font-light text-foreground outline-none placeholder:text-muted-foreground/40"
+                 className="flex-1 w-full bg-transparent py-4 px-6 text-xl sm:text-2xl font-light text-foreground outline-none placeholder:text-muted-foreground/40"
                  autoComplete="off"
                  autoFocus
                />
