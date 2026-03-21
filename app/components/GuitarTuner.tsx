@@ -13,7 +13,7 @@ const INSTRUMENTS: { id: TunerInstrument, label: string }[] = [
 
 export default function GuitarTuner({ onClose }: { onClose: () => void }) {
   const [instrument, setInstrument] = useState<TunerInstrument>('guitar');
-  const { isListening, startTuning, stopTuning, pitch, closestString, cents, error } = useTuner(instrument);
+  const { isListening, startTuning, stopTuning, pitch, closestString, cents, error, isCalibrating } = useTuner(instrument);
 
   // Lock body scroll when Tuner is open to prevent double scrollbars
   useEffect(() => {
@@ -34,7 +34,10 @@ export default function GuitarTuner({ onClose }: { onClose: () => void }) {
   let statusText = "ESPERANDO SEÑAL...";
   let statusColor = "text-zinc-600";
   
-  if (hasSignal && closestString) {
+  if (isCalibrating) {
+    statusText = "CALIBRANDO RUIDO AMBIENTE...";
+    statusColor = "text-amber-500 animate-pulse";
+  } else if (hasSignal && closestString) {
     if (isInTune) {
       statusText = "AFINACIÓN PERFECTA";
       statusColor = "text-teal-400";

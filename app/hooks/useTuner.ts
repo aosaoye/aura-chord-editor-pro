@@ -31,47 +31,8 @@ export const INSTRUMENT_STRINGS = {
   ]
 };
 
-// Algoritmo de Autocorrelación para detectar el tono (Pitch Detection)
-function autoCorrelate(buf: Float32Array, sampleRate: number) {
-  let SIZE = buf.length;
-  let rms = 0;
-  for (let i = 0; i < SIZE; i++) {
-    const val = buf[i];
-    rms += val * val;
-  }
-  rms = Math.sqrt(rms / SIZE);
-  if (rms < 0.01) return -1; // No hay suficiente volumen (ruido de fondo)
-
-  let r1 = 0, r2 = SIZE - 1, thres = 0.2;
-  for (let i = 0; i < SIZE / 2; i++)
-    if (Math.abs(buf[i]) < thres) { r1 = i; break; }
-  for (let i = 1; i < SIZE / 2; i++)
-    if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; break; }
-
-  buf = buf.slice(r1, r2);
-  SIZE = buf.length;
-
-  const c = new Array(SIZE).fill(0);
-  for (let i = 0; i < SIZE; i++)
-    for (let j = 0; j < SIZE - i; j++)
-      c[i] = c[i] + buf[j] * buf[j + i];
-
-  let d = 0; while (c[d] > c[d + 1]) d++;
-  let maxval = -1, maxpos = -1;
-  for (let i = d; i < SIZE; i++) {
-    if (c[i] > maxval) {
-      maxval = c[i];
-      maxpos = i;
-    }
-  }
-  let T0 = maxpos;
-  const x1 = c[T0 - 1], x2 = c[maxval], x3 = c[T0 + 1];
-  const a = (x1 + x3 - 2 * maxval) / 2;
-  const b = (x3 - x1) / 2;
-  if (a) T0 = T0 - b / (2 * a);
-
-  return sampleRate / T0;
-}
+// Algoritmo de Autocorrelación movido a public/pitchProcessor.js (AudioWorklet)
+// para liberar el hilo principal de React.
 
 export function useTuner(instrument: TunerInstrument = 'chromatic') {
   const [isListening, setIsListening] = useState(false);
@@ -80,6 +41,8 @@ export function useTuner(instrument: TunerInstrument = 'chromatic') {
   const [cents, setCents] = useState<number>(0);
 
   const [error, setError] = useState<string | null>(null);
+  const [isCalibrating, setIsCalibrating] = useState(false);
+  const noiseGateThreshold = useRef<number>(0.005); // Default threshold
 
   const instrumentRef = useRef<TunerInstrument>(instrument);
   useEffect(() => {
@@ -104,15 +67,47 @@ export function useTuner(instrument: TunerInstrument = 'chromatic') {
       streamRef.current = stream;
       
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      audioCtxRef.current = new AudioContextClass();
-      analyserRef.current = audioCtxRef.current.createAnalyser();
-      analyserRef.current.fftSize = 2048;
+      const ctx = new AudioContextClass();
+      audioCtxRef.current = ctx;
 
-      const source = audioCtxRef.current.createMediaStreamSource(stream);
-      source.connect(analyserRef.current);
+      // Cargar nuestro AudioWorklet pre-compilado para sacar la matemática del Main Thread
+      await ctx.audioWorklet.addModule('/pitchProcessor.js');
+      
+      const source = ctx.createMediaStreamSource(stream);
+      const pitchNode = new AudioWorkletNode(ctx, 'pitch-processor');
+      
+      // Conectar el nodo (no lo conectamos a destination para no hacer feedback)
+      source.connect(pitchNode);
+
+      // Fase de Calibración de Ruido (Noise Gate)
+      setIsCalibrating(true);
+      let noiseSamples: number[] = [];
+      let stopCalibration = false;
+
+      // Escuchar cálculos asíncronos del Worklet
+      pitchNode.port.onmessage = (event) => {
+         const { freq, rms } = event.data;
+         
+         if (isCalibrating && !stopCalibration) {
+            noiseSamples.push(rms);
+            if (noiseSamples.length > 50) { // ~1.5 segundos a 44.1kHz / 2048
+               const avgNoise = noiseSamples.reduce((a,b) => a+b, 0) / noiseSamples.length;
+               noiseGateThreshold.current = Math.max(0.001, avgNoise * 2.5); // 250% por encima del ruido base
+               setIsCalibrating(false);
+               stopCalibration = true;
+            }
+            return; // Exit here while calibrating
+         }
+
+         if (rms < noiseGateThreshold.current) {
+            handleNoSignal();
+            return;
+         }
+         
+         handleValidPitch(freq);
+      };
 
       setIsListening(true);
-      updatePitch();
     } catch (err: any) {
       // Evitamos usar alert() o console.error para no disparar el overlay rojo del entorno de desarrollo de Next.js
       setError(err.message === "El acceso al micrófono requiere una conexión segura (HTTPS) o localhost." 
@@ -122,7 +117,6 @@ export function useTuner(instrument: TunerInstrument = 'chromatic') {
   }, []);
 
   const stopTuning = useCallback(() => {
-    if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
     if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
     
     // Evitar crasheo si el contexto ya estaba cerrado o fallido
@@ -147,16 +141,15 @@ export function useTuner(instrument: TunerInstrument = 'chromatic') {
     return sorted[Math.floor(sorted.length / 2)];
   };
 
-  const updatePitch = () => {
-    if (!analyserRef.current || !audioCtxRef.current) return;
+  const handleNoSignal = () => {
+       if (pitchHistoryRef.current.length > 0) {
+         pitchHistoryRef.current.shift();
+       }
+  };
 
-    const buffer = new Float32Array(analyserRef.current.fftSize);
-    analyserRef.current.getFloatTimeDomainData(buffer);
-    const rawFreq = autoCorrelate(buffer, audioCtxRef.current.sampleRate);
-
-    // Filter valid pitches
-    if (rawFreq !== -1 && rawFreq > 20 && rawFreq < 2000) {
-      
+  const handleValidPitch = (rawFreq: number) => {
+    // Filter valid pitches mathematically
+    if (rawFreq > 20 && rawFreq < 2000) {
       const freq = getMedianPitch(rawFreq);
       setPitch(freq);
       
@@ -200,19 +193,12 @@ export function useTuner(instrument: TunerInstrument = 'chromatic') {
 
       const centsOff = Math.floor(1200 * Math.log2(freq / targetFreq));
       setCents(Math.max(-50, Math.min(50, centsOff)));
-    } else {
-       // Opcional: limpiar la mediana si hay silencio para no arrastrar la cola
-       if (rawFreq === -1 && pitchHistoryRef.current.length > 0) {
-         pitchHistoryRef.current.shift();
-       }
     }
-
-    rafIdRef.current = requestAnimationFrame(updatePitch);
   };
 
   useEffect(() => {
     return stopTuning; // Cleanup on unmount
   }, [stopTuning]);
 
-  return { isListening, startTuning, stopTuning, pitch, closestString, cents, error };
+  return { isListening, startTuning, stopTuning, pitch, closestString, cents, error, isCalibrating };
 }
