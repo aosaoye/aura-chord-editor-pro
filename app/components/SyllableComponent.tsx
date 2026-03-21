@@ -119,14 +119,14 @@ export default function SyllableComponent({
         role="button"
         tabIndex={0}
         className={
-          "relative inline-block text-left align-bottom group transition-all duration-300 outline-none rounded-sm " +
+          "relative inline-block text-left align-bottom group/syl transition-all duration-300 outline-none rounded-sm " +
           (readOnly ? "cursor-default" : "cursor-pointer hover:bg-black/[0.04] focus-visible:bg-black/5 focus-visible:ring-1 focus-visible:ring-black")
         }
         aria-label={`Sílaba: ${text}, Acorde: ${chord ? chord.rootNote + chord.variation : "ninguno"}`}
       >
         {showChords && (
           <span 
-            className={`flex items-end min-h-[1.5em] w-full mb-0.5 text-[length:var(--chord-font)] font-bold tracking-tight select-none opacity-90 group-hover:opacity-100 transition-opacity relative z-0 ${!inheritedHighlightColor ? 'text-primary' : ''}`}
+            className={`flex items-end min-h-[1.5em] w-full mb-0.5 text-[length:var(--chord-font)] font-bold tracking-tight select-none opacity-90 group-hover/syl:opacity-100 transition-opacity relative z-0 ${!inheritedHighlightColor ? 'text-primary' : ''}`}
             aria-hidden="true"
           >
             {/* The absolute pill bar for highlighting. It merges seamlessly between syllables using negative left/right. */}
@@ -144,14 +144,14 @@ export default function SyllableComponent({
             {chord ? (() => {
               const formatted = formatChordText(chord, notation, songKey);
               return (
-                <span className={`inline-block whitespace-nowrap z-10 bg-background group-active:scale-95 transition-transform duration-100 pr-1 sm:pr-2 ${nextHasChord && !isLastInWord ? 'mr-2' : ''}`}>
+                <span className={`inline-block whitespace-nowrap z-10 bg-background group-active/syl:scale-95 transition-transform duration-100 pr-1 sm:pr-2 ${nextHasChord && !isLastInWord ? 'mr-2' : ''}`}>
                   <span className="text-[1.05em]">{formatted.root}</span>
                   {formatted.variation && <span className="text-[0.65em] ml-[1px] font-normal tracking-wider relative -top-[0.25em]">{formatted.variation}</span>}
                   {formatted.bass && <span className="text-[0.8em] font-normal opacity-80 ml-[0.5px]">/{formatted.bass}</span>}
                 </span>
               );
             })() : (
-               <span className={`opacity-0 ${!readOnly ? 'group-hover:opacity-100' : ''} inline-block z-10 bg-background text-[0.8em] font-light text-gray-400 transition-opacity absolute left-1/2 -translate-x-1/2 pointer-events-none px-1`}>+</span>
+               <span className={`opacity-0 ${!readOnly ? 'group-hover/syl:opacity-100' : ''} inline-block z-10 bg-background text-[0.8em] font-light text-gray-400 transition-opacity absolute left-1/2 -translate-x-1/2 pointer-events-none px-1`}>+</span>
             )}
           </span>
         )}
