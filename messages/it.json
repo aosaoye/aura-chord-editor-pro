@@ -1,0 +1,107 @@
+{
+  "common": {
+    "save": "Salva",
+    "delete": "Elimina",
+    "loading": "Caricamento...",
+    "error": "Si è verificato un errore",
+    "success": "Successo"
+  },
+  "editor": {
+    "title": "Editor di Accordi",
+    "publish": "Pubblica",
+    "unpublish": "Nascondi"
+  },
+  "errors": {
+    "not_found": "Risorsa non trovata",
+    "SONG_NOT_FOUND": "Canzone non trovata",
+    "UNAUTHORIZED": "Non sei autorizzato ad eseguire questa azione"
+  },
+  "landing": {
+    "subtitle": "Ecosistema Musicale",
+    "description": "Composizione Senza Attrito",
+    "feature_studio": "Studio Pro",
+    "feature_transposer": "Traspositore",
+    "feature_live": "Modalità Live",
+    "feature_community": "Comunità",
+    "explorer_label": "Esploratore",
+    "project_open": "Progetto Aperto",
+    "music_that": "La musica che",
+    "tells_your_story": "racconta la tua storia.",
+    "community_description": "Entra nello studio e condividi i tuoi arrangiamenti con compositori di tutto il mondo.",
+    "explore_community": "Esplora la comunità",
+    "ready_to_create": "Pronto a creare la tua?",
+    "open_canvas": "Apri Nuovo Canvas"
+  },
+  "nav": {
+    "home": "Home",
+    "search_lyrics": "Cerca Testi",
+    "community": "Comunità",
+    "enter_studio": "Entra nello Studio",
+    "my_studio": "Il Mio Studio",
+    "tools": "Strumenti"
+  },
+  "search": {
+    "subtitle": "TROVA IL TESTO ORIGINALE",
+    "placeholder": "Cerca per canzone o artista...",
+    "searching": "Ricerca in corso...",
+    "no_results": "Nessun testo trovato. Prova un'altra canzone o artista."
+  },
+  "dashboard": {
+    "overview": "Panoramica",
+    "config": "Configurazione",
+    "my_space": "Il Mio Spazio",
+    "settings": "Impostazioni",
+    "greeting_morning": "Buongiorno",
+    "greeting_afternoon": "Buon pomeriggio",
+    "greeting_evening": "Buonasera",
+    "composer": "Compositore",
+    "summary": "Ecco un riepilogo del tuo spazio creativo.",
+    "add_new": "Aggiungi nuova opera",
+    "total_works": "Opere Totali",
+    "last_edit": "Ultima Modifica",
+    "current_plan": "Piano Attuale",
+    "pro": "PRO",
+    "free": "GRATIS",
+    "upgrade": "Passa a Pro →",
+    "recent_works": "Le Mie Opere Recenti",
+    "empty_title": "Nessuna opera salvata",
+    "empty_sub": "Crea il tuo primo capolavoro musicale in studio.",
+    "go_studio": "Vai allo Studio →",
+    "updated": "Aggiornato"
+  },
+  "community": {
+    "title": "Comunità Globale",
+    "subtitle": "Scopri e condividi arrangiamenti con compositori di tutto il mondo."
+  },
+  "editor_nav": {
+    "studio": "Studio",
+    "voice_off": "Voce Aura Off",
+    "voice_on": "Voce Aura On",
+    "tuner": "Accordatore",
+    "preview": "Anteprima",
+    "edit_mode": "Torna all'Editore",
+    "play": "Riproduci",
+    "generate_canvas": "Genera Tela"
+  },
+  "tools_page": {
+    "title": "Ecosistema di Strumenti",
+    "subtitle": "Potenzia il tuo flusso creativo.",
+    "tuner_title": "Accordatore Smart",
+    "tuner_desc": "Accordatore cromatico ad alta precisione.",
+    "voice_title": "Aura Voice Titano",
+    "voice_desc": "Punteggio vocale analitico e armonia.",
+    "hum_title": "Hum-to-Chords",
+    "hum_desc": "Canticchia e l'IA scriverà gli accordi."
+  },
+  "footer": {
+    "explore": "Esplora",
+    "account": "Account",
+    "legal": "Legale",
+    "search": "Ricerca Testi",
+    "auth": "Autenticazione",
+    "privacy": "Privacy",
+    "terms": "Termini",
+    "description": "L ecosistema musicale del futuro.",
+    "rights": "Tutti i diritti riservati."
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "common": {
+    "save": "Speichern",
+    "delete": "Löschen",
+    "loading": "Wird geladen...",
+    "error": "Ein Fehler ist aufgetreten",
+    "success": "Erfolg"
+  },
+  "editor": {
+    "title": "Akkord-Editor",
+    "publish": "Veröffentlichen",
+    "unpublish": "Ausblenden"
+  },
+  "errors": {
+    "not_found": "Ressource nicht gefunden",
+    "SONG_NOT_FOUND": "Lied nicht gefunden",
+    "UNAUTHORIZED": "Sie haben keine Berechtigung für diese Aktion"
+  },
+  "landing": {
+    "subtitle": "Musikalisches Ökosystem",
+    "description": "Reibungslose Komposition",
+    "feature_studio": "Studio Pro",
+    "feature_transposer": "Transposer",
+    "feature_live": "Live-Modus",
+    "feature_community": "Gemeinschaft",
+    "explorer_label": "Entdecker",
+    "project_open": "Offenes Projekt",
+    "music_that": "Musik, die",
+    "tells_your_story": "Ihre Geschichte erzählt.",
+    "community_description": "Betreten Sie das Studio und teilen Sie Ihre Arrangements mit Komponisten weltweit.",
+    "explore_community": "Gemeinschaft erkunden",
+    "ready_to_create": "Bereit, Ihre eigene zu erstellen?",
+    "open_canvas": "Neues Projekt öffnen"
+  },
+  "nav": {
+    "home": "Startseite",
+    "search_lyrics": "Songtext suchen",
+    "community": "Gemeinschaft",
+    "enter_studio": "Studio betreten",
+    "my_studio": "Mein Studio",
+    "tools": "Werkzeuge"
+  },
+  "search": {
+    "subtitle": "FINDEN SIE DEN ORIGINALTEXT",
+    "placeholder": "Nach Lied oder Künstler suchen...",
+    "searching": "Suchen...",
+    "no_results": "Keine Songtexte gefunden. Versuchen Sie ein anderes Lied oder Künstler."
+  },
+  "dashboard": {
+    "overview": "Übersicht",
+    "config": "Konfiguration",
+    "my_space": "Mein Raum",
+    "settings": "Einstellungen",
+    "greeting_morning": "Guten Morgen",
+    "greeting_afternoon": "Guten Tag",
+    "greeting_evening": "Guten Abend",
+    "composer": "Komponist",
+    "summary": "Hier ist eine Zusammenfassung Ihres kreativen Raums.",
+    "add_new": "Neues Werk hinzufügen",
+    "total_works": "Gesamtwerke",
+    "last_edit": "Zuletzt bearbeitet",
+    "current_plan": "Aktueller Plan",
+    "pro": "PRO",
+    "free": "KOSTENLOS",
+    "upgrade": "Auf Pro upgraden →",
+    "recent_works": "Meine letzten Werke",
+    "empty_title": "Noch keine Werke gespeichert",
+    "empty_sub": "Erstellen Sie Ihr erstes musikalisches Meisterwerk im Studio.",
+    "go_studio": "Zum Studio gehen →",
+    "updated": "Aktualisiert"
+  },
+  "community": {
+    "title": "Globale Gemeinschaft",
+    "subtitle": "Entdecken und teilen Sie Arrangements mit Komponisten weltweit."
+  },
+  "editor_nav": {
+    "studio": "Studio",
+    "voice_off": "Stimme Aura Off",
+    "voice_on": "Stimme Aura On",
+    "tuner": "Stimmgerät",
+    "preview": "Vorschau",
+    "edit_mode": "Zurück zur Bearbeitung",
+    "play": "Spielen",
+    "generate_canvas": "Leinwand erstellen"
+  },
+  "tools_page": {
+    "title": "Werkzeug-Ökosystem",
+    "subtitle": "Steigern Sie Ihren kreativen Fluss.",
+    "tuner_title": "Intelligentes Stimmgerät",
+    "tuner_desc": "Hochpräzises chromatisches Stimmgerät.",
+    "voice_title": "Aura Voice Titan",
+    "voice_desc": "Analytische Gesangsbewertung und Harmonie.",
+    "hum_title": "Hum-to-Chords",
+    "hum_desc": "Summen und KI schreibt die Akkorde."
+  },
+  "footer": {
+    "explore": "Erkunden",
+    "account": "Konto",
+    "legal": "Rechtliches",
+    "search": "Liedtext-Suche",
+    "auth": "Authentifizierung",
+    "privacy": "Datenschutz",
+    "terms": "Bedingungen",
+    "description": "Die musikalische Infrastruktur der Zukunft.",
+    "rights": "Alle Rechte vorbehalten."
+  }
+}

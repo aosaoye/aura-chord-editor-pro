@@ -9,12 +9,13 @@ import { auth } from "@clerk/nextjs/server";
 import GsapWrapper from "../components/GsapWrapper";
 import CommunityClient from "./CommunityClient";
 import GlobalAnimatedBackground from "../components/GlobalAnimatedBackground";
-
+import { getTranslations } from "next-intl/server";
 
 const prisma = db;
 
 export default async function CommunityPage() {
   const { userId } = await auth();
+  const t = await getTranslations('landing');
 
   // Buscamos canciones públicas recientes
   const publicSongs = await prisma.song.findMany({
@@ -65,10 +66,10 @@ export default async function CommunityPage() {
              <div className="flex-1 w-full text-left self-end md:self-center">
                <h1 className="flex flex-col text-left">
                  <span className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-sans font-light tracking-tight text-white mb-2">
-                   Música que
+                   {t('music_that')}
                  </span>
                  <span className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-bold italic tracking-tighter text-white">
-                   cuenta tu historia.
+                   {t('tells_your_story')}
                  </span>
                </h1>
              </div>
@@ -79,7 +80,7 @@ export default async function CommunityPage() {
                   href="#community-list"
                   className="px-8 py-4 bg-[#1A1A1A]/80 backdrop-blur-md border border-white/10 text-white text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase rounded-full hover:bg-white hover:text-black transition-all duration-500 shadow-xl inline-block"
                 >
-                  Explorar la comunidad
+                  {t('explore_community')}
                 </Link>
              </div>
            </div>

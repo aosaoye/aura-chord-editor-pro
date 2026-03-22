@@ -3,25 +3,25 @@ import { requireUser } from "@/lib/auth";
 import { songService } from "@/modules/songs/songs.service";
 import { updateSongSchema } from "@/modules/songs/songs.schema";
 
-export async function GET(_: Request, context: any) {
+export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const params = await context.params;
-    const song = await songService.getById(params.id);
+    const { id } = await params;
+    const song = await songService.getById(id);
     return ok(song);
   } catch (e) {
     return fail(e);
   }
 }
 
-export async function PATCH(req: Request, context: any) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await requireUser();
-    const params = await context.params;
+    const { id } = await params;
     const body = await req.json();
 
     const data = updateSongSchema.parse(body);
 
-    const song = await songService.update(userId, params.id, data);
+    const song = await songService.update(userId, id, data);
 
     return ok(song);
   } catch (e) {
@@ -29,12 +29,12 @@ export async function PATCH(req: Request, context: any) {
   }
 }
 
-export async function DELETE(_: Request, context: any) {
+export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await requireUser();
-    const params = await context.params;
+    const { id } = await params;
 
-    await songService.delete(userId, params.id);
+    await songService.delete(userId, id);
 
     return ok({ deleted: true });
   } catch (e) {

@@ -1,0 +1,107 @@
+{
+  "common": {
+    "save": "保存",
+    "delete": "削除",
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました",
+    "success": "成功"
+  },
+  "editor": {
+    "title": "コードエディタ",
+    "publish": "公開",
+    "unpublish": "非公開"
+  },
+  "errors": {
+    "not_found": "リソースが見つかりません",
+    "SONG_NOT_FOUND": "曲が見つかりません",
+    "UNAUTHORIZED": "このアクションを実行する権限がありません"
+  },
+  "landing": {
+    "subtitle": "音楽エコシステム",
+    "description": "スムーズな作曲",
+    "feature_studio": "スタジオプロ",
+    "feature_transposer": "移調ツール",
+    "feature_live": "ライブモード",
+    "feature_community": "コミュニティ",
+    "explorer_label": "エクスプローラー",
+    "project_open": "オープンプロジェクト",
+    "music_that": "あなたの物語を",
+    "tells_your_story": "語る音楽。",
+    "community_description": "スタジオに入り、世界中の作曲家とアレンジを共有しましょう。",
+    "explore_community": "コミュニティを探索",
+    "ready_to_create": "作成する準備はできましたか？",
+    "open_canvas": "新しいキャンバスを開く"
+  },
+  "nav": {
+    "home": "ホーム",
+    "search_lyrics": "歌詞を検索",
+    "community": "コミュニティ",
+    "enter_studio": "スタジオに入る",
+    "my_studio": "マイスタジオ",
+    "tools": "ツール"
+  },
+  "search": {
+    "subtitle": "オリジナル歌詞を見つける",
+    "placeholder": "曲名またはアーティスト名で検索...",
+    "searching": "検索中...",
+    "no_results": "歌詞が見つかりません。別の曲またはアーティストをお試しください。"
+  },
+  "dashboard": {
+    "overview": "概要",
+    "config": "設定",
+    "my_space": "マイ スペース",
+    "settings": "設定",
+    "greeting_morning": "おはようございます",
+    "greeting_afternoon": "こんにちは",
+    "greeting_evening": "こんばんは",
+    "composer": "作曲家",
+    "summary": "あなたのクリエイティブスペースの概要です。",
+    "add_new": "新しい作品を追加",
+    "total_works": "全作品",
+    "last_edit": "最終編集",
+    "current_plan": "現在のプラン",
+    "pro": "PRO",
+    "free": "無料",
+    "upgrade": "Proにアップグレード →",
+    "recent_works": "最近の作品",
+    "empty_title": "保存された作品はまだありません",
+    "empty_sub": "スタジオで最初の音楽の傑作を作りましょう。",
+    "go_studio": "スタジオへ行く →",
+    "updated": "更新"
+  },
+  "community": {
+    "title": "グローバルコミュニティ",
+    "subtitle": "世界中の作曲家とアレンジを発見して共有しましょう。"
+  },
+  "editor_nav": {
+    "studio": "スタジオ",
+    "voice_off": "オーラボイス オフ",
+    "voice_on": "オーラボイス オン",
+    "tuner": "チューナー",
+    "preview": "プレビュー",
+    "edit_mode": "編集に戻る",
+    "play": "再生",
+    "generate_canvas": "キャンバスを生成"
+  },
+  "tools_page": {
+    "title": "ツールエコシステム",
+    "subtitle": "クリエイティブフローのシームレスな統合。",
+    "tuner_title": "スマートチューナー",
+    "tuner_desc": "高精度チューナー。",
+    "voice_title": "オーラボイス",
+    "voice_desc": "ボーカルマッチやハーモニー評価。",
+    "hum_title": "Hum-to-Chords",
+    "hum_desc": "ハミングでAIがコードを生成。"
+  },
+  "footer": {
+    "explore": "探索",
+    "account": "アカウント",
+    "legal": "法的",
+    "search": "歌詞検索",
+    "auth": "認証",
+    "privacy": "プライバシー",
+    "terms": "利用規約",
+    "description": "未来の音楽エコシステム。",
+    "rights": "無断転載禁止。"
+  }
+}

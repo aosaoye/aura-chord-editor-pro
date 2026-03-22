@@ -7,6 +7,8 @@ import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import NotificationBell from "./NotificationBell";
+import { useTranslations } from "next-intl";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 interface NavbarProps {
   variant?: "default" | "transparent" | "editor" | "border";
@@ -22,6 +24,7 @@ export default function Navbar({ variant = "default", className = "", centerCont
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const t = useTranslations('nav');
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -98,9 +101,10 @@ export default function Navbar({ variant = "default", className = "", centerCont
       {/* Desktop Navigation */}
       {centerContent || (
         <div className="hidden lg:flex flex-1 justify-center items-center gap-10 text-[10px] font-bold tracking-[0.2em] uppercase">
-          <Link href="/" className={linkClass("/")}>Inicio</Link>
-          <Link href="/search" className={linkClass("/search")}>Buscar Letras</Link>
-          <Link href="/community" className={linkClass("/community")}>Comunidad</Link>
+          <Link href="/" className={linkClass("/")}>{t('home')}</Link>
+          <Link href="/search" className={linkClass("/search")}>{t('search_lyrics')}</Link>
+          <Link href="/community" className={linkClass("/community")}>{t('community')}</Link>
+          <Link href="/herramientas" className={linkClass("/herramientas")}>{t('tools') || 'Herramientas'}</Link>
         </div>
       )}
 
@@ -108,18 +112,19 @@ export default function Navbar({ variant = "default", className = "", centerCont
       <div className="hidden lg:flex flex-1 items-center justify-end gap-6">
         {rightContent || (
           <>
+            <LanguageSwitcher />
             <SignedOut>
               <div className="rounded-full overflow-hidden group">
                 <SignInButton mode="modal">
                   <button className="px-6 py-3 w-full h-full rounded-full bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase hover:scale-105 active:scale-95 transition-all text-center whitespace-nowrap outline-none border-none">
-                    Entrar al Estudio
+                    {t('enter_studio')}
                   </button>
                 </SignInButton>
               </div>
             </SignedOut>
             <SignedIn>
               <Link href="/dashboard" className="px-6 py-3 bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase rounded-full hover:bg-primary/80 transition-all text-center whitespace-nowrap">
-                 Mi Estudio
+                 {t('my_studio')}
               </Link>
               <div className="flex items-center gap-4 ml-2">
                  <NotificationBell />
@@ -132,6 +137,7 @@ export default function Navbar({ variant = "default", className = "", centerCont
 
       {/* Mobile Hamburger */}
       <div className="lg:hidden flex items-center gap-4 relative z-50">
+        <LanguageSwitcher />
         <SignedIn>
            <NotificationBell />
            <UserButton />
@@ -149,9 +155,10 @@ export default function Navbar({ variant = "default", className = "", centerCont
         <div className="absolute top-[calc(100%+1rem)] left-0 w-full bg-[#0A0C12]/95 backdrop-blur-3xl border border-white/10 rounded-3xl shadow-2xl flex flex-col p-8 gap-8 lg:hidden animate-in fade-in slide-in-from-top-4 duration-300">
           {centerContent ? centerContent : (
             <div className="flex flex-col gap-6 text-xs font-bold tracking-[0.3em] uppercase items-center">
-              <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/")}>Inicio</Link>
-              <Link href="/search" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/search")}>Buscar Letras</Link>
-              <Link href="/community" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/community")}>Comunidad</Link>
+              <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/")}>{t('home')}</Link>
+              <Link href="/search" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/search")}>{t('search_lyrics')}</Link>
+              <Link href="/community" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/community")}>{t('community')}</Link>
+              <Link href="/herramientas" onClick={() => setIsMobileMenuOpen(false)} className={linkClass("/herramientas")}>{t('tools') || 'Herramientas'}</Link>
             </div>
           )}
           
@@ -163,14 +170,14 @@ export default function Navbar({ variant = "default", className = "", centerCont
                 <div className="rounded-full overflow-hidden w-full">
                   <SignInButton mode="modal">
                     <button className="w-full py-4 rounded-full bg-primary text-primary-foreground text-xs font-bold tracking-[0.2em] uppercase hover:scale-105 active:scale-95 transition-all text-center outline-none border-none">
-                      Entrar al Estudio
+                      {t('enter_studio')}
                     </button>
                   </SignInButton>
                 </div>
               </SignedOut>
               <SignedIn>
                 <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="w-full block py-4 bg-primary text-primary-foreground text-xs font-bold tracking-[0.2em] uppercase rounded-full transition-all text-center hover:bg-primary/80">
-                  Mi Estudio
+                  {t('my_studio')}
                 </Link>
               </SignedIn>
             </div>

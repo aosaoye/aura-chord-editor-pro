@@ -1,0 +1,107 @@
+{
+  "common": {
+    "save": "Salvar",
+    "delete": "Excluir",
+    "loading": "Carregando...",
+    "error": "Ocorreu um erro",
+    "success": "Sucesso"
+  },
+  "editor": {
+    "title": "Editor de Acordes",
+    "publish": "Publicar",
+    "unpublish": "Ocultar"
+  },
+  "errors": {
+    "not_found": "Recurso não encontrado",
+    "SONG_NOT_FOUND": "Música não encontrada",
+    "UNAUTHORIZED": "Você não tem permissão para realizar esta ação"
+  },
+  "landing": {
+    "subtitle": "Ecossistema Musical",
+    "description": "Composição Sem Atrito",
+    "feature_studio": "Studio Pro",
+    "feature_transposer": "Transpositor",
+    "feature_live": "Modo Live",
+    "feature_community": "Comunidade",
+    "explorer_label": "Explorador",
+    "project_open": "Projeto Aberto",
+    "music_that": "Música que",
+    "tells_your_story": "conta a sua história.",
+    "community_description": "Entre no estúdio e compartilhe seus arranjos com compositores de todo o mundo.",
+    "explore_community": "Explorar a comunidade",
+    "ready_to_create": "Pronto para criar a sua?",
+    "open_canvas": "Abrir Nova Tela"
+  },
+  "nav": {
+    "home": "Início",
+    "search_lyrics": "Buscar Letras",
+    "community": "Comunidade",
+    "enter_studio": "Entrar no Estúdio",
+    "my_studio": "Meu Estúdio",
+    "tools": "Ferramentas"
+  },
+  "search": {
+    "subtitle": "ENCONTRE A LETRA ORIGINAL",
+    "placeholder": "Buscar por música ou artista...",
+    "searching": "Buscando...",
+    "no_results": "Nenhuma letra encontrada. Tente outra música ou artista."
+  },
+  "dashboard": {
+    "overview": "Visão Geral",
+    "config": "Configuração",
+    "my_space": "Meu Espaço",
+    "settings": "Configurações",
+    "greeting_morning": "Bom dia",
+    "greeting_afternoon": "Boa tarde",
+    "greeting_evening": "Boa noite",
+    "composer": "Compositor",
+    "summary": "Aqui está um resumo do seu espaço criativo.",
+    "add_new": "Adicionar nova obra",
+    "total_works": "Total de Obras",
+    "last_edit": "Última Edição",
+    "current_plan": "Plano Atual",
+    "pro": "PRO",
+    "free": "GRÁTIS",
+    "upgrade": "Mudar para Pro →",
+    "recent_works": "Minhas Obras Recentes",
+    "empty_title": "Nenhuma obra salva ainda",
+    "empty_sub": "Crie sua primeira obra de arte musical no estúdio.",
+    "go_studio": "Ir para o Estúdio →",
+    "updated": "Atualizado"
+  },
+  "community": {
+    "title": "Comunidade Global",
+    "subtitle": "Descubra e compartilhe arranjos com compositores de todo o mundo."
+  },
+  "editor_nav": {
+    "studio": "Estúdio",
+    "voice_off": "Voz Aura Off",
+    "voice_on": "Voz Aura On",
+    "tuner": "Afinador",
+    "preview": "Visualizar",
+    "edit_mode": "Voltar a Editar",
+    "play": "Tocar",
+    "generate_canvas": "Gerar Tela"
+  },
+  "tools_page": {
+    "title": "Ecossistema de Ferramentas",
+    "subtitle": "Potencialize seu fluxo criativo.",
+    "tuner_title": "Afinador Inteligente",
+    "tuner_desc": "Afinador cromático de alta precisão.",
+    "voice_title": "Aura Voice Titã",
+    "voice_desc": "Pontuação vocal analítica e harmonia.",
+    "hum_title": "Hum-to-Chords",
+    "hum_desc": "Cantarole e a IA escreverá os acordes."
+  },
+  "footer": {
+    "explore": "Explorar",
+    "account": "Conta",
+    "legal": "Legal",
+    "search": "Pesquisa de Letras",
+    "auth": "Autenticação",
+    "privacy": "Privacidade",
+    "terms": "Termos",
+    "description": "O ecossistema musical do futuro.",
+    "rights": "Todos os direitos reservados."
+  }
+}

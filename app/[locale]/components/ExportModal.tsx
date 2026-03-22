@@ -18,6 +18,18 @@ export default function ExportModal({
   const [activeTab, setActiveTab] = useState("documentos"); // documentos | redes
   const [isExporting, setIsExporting] = useState(false);
 
+  const handleExportPDFWrapper = async () => {
+    setIsExporting(true);
+    await new Promise(r => setTimeout(r, 150));
+    try { await onExportPDF(); } finally { setIsExporting(false); }
+  };
+
+  const handleExportPNGWrapper = async () => {
+    setIsExporting(true);
+    await new Promise(r => setTimeout(r, 150));
+    try { await onExportPNG(); } finally { setIsExporting(false); }
+  };
+
   // Opciones de Redes
   const [socialFormat, setSocialFormat] = useState("instagram-story");
   const socialRef = useRef<HTMLDivElement>(null);
@@ -153,23 +165,23 @@ export default function ExportModal({
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
-                      onClick={onExportPDF}
+                      onClick={handleExportPDFWrapper}
                       disabled={isExporting}
                       className="border border-border bg-background py-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:border-primary hover:text-primary transition-all disabled:opacity-50 group shadow-sm"
                     >
                       <FileText className="w-6 h-6 mb-1 text-muted-foreground group-hover:scale-110 transition-transform group-hover:text-primary" />
                       <span className="text-[10px] font-bold tracking-widest uppercase">
-                        Multi-Pág PDF
+                        {isExporting ? "Generando..." : "Multi-Pág PDF"}
                       </span>
                     </button>
                     <button
-                      onClick={onExportPNG}
+                      onClick={handleExportPNGWrapper}
                       disabled={isExporting}
                       className="border border-border bg-background py-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:border-primary hover:text-primary transition-all disabled:opacity-50 group shadow-sm"
                     >
                       <ImageIcon className="w-6 h-6 mb-1 text-muted-foreground group-hover:scale-110 transition-transform group-hover:text-primary" />
                       <span className="text-[10px] font-bold tracking-widest uppercase">
-                        Imágenes PNG
+                        {isExporting ? "Generando..." : "Imágenes PNG"}
                       </span>
                     </button>
                   </div>

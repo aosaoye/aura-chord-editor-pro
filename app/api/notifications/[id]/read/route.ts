@@ -2,14 +2,14 @@ import { ok, fail } from "@/lib/http";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-export async function PATCH(req: Request, context: any) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await requireUser();
-    const params = await context.params;
+    const { id } = await params;
     
     // updateMany for extra safety against invalid user IDs trying to read someone else's notification
     await db.notification.updateMany({
-      where: { id: params.id, userId },
+      where: { id, userId },
       data: { read: true },
     });
 

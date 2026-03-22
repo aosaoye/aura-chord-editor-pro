@@ -4,15 +4,18 @@ import Link from 'next/link';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Mic, Activity, Zap } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function HerramientasHub() {
+  const t = useTranslations('tools_page');
+
   return (
     <div className="min-h-[100svh] bg-background text-foreground font-sans flex flex-col">
       <Navbar variant="default" />
       <main className="flex-1 max-w-[1400px] w-full mx-auto px-6 pt-32 pb-20 flex flex-col items-center">
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-black tracking-tight mb-6 text-center">Ecosistema de Herramientas</h1>
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-black tracking-tight mb-6 text-center">{t('title')}</h1>
         <p className="text-muted-foreground text-center mb-16 max-w-xl text-sm md:text-base leading-relaxed">
-          Potencia tu flujo creativo con nuestras utilidades de ingeniería acústica y teoría musical integradas.
+          {t('subtitle')}
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
@@ -27,11 +30,11 @@ export default function HerramientasHub() {
              </div>
              <div className="relative z-10 w-full">
                 <div className="flex items-center justify-between w-full mb-3">
-                   <h3 className="text-2xl font-bold tracking-tight text-foreground">Afinador Inteligente</h3>
+                   <h3 className="text-2xl font-bold tracking-tight text-foreground">{t('tuner_title')}</h3>
                    <span className="text-[9px] uppercase tracking-widest font-black text-teal-500 bg-teal-500/10 px-3 py-1 rounded-full">Activo</span>
                 </div>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  Afinador cromático de alta precisión para guitarra, bajo, ukelele y violín con detección YIN en tiempo real mediante AudioWorklets y calibración de ruido dinámica.
+                  {t('tuner_desc')}
                 </p>
              </div>
           </Link>
@@ -42,8 +45,8 @@ export default function HerramientasHub() {
                <Mic size={32} />
              </div>
              <div className="relative z-10">
-                <h3 className="text-2xl font-bold tracking-tight mb-3">Aura Voice Titán</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">Puntaje vocal analítico (Singer Score), auto-key matcher y entrenamiento de armonías polifónicas en vivo.</p>
+                <h3 className="text-2xl font-bold tracking-tight mb-3">{t('voice_title')}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{t('voice_desc')}</p>
              </div>
           </div>
 
@@ -56,11 +59,11 @@ export default function HerramientasHub() {
                <Zap size={32} />
              </div>
              <div className="relative z-10 w-full">
-                <div className="flex items-center justify-between w-full mb-3">
-                   <h3 className="text-2xl font-bold tracking-tight text-foreground">Hum-to-Chords</h3>
+                 <div className="flex items-center justify-between w-full mb-3">
+                   <h3 className="text-2xl font-bold tracking-tight text-foreground">{t('hum_title')}</h3>
                    <span className="text-[9px] uppercase tracking-widest font-black text-zinc-500 bg-zinc-500/10 px-3 py-1 rounded-full">Activo</span>
                 </div>
-                <p className="text-muted-foreground text-sm leading-relaxed">Tararea una melodía vocal y la Inteligencia Artificial escribirá la estructura de acordes base directamente en el editor.</p>
+                <p className="text-muted-foreground text-sm leading-relaxed">{t('hum_desc')}</p>
              </div>
           </Link>
 

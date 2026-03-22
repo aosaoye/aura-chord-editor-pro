@@ -62,6 +62,7 @@ model Song {
   price    Float?  @default(0)
 
   devotionals  DevotionalSong[]
+  translations SongTranslation[]
   ratings      SongRating[]
   purchases    Purchase[]
   interactions Interaction[]
@@ -165,5 +166,17 @@ model Purchase {
 
   @@unique([userId, songId])
   @@index([userId])
+  @@index([songId])
+}
+
+model SongTranslation {
+  id          String @id @default(uuid())
+  songId      String
+  song        Song   @relation(fields: [songId], references: [id], onDelete: Cascade)
+  locale      String // "es", "en", "ja", etc.
+  title       String
+  description String? @db.Text
+
+  @@unique([songId, locale])
   @@index([songId])
 }

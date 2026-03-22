@@ -1,0 +1,107 @@
+{
+  "common": {
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "loading": "Cargando...",
+    "error": "Ha ocurrido un error",
+    "success": "Éxito"
+  },
+  "editor": {
+    "title": "Editor de Acordes",
+    "publish": "Publicar",
+    "unpublish": "Ocultar"
+  },
+  "errors": {
+    "not_found": "Recurso no encontrado",
+    "SONG_NOT_FOUND": "La canción no existe o fue eliminada",
+    "UNAUTHORIZED": "No tienes permisos para realizar esta acción"
+  },
+  "landing": {
+    "subtitle": "Ecosistema Musical",
+    "description": "Composición Sin Fricción",
+    "feature_studio": "Studio Pro",
+    "feature_transposer": "Transpositor",
+    "feature_live": "Live Mode",
+    "feature_community": "Comunidad",
+    "explorer_label": "Explorador",
+    "project_open": "Proyecto Abierto",
+    "music_that": "Música que",
+    "tells_your_story": "cuenta tu historia.",
+    "community_description": "Entra al estudio y comparte tus arreglos con compositores de todo el mundo.",
+    "explore_community": "Explorar la comunidad",
+    "ready_to_create": "¿Listo para crear la tuya?",
+    "open_canvas": "Abrir Nuevo Lienzo"
+  },
+  "nav": {
+    "home": "Inicio",
+    "search_lyrics": "Buscar Letras",
+    "community": "Comunidad",
+    "enter_studio": "Entrar al Estudio",
+    "my_studio": "Mi Estudio",
+    "tools": "Herramientas"
+  },
+  "search": {
+    "subtitle": "ENCUENTRA LA LETRA ORIGINAL",
+    "placeholder": "Busca por canción o artista...",
+    "searching": "Buscando...",
+    "no_results": "No se encontraron letras. Intenta con otra canción o artista."
+  },
+  "dashboard": {
+    "overview": "Visión General",
+    "config": "Configuración",
+    "my_space": "Mi Espacio",
+    "settings": "Ajustes",
+    "greeting_morning": "Buenos días",
+    "greeting_afternoon": "Buenas tardes",
+    "greeting_evening": "Buenas noches",
+    "composer": "Compositor",
+    "summary": "Aquí está un resumen de tu espacio creativo.",
+    "add_new": "Añadir nueva obra",
+    "total_works": "Total Obras",
+    "last_edit": "Última Edición",
+    "current_plan": "Plan Actual",
+    "pro": "PRO",
+    "free": "GRATIS",
+    "upgrade": "Mejorar a Pro →",
+    "recent_works": "Mis Obras Recientes",
+    "empty_title": "Aún no tienes obras guardadas",
+    "empty_sub": "Crea tu primera obra de arte musical en el estudio.",
+    "go_studio": "Ir al Estudio →",
+    "updated": "Actualizado"
+  },
+  "community": {
+    "title": "Comunidad Global",
+    "subtitle": "Descubre y comparte arreglos con compositores de todo el mundo."
+  },
+  "editor_nav": {
+    "studio": "Estudio",
+    "voice_off": "Aura Voice Off",
+    "voice_on": "Aura Voice On",
+    "tuner": "Afinador",
+    "preview": "Ver Vista Previa",
+    "edit_mode": "Ir a Editar",
+    "play": "Reproducir",
+    "generate_canvas": "Generar Lienzo"
+  },
+  "tools_page": {
+    "title": "Ecosistema de Herramientas",
+    "subtitle": "Potencia tu flujo creativo con nuestras utilidades de ingeniería acústica y teoría musical integradas.",
+    "tuner_title": "Afinador Inteligente",
+    "tuner_desc": "Afinador cromático de alta precisión para guitarra, bajo, ukelele y violín con detección YIN en tiempo real mediante AudioWorklets y calibración de ruido dinámica.",
+    "voice_title": "Aura Voice Titán",
+    "voice_desc": "Puntaje vocal analítico (Singer Score), auto-key matcher y entrenamiento de armonías polifónicas en vivo.",
+    "hum_title": "Hum-to-Chords",
+    "hum_desc": "Tararea una melodía vocal y la Inteligencia Artificial escribirá la estructura de acordes base directamente en el editor."
+  },
+  "footer": {
+    "explore": "Explorar",
+    "account": "Cuenta",
+    "legal": "Legal",
+    "search": "Buscador de Letras",
+    "auth": "Autenticación",
+    "privacy": "Privacidad",
+    "terms": "Términos",
+    "description": "El ecosistema musical del futuro.",
+    "rights": "Todos los derechos reservados."
+  }
+}

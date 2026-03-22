@@ -3,12 +3,13 @@
 import Link from "next/link";
 import Navbar from "../components/Navbar";
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { toPng } from "html-to-image";
 import SyllableComponent from "../components/SyllableComponent";
 import MiniPiano2D from '../components/MiniPiano2D';
 import MiniGuitar2D from '../components/MiniGuitar2D';
 import LiveGuitarFretboard from '../components/LiveGuitarFretboard';
-import { Song, Chord, Word } from "../config/config";
+import { Song, Chord, Word, Syllable } from "../config/config";
 import { parseTextToSong } from "../config/parseTextToSong";
 import { jsPDF } from "jspdf";
 import { transposeSong, transposeChord } from "../helpers/transpose";
@@ -18,6 +19,7 @@ import { useGlobalSettings } from "../context/SettingsContext";
 import { useTeleprompter } from "../hooks/useTeleprompter";
 import { getChordKeys } from "../helpers/chordToPianoKeys";
 import { useUser } from "@clerk/nextjs";
+import { useTranslations } from "next-intl";
 import PurchaseButton from "../components/PurchaseButton";
 import StarRatingInteractive from "../components/StarRatingInteractive";
 import GsapWrapper from "../components/GsapWrapper";
@@ -26,7 +28,7 @@ import ExportModal from "../components/ExportModal";
 import EditorSettingsSidebar from "../components/EditorSettingsSidebar";
 import { offlineStorage } from "../utils/offlineStorage";
 import { useTuner } from "../hooks/useTuner";
-import { Mic, MicOff, Smartphone } from "lucide-react";
+import { Mic, MicOff, Smartphone, Eye, Play } from "lucide-react";
 
 const Piano3D = dynamic(() => import('../components/Piano3D'), {
   ssr: false, 
@@ -35,6 +37,9 @@ const Piano3D = dynamic(() => import('../components/Piano3D'), {
 const GuitarTuner = dynamic(() => import('../components/GuitarTuner'), { ssr: false });
 
 export default function SongEditor() {
+  const t = useTranslations('editor_nav');
+  const tNav = useTranslations('nav');
+  const searchParams = useSearchParams();
   const [song, setSong] = useState<Song | null>(null);
 
   const [isExporting, setIsExporting] = useState(false);
@@ -47,6 +52,10 @@ export default function SongEditor() {
   const [dragOverSectionId, setDragOverSectionId] = useState<string | null>(null);
   const [dragOverDirection, setDragOverDirection] = useState<'top' | 'bottom' | 'left' | 'right' | null>(null);
   const [includeChordsDictionary, setIncludeChordsDictionary] = useState(true);
+
+  // States for inline lyric editing
+  const [editingLineId, setEditingLineId] = useState<string | null>(null);
+  const [editingLineText, setEditingLineText] = useState<string>("");
 
   // --- Opciones Musicales de Sesión ---
   const [songKey, setSongKey] = useState('C');
@@ -192,7 +201,7 @@ export default function SongEditor() {
     window.addEventListener('chord-picker-opened', handlePickerOpened as EventListener);
     window.addEventListener('piano-play-chord', handlePianoPlay as EventListener);
     return () => {
-      window.removeEventListener('chord-picker-opened', handlePickerOpened as EventListener);
+      window.removeEventListener('chord-picker-opened', handlePianoPlay as EventListener);
       window.removeEventListener('piano-play-chord', handlePianoPlay as EventListener);
     }
   }, [song]);
@@ -242,14 +251,13 @@ export default function SongEditor() {
     }
   }, [isPlaying, activeLineId]);
 
-  // Hook Importación del Buscador (LocalStorage) + AutoRecover + Load from DB
+    // Hook Importación del Buscador (LocalStorage) + AutoRecover + Load from DB
   useEffect(() => {
     const draftLyrics = localStorage.getItem("chordpro-draft-lyrics");
     const draftTitle = localStorage.getItem("chordpro-draft-title");
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const songId = urlParams.get('id');
-    const isNew = urlParams.get('new');
+    const id = searchParams.get('id');
+    const isNew = searchParams.get('new');
 
     if (isNew === 'true') {
       localStorage.removeItem("chordpro-draft-lyrics");
@@ -266,16 +274,16 @@ export default function SongEditor() {
       return;
     }
 
-    if (songId) {
+    if (id) {
       setIsAnimating(true);
-      fetch(`/api/songs?id=${songId}`)
+      fetch(`/api/songs?id=${id}`)
         .then(res => {
           if (!res.ok) throw new Error("Fallo de red");
           return res.json();
         })
         .then(data => {
           if (data.songs && data.songs.length > 0) {
-            const found = data.songs.find((s: any) => s.id === songId) || data.songs[0];
+            const found = data.songs.find((s: any) => s.id === id) || data.songs[0];
             if (found && found.parsedData) {
               try {
                 const loadedSong = typeof found.parsedData === 'string' ? JSON.parse(found.parsedData) : found.parsedData;
@@ -298,7 +306,7 @@ export default function SongEditor() {
              // 🚀 SENIOR FIX: FALLBACK OFFLINE
              console.log("Online fetch failed, trying offline storage...");
              try {
-                 const offlineSong = await offlineStorage.getSong(songId);
+                 const offlineSong = await offlineStorage.getSong(id);
                  if (offlineSong) {
                      setSong(offlineSong);
                      setOfflineModalMsg({
@@ -316,11 +324,10 @@ export default function SongEditor() {
              } finally {
                  setIsAnimating(false);
              }
-        });
-      return;
-    }
-
-    if (draftLyrics && draftTitle) {
+         });
+    } else {
+      // 🚀 RESTORE DRAFTS IF ID == NULL AND NOT NEW
+      if (draftLyrics && draftTitle) {
       setTitleInput(draftTitle);
       setLyricsInput(draftLyrics);
 
@@ -343,8 +350,9 @@ export default function SongEditor() {
           }, 500);
         } catch (e) { }
       }
+      }
     }
-  }, []);
+  }, [searchParams]);
 
   // Guardado en caliente (Hot Save) cada vez que se modifique un acorde o algo en el Editor
   useEffect(() => {
@@ -375,6 +383,57 @@ export default function SongEditor() {
     [titleInput, bpmInput, lyricsInput, timeSignatureInput]
   );
 
+  // Function to edit lyrics inline
+  const handleSaveLineEdit = useCallback((sectionId: string, lineId: string) => {
+    if (!editingLineText.trim()) {
+      setEditingLineId(null);
+      return; 
+    }
+    setSong(currentSong => {
+      if (!currentSong) return currentSong;
+      const newSections = currentSong.sections.map(section => {
+        if (section.id !== sectionId) return section;
+        const newLines = section.lines.map(line => {
+          if (line.id !== lineId) return line;
+          
+          const wordsText = editingLineText.trim().split(/\s+/).filter(Boolean);
+          const mockSilabear = (word: string) => {
+              if (!word) return [];
+              const silabas = word.match(/[^aeiouáéíóúü]*[aeiouáéíóúü]+(?:[^aeiouáéíóúü]*$|[^aeiouáéíóúü](?=[^aeiouáéíóúü]))?/gi);
+              return silabas || [word];
+          };
+
+          const newWords: Word[] = wordsText.map(wordStr => {
+             const syllablesText = mockSilabear(wordStr);
+             const syllables: Syllable[] = syllablesText.map(sylStr => ({
+                id: `syl-${Date.now().toString(36)}-${Math.random().toString(36).substring(2,6)}`,
+                text: sylStr,
+                chord: null
+             }));
+             return {
+                id: `word-${Date.now().toString(36)}-${Math.random().toString(36).substring(2,6)}`,
+                syllables
+             };
+          });
+
+          // Recover sequential chords and reassign them
+          const oldChords = line.words.flatMap(w => w.syllables).map(s => s.chord).filter(c => c !== null);
+          const newSyllables = newWords.flatMap(w => w.syllables);
+          for (let i = 0; i < Math.min(oldChords.length, newSyllables.length); i++) {
+             newSyllables[i].chord = oldChords[i];
+          }
+
+          return { ...line, words: newWords };
+        });
+        return { ...section, lines: newLines };
+      });
+      return { ...currentSong, sections: newSections };
+    });
+    setEditingLineId(null);
+    setEditingLineText("");
+  }, [editingLineText]);
+
+  // Cambiar Acorde Específico
   const handleChordChange = useCallback((syllableId: string, newChord: Chord | null, styleOptions?: { highlightColor?: string, casing?: string }) => {
     setSong((currentSong) => {
       if (!currentSong) return currentSong;
@@ -789,6 +848,7 @@ export default function SongEditor() {
 
     try {
       setIsExporting(true);
+      await new Promise(resolve => setTimeout(resolve, 150));
 
       const pageNodes = Array.from(pagesContainerRef.current.querySelectorAll('.a4-page')) as HTMLElement[];
       if (pageNodes.length === 0) return;
@@ -878,6 +938,7 @@ export default function SongEditor() {
 
     try {
       setIsExporting(true);
+      await new Promise(resolve => setTimeout(resolve, 150));
 
       const pageNodes = Array.from(pagesContainerRef.current.querySelectorAll('.a4-page')) as HTMLElement[];
 
@@ -1079,7 +1140,7 @@ export default function SongEditor() {
                   type="submit"
                   className="w-full sm:w-auto px-10 sm:px-12 py-5 bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-4 rounded-full shadow-[0_15px_30px_rgba(var(--primary-raw),0.2)] hover:bg-primary/90"
                 >
-                  Generar Lienzo
+                  {t('generate_canvas')}
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
                   </svg>
@@ -1137,9 +1198,9 @@ export default function SongEditor() {
                 ← Atrás
               </button>
               <span>/</span>
-              <Link href="/" className="cursor-pointer hover:text-foreground transition-colors">Inicio</Link>
-              <Link href="/settings" className="cursor-pointer hover:text-foreground transition-colors">Configuración</Link>
-              <span className="cursor-pointer text-primary border-b-2 border-primary pb-1">Estudio</span>
+              <Link href="/" className="cursor-pointer hover:text-foreground transition-colors">{tNav('home')}</Link>
+              <Link href="/settings" className="cursor-pointer hover:text-foreground transition-colors">{tNav('tools') || 'Configuración'}</Link>
+              <span className="cursor-pointer text-primary border-b-2 border-primary pb-1">{t('studio')}</span>
             </div>
           }
           rightContent={
@@ -1157,51 +1218,32 @@ export default function SongEditor() {
                 className={`text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-3 rounded-full shrink-0 flex items-center gap-2 transition-all ${isAuraVoiceActive ? 'bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary-raw),0.5)] animate-pulse' : 'text-foreground border border-transparent hover:border-border hover:bg-accent'}`}
                 title="Dictado por Voz / Instrumento"
               >
-                {isAuraVoiceActive ? <Mic size={14} /> : <MicOff size={14} className="opacity-50" />} Aura Voice {isAuraVoiceActive ? 'ON' : 'OFF'}
+                {isAuraVoiceActive ? <Mic size={14} /> : <MicOff size={14} className="opacity-50" />} {isAuraVoiceActive ? t('voice_on') : t('voice_off')}
               </button>
 
               <Link
                 href="/herramientas/afinador"
                 target="_blank"
                 className="text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-3 rounded-full text-foreground border border-transparent hover:border-border hover:bg-accent transition-colors shrink-0 flex items-center gap-2"
-                title="Afinador Inteligente en nueva pantalla"
+                title={t('tuner')}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M8 6h8"/><path d="M8 14h8"/><path d="M8 18h8"/></svg>
-                Afinador
+                <Mic size={14} /> {t('tuner')}
               </Link>
 
               <button
-                onClick={() => {
-                  if (isPreviewMode && isPlaying) togglePlay();
-                  setIsPreviewMode(!isPreviewMode);
-                }}
-                className="text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-3 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shrink-0"
+                onClick={() => setIsPreviewMode(true)}
+                className="text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-3 rounded-full bg-accent text-foreground hover:bg-primary hover:text-primary-foreground transition-colors shrink-0 flex items-center gap-2"
               >
-                {isPreviewMode ? "Salir de Vista Previa" : "Ver Vista Previa"}
+                <Eye size={14} /> {t('preview')}
+              </button>
+              <button
+                onClick={togglePlay}
+                className="text-[10px] sm:text-xs font-bold tracking-[0.2em] uppercase px-6 sm:px-8 py-3 rounded-full bg-primary text-primary-foreground hover:scale-105 active:scale-95 transition-all shadow-xl shrink-0 flex items-center gap-2"
+              >
+                <Play size={14} fill="currentColor" /> {t('play')}
               </button>
 
               <div className="h-4 w-px bg-border hidden sm:block shrink-0"></div>
-
-              <button
-                onClick={togglePlay}
-                className="flex items-center gap-3 px-6 py-3 bg-primary text-primary-foreground text-[10px] font-bold tracking-[0.2em] uppercase hover:scale-105 transition-all active:scale-95 rounded-full  shrink-0"
-              >
-                {isPlaying ? (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
-                    </svg>
-                    Pausar
-                  </>
-                ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5 pl-[2px]">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
-                    </svg>
-                    Reproducir
-                  </>
-                )}
-              </button>
 
               {/* Grupo de Exportación */}
               <div className="flex items-center bg-foreground rounded-full overflow-hidden transition-transform active:scale-95 shrink-0">
@@ -1350,7 +1392,7 @@ export default function SongEditor() {
               <button
                 onClick={() => setIsPreviewMode(false)}
                 className="w-10 h-10 rounded-full flex items-center justify-center bg-muted/80 text-foreground hover:bg-accent hover:text-foreground transition-all"
-                title="Cerrar Vista Previa"
+                title={t('close_preview')}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
@@ -1566,7 +1608,7 @@ export default function SongEditor() {
 
                           {/* Título de la sección o canción (Editable) */}
                           {!section.isContinuation && (section.title || !isReadOnly) && (
-                            <div className={`w-full flex ${section.title ? 'mt-2 mb-2' : 'mb-0 overflow-visible'}`}>
+                            <div className={`w-full flex ${section.title ? 'mt-2 mb-2 relative' : 'mb-0 overflow-visible relative'}`}>
                                <input
                                   readOnly={isReadOnly}
                                   type="text"
@@ -1581,10 +1623,10 @@ export default function SongEditor() {
                                       };
                                     });
                                   }}
-                                  className={`bg-transparent border-none outline-none italic tracking-tight w-full placeholder:text-foreground
+                                  className={`bg-transparent border-none outline-none italic tracking-tight w-full placeholder:text-foreground/50
                                     ${layout.alignment === 'justify-center' ? 'text-center' : layout.alignment === 'justify-end' ? 'text-right' : layout.alignment === 'justify-between' ? 'text-justify' : 'text-left'} 
                                     ${/^(?:[IVX]+\.|\d+\.)/i.test(section.title || '') ? 'font-serif font-black text-lg sm:text-xl opacity-90' : 'font-sans font-black text-xl sm:text-2xl opacity-90'} 
-                                    ${!section.title ? 'text-sm h-0 opacity-0 group-hover:h-auto group-hover:py-1 group-hover:opacity-40 focus:h-auto focus:py-1 focus:opacity-100 transition-all font-normal not-italic' : ''}
+                                    ${!section.title ? 'text-[11px] font-bold absolute -top-5 left-0 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity font-sans not-italic placeholder:text-foreground/40 pointer-events-none group-hover:pointer-events-auto focus:pointer-events-auto z-10' : ''}
                                   `}
                                 />
                             </div>
@@ -1693,6 +1735,25 @@ export default function SongEditor() {
                                     : isPlaying
                                       ? 'opacity-30 blur-[1px]'
                                       : 'opacity-100';
+
+                                  if (editingLineId === line.id) {
+                                      return (
+                                        <div key={line.id} className={`flex w-full items-center pt-2 pb-1 relative transition-all duration-300 ${playingStyle}`}>
+                                            <input
+                                                autoFocus
+                                                value={editingLineText}
+                                                onChange={(e) => setEditingLineText(e.target.value)}
+                                                onBlur={() => handleSaveLineEdit(section.id, line.id)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') handleSaveLineEdit(section.id, line.id);
+                                                    if (e.key === 'Escape') { setEditingLineId(null); setEditingLineText(""); }
+                                                }}
+                                                className="flex-1 bg-white/5 border border-primary/50 text-foreground px-4 py-2 rounded-lg shadow-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary font-bold font-sans transition-all"
+                                                placeholder="Escribe la letra aquí..."
+                                            />
+                                        </div>
+                                      );
+                                  }
 
                                   return (
                                     <div
@@ -1806,7 +1867,17 @@ export default function SongEditor() {
                                   {!isReadOnly && (
                                     <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-zinc-100 dark:bg-[#1A1A1A] p-1.5 rounded-lg items-center gap-1.5 opacity-0 group-hover/line:opacity-100 flex shadow-sm origin-right pointer-events-none group-hover/line:pointer-events-auto transform translate-x-4 group-hover/line:translate-x-0 transition-all duration-300 border border-zinc-200 dark:border-zinc-800/80">
                                       <button
-                                        onClick={() => handleSplitSection(section.id, line.id)}
+                                        onClick={() => {
+                                          const text = line.words.map(w => w.syllables.map(s => s.text).join('')).join(' ');
+                                          setEditingLineText(text);
+                                          setEditingLineId(line.id);
+                                        }}
+                                        className="text-[9px] font-black text-white bg-blue-500 hover:bg-blue-600 rounded px-2.5 py-1.5 tracking-widest transition-all uppercase whitespace-nowrap shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+                                        title="Editar letra de la línea"
+                                      >
+                                        ✎ EDITAR
+                                      </button>
+                                      <button                                        onClick={() => handleSplitSection(section.id, line.id)}
                                         className="text-[9px] font-black text-zinc-500 hover:text-white bg-zinc-200 dark:bg-[#252525] hover:bg-zinc-700 dark:hover:bg-zinc-700 rounded px-2.5 py-1.5 tracking-widest transition-all uppercase whitespace-nowrap shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
                                         title="Separar estrofa a partir de esta línea hacia abajo"
                                       >
@@ -1854,7 +1925,7 @@ export default function SongEditor() {
                 </div>
 
                 {/* FOOTER POR PÁGINA (Anclaje Físico Estricto) */}
-                <div className="absolute bottom-0 left-0 w-full h-[4rem] lg:h-[4.5rem] bg-background flex flex-col justify-end px-8 sm:px-12 lg:px-16 pb-3 sm:pb-4 lg:pb-6 text-muted-foreground/60 shrink-0 z-20 pointer-events-none">
+                <div className="absolute bottom-0 left-0 w-full h-[5rem] lg:h-[6rem] bg-background flex flex-col justify-end px-8 sm:px-12 lg:px-16 pb-6 sm:pb-8 lg:pb-12 text-muted-foreground/60 shrink-0 z-20 pointer-events-none">
                   <div className="w-auto absolute top-0 left-8 right-8 sm:left-12 sm:right-12 lg:left-16 lg:right-16 h-px bg-border/30"></div>
                   <div className="flex justify-between items-end w-full">
                     <p className="text-[8px] font-bold tracking-[0.2em] uppercase">

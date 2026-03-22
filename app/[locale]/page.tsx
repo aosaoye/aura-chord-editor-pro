@@ -3,8 +3,10 @@ import Navbar from './components/Navbar';
 import GsapWrapper from './components/GsapWrapper';
 import Footer from './components/Footer';
 import { Music, Smartphone, Zap, DollarSign, Crown, Lock, ArrowRight, ShieldCheck, Users } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function LandingPage() {
+  const t = useTranslations('landing');
   return (
     <div className="min-h-[100svh] bg-background text-foreground font-sans relative overflow-x-hidden selection:bg-primary/30 selection:text-foreground transition-colors duration-500">
       
@@ -76,7 +78,7 @@ export default function LandingPage() {
              
              {/* Small Overline */}
              <div className="text-[10px] tracking-[0.4em] text-zinc-500 uppercase mb-12 font-bold font-mono">
-               Ecosistema Musical
+                {t('subtitle')}
              </div>
              
              {/* Main Title */}
@@ -86,7 +88,7 @@ export default function LandingPage() {
              
              {/* Small Underline / Category */}
              <div className="text-[10px] tracking-[0.5em] text-muted-foreground uppercase font-bold border-t border-border pt-6 px-12">
-               Composición Sin Fricción
+                {t('description')}
              </div>
 
            </GsapWrapper>
@@ -97,10 +99,10 @@ export default function LandingPage() {
            <GsapWrapper animationType="stagger-children" className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
              
              {[
-                { label: 'Studio Pro', num: '01', icon: <Music size={28}/> },
-                { label: 'Transpositor', num: '02', icon: <Zap size={28}/> },
-                { label: 'Live Mode', num: '03', icon: <Smartphone size={28}/> },
-                { label: 'Comunidad', num: '04', icon: <Users size={28}/> }
+                { label: t('feature_studio'), num: '01', icon: <Music size={28}/> },
+                { label: t('feature_transposer'), num: '02', icon: <Zap size={28}/> },
+                { label: t('feature_live'), num: '03', icon: <Smartphone size={28}/> },
+                { label: t('feature_community'), num: '04', icon: <Users size={28}/> }
              ].map((card, i) => (
                <div key={i} className="aspect-square bg-transparent border border-border rounded-2xl md:rounded-[2.5rem] p-6 md:p-10 flex flex-col justify-between items-center text-center hover:border-primary/50 transition-all duration-500 group">
                   <div className="mt-4 text-muted-foreground group-hover:text-primary transition-colors duration-500 group-hover:scale-110 transform">
@@ -123,7 +125,7 @@ export default function LandingPage() {
            <div className="flex items-center gap-6 mb-12">
              <div className="w-2 h-2 rounded-full bg-primary"></div>
              <div className="text-[10px] tracking-[0.3em] font-bold text-zinc-500 uppercase">
-               Explorador
+               {t('explorer_label')}
              </div>
            </div>
 
@@ -185,24 +187,24 @@ export default function LandingPage() {
                   
                   <div className="max-w-xl relative">
                     <p className="text-[10px] tracking-[0.4em] font-bold text-primary uppercase mb-8">
-                       Proyecto Abierto
+                       {t('project_open')}
                     </p>
                     <h2 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-sans font-light tracking-tight text-white mb-2 leading-none">
-                      Música que
+                      {t('music_that')}
                     </h2>
                     <h2 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-serif font-bold italic tracking-tighter text-white leading-none drop-shadow-lg mb-10">
-                      cuenta tu historia.
+                      {t('tells_your_story')}
                     </h2>
                     
                     <p className="text-zinc-400 font-light text-sm md:text-base leading-relaxed max-w-sm mb-12 hidden md:block border-l px-4 border-white/20">
-                      Entra al estudio y comparte tus arreglos con compositores de todo el mundo.
+                      {t('community_description')}
                     </p>
 
                     <Link 
                       href="/community"
                       className="inline-block px-10 py-5 bg-white text-black text-[10px] font-black tracking-[0.3em] uppercase rounded-full hover:scale-105 transition-all shadow-xl"
                     >
-                      Explorar la comunidad
+                      {t('explore_community')}
                     </Link>
                   </div>
 
@@ -218,13 +220,13 @@ export default function LandingPage() {
                 · · ·
               </span>
               <h3 className="text-4xl md:text-5xl lg:text-6xl font-serif tracking-tight text-foreground">
-                ¿Listo para crear la tuya?
+                {t('ready_to_create')}
               </h3>
               <Link 
                 href="/editor?new=true"
                 className="px-12 py-5 border border-border text-foreground text-[10px] font-bold tracking-[0.3em] uppercase rounded-full hover:bg-foreground hover:text-background transition-all"
               >
-                Abrir Nuevo Lienzo
+                {t('open_canvas')}
               </Link>
            </GsapWrapper>
         </section>

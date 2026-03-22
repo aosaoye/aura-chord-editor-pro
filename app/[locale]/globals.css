@@ -114,3 +114,25 @@ body {
   scrollbar-width: none; /* Firefox */
 }
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* =========================================
+   KILL CLERK BRANDING & DEV MODE WATERMARK
+   ========================================= */
+.cl-footer,
+.cl-watermark,
+.cl-userButtonPopoverFooter,
+[class^="cl-internal-"]:has(> [href*="clerk.dev"]),
+[class^="cl-internal-"]:has(> [href*="clerk.com"]),
+[class*="DevelopmentMode"],
+div:has(> a.cl-internal-1x6k50a),
+.cl-popoverBox > div > div:last-child:has(svg) {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+}

@@ -1,0 +1,107 @@
+{
+  "common": {
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "loading": "Chargement...",
+    "error": "Une erreur s'est produite",
+    "success": "Succès"
+  },
+  "editor": {
+    "title": "Éditeur d'accords",
+    "publish": "Publier",
+    "unpublish": "Masquer"
+  },
+  "errors": {
+    "not_found": "Ressource non trouvée",
+    "SONG_NOT_FOUND": "Chanson introuvable",
+    "UNAUTHORIZED": "Vous n'êtes pas autorisé à effectuer cette action"
+  },
+  "landing": {
+    "subtitle": "Écosystème Musical",
+    "description": "Composition Sans Friction",
+    "feature_studio": "Studio Pro",
+    "feature_transposer": "Transpositeur",
+    "feature_live": "Mode Live",
+    "feature_community": "Communauté",
+    "explorer_label": "Explorateur",
+    "project_open": "Projet Ouvert",
+    "music_that": "La musique qui",
+    "tells_your_story": "raconte votre histoire.",
+    "community_description": "Entrez dans le studio et partagez vos arrangements avec des compositeurs du monde entier.",
+    "explore_community": "Explorer la communauté",
+    "ready_to_create": "Prêt à créer la vôtre ?",
+    "open_canvas": "Ouvrir un nouveau canevas"
+  },
+  "nav": {
+    "home": "Accueil",
+    "search_lyrics": "Chercher Paroles",
+    "community": "Communauté",
+    "enter_studio": "Entrer au Studio",
+    "my_studio": "Mon Studio",
+    "tools": "Outils"
+  },
+  "search": {
+    "subtitle": "TROUVEZ LES PAROLES ORIGINALES",
+    "placeholder": "Recherche par chanson ou artiste...",
+    "searching": "Recherche en cours...",
+    "no_results": "Aucune parole trouvée. Essayez une autre chanson ou artiste."
+  },
+  "dashboard": {
+    "overview": "Aperçu",
+    "config": "Configuration",
+    "my_space": "Mon Espace",
+    "settings": "Paramètres",
+    "greeting_morning": "Bonjour",
+    "greeting_afternoon": "Bon après-midi",
+    "greeting_evening": "Bonsoir",
+    "composer": "Compositeur",
+    "summary": "Voici un résumé de votre espace créatif.",
+    "add_new": "Ajouter une nouvelle œuvre",
+    "total_works": "Œuvres Totales",
+    "last_edit": "Dernière Édition",
+    "current_plan": "Forfait Actuel",
+    "pro": "PRO",
+    "free": "GRATUIT",
+    "upgrade": "Passer à Pro →",
+    "recent_works": "Mes Œuvres Récentes",
+    "empty_title": "Aucune œuvre enregistrée",
+    "empty_sub": "Créez votre premier chef-d'œuvre musical en studio.",
+    "go_studio": "Aller au Studio →",
+    "updated": "Mis à jour"
+  },
+  "community": {
+    "title": "Communauté Mondiale",
+    "subtitle": "Découvrez et partagez des arrangements avec des compositeurs du monde entier."
+  },
+  "editor_nav": {
+    "studio": "Studio",
+    "voice_off": "Aura Vocale Off",
+    "voice_on": "Aura Vocale On",
+    "tuner": "Accordeur",
+    "preview": "Aperçu",
+    "edit_mode": "Retour a l'Édition",
+    "play": "Jouer",
+    "generate_canvas": "Générer le Canevas"
+  },
+  "tools_page": {
+    "title": "Écosystème d'Outils",
+    "subtitle": "Boostez votre flux créatif avec nos utilitaires.",
+    "tuner_title": "Accordeur Intelligent",
+    "tuner_desc": "Accordeur chromatique haute précision.",
+    "voice_title": "Aura Voice Titan",
+    "voice_desc": "Score vocal analytique et harmonie.",
+    "hum_title": "Hum-to-Chords",
+    "hum_desc": "Fredonnez et l'IA écrira les accords."
+  },
+  "footer": {
+    "explore": "Explorer",
+    "account": "Compte",
+    "legal": "Légal",
+    "search": "Recherche de Paroles",
+    "auth": "Authentification",
+    "privacy": "Confidentialité",
+    "terms": "Conditions",
+    "description": "Le écosystème musical du futur.",
+    "rights": "Tous droits réservés."
+  }
+}

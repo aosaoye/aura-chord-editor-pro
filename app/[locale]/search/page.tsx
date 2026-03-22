@@ -10,6 +10,7 @@ import { toPng } from "html-to-image";
 import { Document, Packer, Paragraph, TextRun } from "docx";
 import { saveAs } from "file-saver";
 import GlobalAnimatedBackground from "../components/GlobalAnimatedBackground";
+import { useTranslations } from "next-intl";
 
 interface Suggestion {
   id: number;
@@ -21,6 +22,7 @@ interface Suggestion {
 export default function LyricsSearchPage() {
   const { settings, isHydrated } = useGlobalSettings();
   const router = useRouter();
+  const t = useTranslations('search');
 
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -31,6 +33,7 @@ export default function LyricsSearchPage() {
   const [song, setSong] = useState("");
   const [lyrics, setLyrics] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -254,7 +257,9 @@ export default function LyricsSearchPage() {
   const handleExportPNG = useCallback(async () => {
     if (!lyrics) return;
     try {
+      setIsExporting(true);
       showToast("Generando imágenes en formato A4...");
+      await new Promise(r => setTimeout(r, 150));
       const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
 
@@ -418,13 +423,17 @@ export default function LyricsSearchPage() {
     } catch (err) {
       console.error(err);
       showToast("Error al exportar PNG(s).");
+    } finally {
+      setIsExporting(false);
     }
   }, [song, lyrics, artist, settings.colorTheme, showToast]);
 
-  const handleExportPDF = useCallback(() => {
+  const handleExportPDF = useCallback(async () => {
     if (!lyrics) return;
     try {
+      setIsExporting(true);
       showToast("Generando PDF estructurado...");
+      await new Promise(r => setTimeout(r, 150));
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const pdfWidth = 210;
       const pdfHeight = 297;
@@ -537,12 +546,17 @@ export default function LyricsSearchPage() {
     } catch (err) {
       console.error(err);
       showToast("Error al exportar PDF estructurado.");
+    } finally {
+      setIsExporting(false);
     }
   }, [song, lyrics, artist, showToast]);
 
   const handleExportDOCX = useCallback(async () => {
     if (!lyrics) return;
     try {
+      setIsExporting(true);
+      showToast("Generando documento DOCX...");
+      await new Promise(r => setTimeout(r, 150));
       const lines = lyrics.split('\n');
       const paragraphs = lines.map(line => 
         new Paragraph({
@@ -571,6 +585,8 @@ export default function LyricsSearchPage() {
     } catch (err) {
       console.error(err);
       alert("Error al exportar DOCX.");
+    } finally {
+      setIsExporting(false);
     }
   }, [lyrics, song, artist]);
 
@@ -589,7 +605,7 @@ export default function LyricsSearchPage() {
             lyrics<span className="text-primary font-light">.global</span>
           </h1>
           <p className="text-sm font-bold tracking-[0.4em] text-muted-foreground uppercase opacity-70">
-            Encuentra La Letra Original
+            {t('subtitle')}
           </p>
         </div>
         
@@ -603,14 +619,14 @@ export default function LyricsSearchPage() {
                  value={query}
                  onChange={handleQueryChange}
                  onFocus={() => { if (query.trim()) setShowSuggestions(true); }}
-                 placeholder="Busca por canción o artista..."
+                 placeholder={t('placeholder')}
                  className="flex-1 w-full bg-transparent py-4 px-6 text-xl sm:text-2xl font-light text-foreground outline-none placeholder:text-muted-foreground/40"
                  autoComplete="off"
                  autoFocus
                />
                {isLoading && (
                  <div className="pr-6 flex items-center gap-2 text-primary text-xs font-bold tracking-widest uppercase animate-pulse">
-                   Descargando...
+                   {t('searching')}
                  </div>
                )}
             </div>
@@ -622,13 +638,13 @@ export default function LyricsSearchPage() {
               
               {isSuggesting && suggestions.length === 0 && (
                  <div className="p-8 text-center text-sm font-medium tracking-widest uppercase text-muted-foreground animate-pulse">
-                   Consultando bases mundiales...
+                   {t('searching')}
                  </div>
               )}
 
               {!isSuggesting && query && suggestions.length === 0 && (
                  <div className="p-8 text-center text-sm font-medium text-muted-foreground">
-                   Las ondas no traen resultados. Prueba otra vez.
+                   {t('no_results')}
                  </div>
               )}
 
@@ -680,17 +696,17 @@ export default function LyricsSearchPage() {
               
               <div className="w-px h-6 bg-border mx-2 hidden sm:block"></div>
               
-              <button onClick={handleCopy} className="text-[10px] font-bold tracking-[0.2em] bg-accent text-foreground hover:bg-primary hover:text-primary-foreground uppercase transition-colors px-4 py-2.5 rounded-full">
-                Copiar
+              <button disabled={isExporting} onClick={handleCopy} className="text-[10px] font-bold tracking-[0.2em] bg-accent text-foreground hover:bg-primary hover:text-primary-foreground uppercase transition-colors px-4 py-2.5 rounded-full disabled:opacity-50">
+                {isExporting ? "..." : "Copiar"}
               </button>
-              <button onClick={handleExportPNG} className="text-[10px] font-bold tracking-[0.2em] bg-accent text-foreground hover:bg-primary hover:text-primary-foreground uppercase transition-colors px-4 py-2.5 rounded-full">
-                PNG
+              <button disabled={isExporting} onClick={handleExportPNG} className="text-[10px] font-bold tracking-[0.2em] bg-accent text-foreground hover:bg-primary hover:text-primary-foreground uppercase transition-colors px-4 py-2.5 rounded-full disabled:opacity-50">
+                {isExporting ? "PROCESANDO..." : "PNG"}
               </button>
-              <button onClick={handleExportPDF} className="text-[10px] font-bold tracking-[0.2em] bg-accent text-foreground hover:bg-primary hover:text-primary-foreground uppercase transition-colors px-4 py-2.5 rounded-full outline-white ring-1 ring-inset ring-border">
-                PDF
+              <button disabled={isExporting} onClick={handleExportPDF} className="text-[10px] font-bold tracking-[0.2em] bg-accent text-foreground hover:bg-primary hover:text-primary-foreground uppercase transition-colors px-4 py-2.5 rounded-full outline-white ring-1 ring-inset ring-border disabled:opacity-50">
+                {isExporting ? "PROCESANDO..." : "PDF"}
               </button>
-              <button onClick={handleExportDOCX} className="text-[10px] font-bold tracking-[0.2em] bg-accent text-foreground hover:bg-primary hover:text-primary-foreground uppercase transition-colors px-4 py-2.5 rounded-full">
-                DOCX (Word)
+              <button disabled={isExporting} onClick={handleExportDOCX} className="text-[10px] font-bold tracking-[0.2em] bg-accent text-foreground hover:bg-primary hover:text-primary-foreground uppercase transition-colors px-4 py-2.5 rounded-full disabled:opacity-50">
+                {isExporting ? "PROCESANDO..." : "DOCX (Word)"}
               </button>
             </div>
 

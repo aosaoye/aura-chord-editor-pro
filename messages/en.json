@@ -1,0 +1,107 @@
+{
+  "common": {
+    "save": "Save",
+    "delete": "Delete",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success"
+  },
+  "editor": {
+    "title": "Chord Editor",
+    "publish": "Publish",
+    "unpublish": "Unpublish"
+  },
+  "errors": {
+    "not_found": "Resource not found",
+    "SONG_NOT_FOUND": "Song not found",
+    "UNAUTHORIZED": "You are not authorized to perform this action"
+  },
+  "landing": {
+    "subtitle": "Musical Ecosystem",
+    "description": "Frictionless Composition",
+    "feature_studio": "Studio Pro",
+    "feature_transposer": "Transposer",
+    "feature_live": "Live Mode",
+    "feature_community": "Community",
+    "explorer_label": "Explorer",
+    "project_open": "Open Project",
+    "music_that": "Music that",
+    "tells_your_story": "tells your story.",
+    "community_description": "Step into the studio and share your arrangements with composers worldwide.",
+    "explore_community": "Explore the community",
+    "ready_to_create": "Ready to create yours?",
+    "open_canvas": "Open New Canvas"
+  },
+  "nav": {
+    "home": "Home",
+    "search_lyrics": "Search Lyrics",
+    "community": "Community",
+    "enter_studio": "Enter Studio",
+    "my_studio": "My Studio",
+    "tools": "Tools"
+  },
+  "search": {
+    "subtitle": "FIND THE ORIGINAL LYRICS",
+    "placeholder": "Search by song or artist...",
+    "searching": "Searching...",
+    "no_results": "No lyrics found. Try another song or artist."
+  },
+  "dashboard": {
+    "overview": "Overview",
+    "config": "Configuration",
+    "my_space": "My Space",
+    "settings": "Settings",
+    "greeting_morning": "Good morning",
+    "greeting_afternoon": "Good afternoon",
+    "greeting_evening": "Good evening",
+    "composer": "Composer",
+    "summary": "Here is a summary of your creative space.",
+    "add_new": "Add new work",
+    "total_works": "Total Works",
+    "last_edit": "Last Edit",
+    "current_plan": "Current Plan",
+    "pro": "PRO",
+    "free": "FREE",
+    "upgrade": "Upgrade to Pro →",
+    "recent_works": "My Recent Works",
+    "empty_title": "No works saved yet",
+    "empty_sub": "Create your first musical masterpiece in the studio.",
+    "go_studio": "Go to Studio →",
+    "updated": "Updated"
+  },
+  "community": {
+    "title": "Global Community",
+    "subtitle": "Discover and share arrangements with composers worldwide."
+  },
+  "editor_nav": {
+    "studio": "Studio",
+    "voice_off": "Aura Voice Off",
+    "voice_on": "Aura Voice On",
+    "tuner": "Tuner",
+    "preview": "Preview",
+    "edit_mode": "Back to Edit",
+    "play": "Play",
+    "generate_canvas": "Generate Canvas"
+  },
+  "tools_page": {
+    "title": "Tools Ecosystem",
+    "subtitle": "Power your creative flow with our integrated acoustic engineering and music theory utilities.",
+    "tuner_title": "Smart Tuner",
+    "tuner_desc": "High-precision chromatic tuner for guitar, bass, ukulele, and violin with real-time YIN detection via AudioWorklets and dynamic noise calibration.",
+    "voice_title": "Aura Voice Titan",
+    "voice_desc": "Analytical vocal scoring (Singer Score), auto-key matcher, and live polyphonic harmony training.",
+    "hum_title": "Hum-to-Chords",
+    "hum_desc": "Hum a vocal melody and Artificial Intelligence will write the base chord structure directly into the editor."
+  },
+  "footer": {
+    "explore": "Explore",
+    "account": "Account",
+    "legal": "Legal",
+    "search": "Lyrics Search",
+    "auth": "Authentication",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "description": "The musical ecosystem of the future.",
+    "rights": "All rights reserved."
+  }
+}

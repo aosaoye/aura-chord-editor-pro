@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { Plus, Folder, Clock, Music, Settings, LayoutDashboard, Globe } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { getAuth } from "@clerk/nextjs/server";
@@ -8,6 +8,7 @@ import { es } from "date-fns/locale";
 import DeleteSongButton from "./DeleteSongButton";
 import GsapWrapper from "../components/GsapWrapper";
 import { Prisma } from "@prisma/client";
+import { getTranslations } from "next-intl/server";
 
 const prisma = db;
 
@@ -20,14 +21,16 @@ export default async function DashboardPage() {
   const user = await currentUser();
   const userId = user?.id; // Clerk user id
 
+  const t = await getTranslations('dashboard');
+
   const handleGreetings = (): string => {
     const hour = new Date().getHours();
     if (hour < 12) {
-      return "Buenos días";
+      return t('greeting_morning');
     } else if (hour < 18) {
-      return "Buenas tardes";
+      return t('greeting_afternoon');
     } else {
-      return "Buenas noches";
+      return t('greeting_evening');
     }
   }
 
@@ -69,19 +72,19 @@ export default async function DashboardPage() {
         {/* Sidebar Vertical (Hidden on mobile) */}
         <aside className="hidden md:flex flex-col w-64 border-r border-border/50 bg-background/50 backdrop-blur-md p-6 gap-8">
           <div className="flex flex-col gap-2">
-             <p className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase mb-2">Mi Espacio</p>
+             <p className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase mb-2">{t('my_space')}</p>
              <Link href="/dashboard" className="flex items-center gap-3 text-sm font-semibold p-3 rounded-lg bg-primary/[0.08] text-primary border border-primary/20 shadow-[0_0_15px_rgba(var(--primary-raw),0.1)] transition-colors">
                <LayoutDashboard size={18} />
-               Visión General
+               {t('overview')}
              </Link>
           </div>
 
           <div className="flex flex-col gap-2">
-             <p className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase mb-2">Ajustes</p>
+             <p className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase mb-2">{t('settings')}</p>
 
              <Link href="/settings" className="flex items-center gap-3 text-sm font-medium p-3 rounded-lg hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all">
                <Settings size={18} />
-               Configuración
+               {t('config')}
              </Link>
           </div>
         </aside>
@@ -93,14 +96,14 @@ export default async function DashboardPage() {
              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-6">
                 <div>
                   <h1 className="text-3xl sm:text-4xl font-light tracking-tight text-foreground">
-                    {handleGreetings()}, <span className="font-bold">{user?.firstName || "Compositor"}</span>
+                    {handleGreetings()}, <span className="font-bold">{user?.firstName || t('composer')}</span>
                   </h1>
-                  <p className="text-muted-foreground mt-2 font-medium">Aquí está un resumen de tu espacio creativo.</p>
+                  <p className="text-muted-foreground mt-2 font-medium">{t('summary')}</p>
                 </div>
 
                 <Link href="/editor?new=true" className="bg-primary text-primary-foreground px-6 py-3 rounded-full text-xs font-bold tracking-[0.1em] uppercase hover:scale-105 active:scale-95 transition-all shadow-[0_10px_20px_rgba(var(--primary-raw),0.2)] flex items-center gap-2 whitespace-nowrap">
                   <Plus size={16} />
-                  Añadir nueva obra
+                  {t('add_new')}
                 </Link>
              </div>
            </GsapWrapper>
@@ -111,27 +114,27 @@ export default async function DashboardPage() {
              <div className="bg-background/60 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-3xl p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden group">
                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all"></div>
                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-               <p className="text-muted-foreground font-semibold text-sm flex items-center gap-2 relative z-10"><Music size={16} className="text-primary"/> Total Obras</p>
+               <p className="text-muted-foreground font-semibold text-sm flex items-center gap-2 relative z-10"><Music size={16} className="text-primary"/> {t('total_works')}</p>
                <h3 className="text-5xl font-bold tracking-tighter mt-4 relative z-10 drop-shadow-md">{songs.length}</h3>
              </div>
 
              <div className="bg-background/60 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-3xl p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden group">
                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all"></div>
                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-               <p className="text-muted-foreground font-semibold text-sm flex items-center gap-2 relative z-10"><Clock size={16} className="text-blue-500"/> Última Edición</p>
+               <p className="text-muted-foreground font-semibold text-sm flex items-center gap-2 relative z-10"><Clock size={16} className="text-blue-500"/> {t('last_edit')}</p>
                <h3 className="text-2xl font-bold tracking-tight mt-4 relative z-10 drop-shadow-md">
                  {songs.length > 0 ? format(new Date(songs[0].updatedAt), "d MMM yyyy", { locale: es }) : "—"}
                </h3>
              </div>
 
              <div className="bg-primary text-primary-foreground border border-primary/20 rounded-3xl p-6 flex flex-col justify-center items-center shadow-md relative overflow-hidden text-center">
-               <p className="text-primary-foreground/70 font-semibold text-sm mb-2">Plan Actual</p>
+               <p className="text-primary-foreground/70 font-semibold text-sm mb-2">{t('current_plan')}</p>
                <h3 className="text-3xl font-bold tracking-tighter">
-                 {dbUser?.stripeSubscriptionId ? "PRO" : "GRATIS"}
+                 {dbUser?.stripeSubscriptionId ? t('pro') : t('free')}
                </h3>
                {!dbUser?.stripeSubscriptionId && (
                  <Link href="/pricing" className="mt-4 text-[10px] font-bold tracking-[0.2em] uppercase text-primary-foreground underline hover:text-white transition-colors">
-                   Mejorar a Pro →
+                   {t('upgrade')}
                  </Link>
                )}
              </div>
@@ -140,15 +143,15 @@ export default async function DashboardPage() {
 
            {/* Works Grid */}
            <div className="w-full">
-              <h2 className="text-xl font-bold tracking-tight mb-6">Mis Obras Recientes</h2>
+              <h2 className="text-xl font-bold tracking-tight mb-6">{t('recent_works')}</h2>
               
               {songs.length === 0 ? (
                 <div className="w-full h-64 border-2 border-dashed border-border rounded-3xl flex flex-col items-center justify-center text-muted-foreground">
                   <Folder size={48} className="mb-4 opacity-50" />
-                  <p className="font-semibold text-lg">Aún no tienes obras guardadas</p>
-                  <p className="text-sm mt-1">Crea tu primera obra de arte musical en el estudio.</p>
+                  <p className="font-semibold text-lg">{t('empty_title')}</p>
+                  <p className="text-sm mt-1">{t('empty_sub')}</p>
                   <Link href="/editor?new=true" className="mt-6 font-bold text-primary text-sm hover:underline">
-                    Ir al Estudio →
+                    {t('go_studio')}
                   </Link>
                 </div>
               ) : (
@@ -170,7 +173,7 @@ export default async function DashboardPage() {
 
                         <div className="z-10 mt-auto">
                           <h3 className="text-lg font-bold tracking-tight group-hover:text-primary transition-colors line-clamp-1 drop-shadow-sm">{song.title}</h3>
-                          <p className="text-xs text-muted-foreground mt-1 font-medium">Actualizado: {format(new Date(song.updatedAt), "dd/MM/yyyy")}</p>
+                          <p className="text-xs text-muted-foreground mt-1 font-medium">{t('updated')}: {format(new Date(song.updatedAt), "dd/MM/yyyy")}</p>
                         </div>
                         
                         {/* Decorative background visual */}
