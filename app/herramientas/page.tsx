@@ -47,16 +47,22 @@ export default function HerramientasHub() {
              </div>
           </div>
 
-          <div className="group rounded-[2.5rem] border border-border bg-foreground/[0.01] opacity-70 cursor-not-allowed p-10 flex flex-col items-start gap-6 relative overflow-hidden">
-             <div className="absolute top-8 right-8 text-[9px] font-bold tracking-widest uppercase px-3 py-1 bg-zinc-500/20 text-zinc-500 rounded-full">Próximamente</div>
-             <div className="w-16 h-16 rounded-full bg-zinc-500/10 flex items-center justify-center text-zinc-500">
+          <Link href="/herramientas/hum-to-chords" className="group rounded-[2.5rem] border border-border bg-foreground/[0.02] hover:bg-foreground/[0.04] transition-all p-10 flex flex-col items-start gap-6 hover:border-zinc-500/40 relative overflow-hidden">
+             
+             {/* Glow decorativo */}
+             <div className="absolute -right-20 -top-20 w-40 h-40 bg-zinc-500/10 blur-[50px] rounded-full group-hover:bg-zinc-500/20 transition-all"></div>
+
+             <div className="w-16 h-16 rounded-full bg-zinc-500/10 flex items-center justify-center text-zinc-500 group-hover:scale-110 transition-transform">
                <Zap size={32} />
              </div>
-             <div className="relative z-10">
-                <h3 className="text-2xl font-bold tracking-tight mb-3">Hum-to-Chords</h3>
+             <div className="relative z-10 w-full">
+                <div className="flex items-center justify-between w-full mb-3">
+                   <h3 className="text-2xl font-bold tracking-tight text-foreground">Hum-to-Chords</h3>
+                   <span className="text-[9px] uppercase tracking-widest font-black text-zinc-500 bg-zinc-500/10 px-3 py-1 rounded-full">Activo</span>
+                </div>
                 <p className="text-muted-foreground text-sm leading-relaxed">Tararea una melodía vocal y la Inteligencia Artificial escribirá la estructura de acordes base directamente en el editor.</p>
              </div>
-          </div>
+          </Link>
 
         </div>
       </main>
